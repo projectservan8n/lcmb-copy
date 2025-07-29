@@ -1,0 +1,13 @@
+{
+  "name": "lcmb-frontend",
+  "version": "1.0.0",
+  "description": "LCMB Material Order System Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server $PORT",
+    "dev": "python3 -m http.server 8080"
+  },
+  "keywords": ["lcmb", "material-order", "frontend"],
+  "author": "LCMB Group",
+  "license": "MIT"
+}
