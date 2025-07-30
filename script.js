@@ -1,8 +1,8 @@
 // 🧠 SMART LCMB PROCUREMENT FRONTEND - FIXED VERSION
-// Using correct webhook paths from your n8n workflow
+// Using correct webhook PATHS from your n8n workflow
 const API_BASE = 'https://primary-s0q-production.up.railway.app/webhook/';
-const MATERIALS_ENDPOINT = API_BASE + '42bcefd4-fe21-4b42-aeca-ea38ac7b1bc7'; // materials-data
-const ORDER_ENDPOINT = API_BASE + '635a4c96-a2e7-4e65-9c54-229b12faddd1'; // material-order
+const MATERIALS_ENDPOINT = API_BASE + 'materials-data';
+const ORDER_ENDPOINT = API_BASE + 'material-order';
 
 // Global State
 let smartData = null;
@@ -795,5 +795,8 @@ window.debugLCMB = {
     resetForm,
     showMessage,
     useFallbackData,
-    endpoints: { MATERIALS_ENDPOINT, ORDER_ENDPOINT }
+    endpoints: { 
+        MATERIALS_ENDPOINT: 'https://primary-s0q-production.up.railway.app/webhook/materials-data', 
+        ORDER_ENDPOINT: 'https://primary-s0q-production.up.railway.app/webhook/material-order' 
+    }
 };
