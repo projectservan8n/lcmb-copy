@@ -4,22 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LCMB Smart Procurement System</title>
-    <meta name="description" content="Intelligent Material Ordering System for LCMB Group - Streamlined procurement with automated supplier notifications">
-    <meta name="author" content="LCMB Group">
-    <meta name="robots" content="index, follow">
+    <meta name="description" content="Intelligent Material Ordering System for LCMB Group">
     
-    <!-- Preconnect to Google Fonts for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#667eea">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="LCMB Procurement">
-    
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     
     <style>
@@ -35,7 +25,6 @@
             min-height: 100vh;
             color: #1a202c;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         .container {
@@ -73,7 +62,7 @@
             font-weight: 500;
         }
 
-        /* Loading States */
+        /* Loading */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -147,6 +136,26 @@
             font-weight: 700;
             color: #1a202c;
             margin-bottom: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 4px;
         }
 
         /* Main Content */
@@ -227,176 +236,100 @@
             color: #1a202c;
         }
 
-        /* Smart Cards */
-        .smart-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-            gap: 20px;
+        /* Dropdowns */
+        .dropdown-container {
             margin-bottom: 30px;
         }
 
-        .smart-card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .smart-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .smart-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .smart-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .smart-card.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
-        }
-
-        .smart-card.selected::before {
-            transform: scaleX(1);
-        }
-
-        /* Supplier Cards */
-        .supplier-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .supplier-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        .supplier-info h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 4px;
-        }
-
-        .supplier-email {
-            font-size: 0.9rem;
-            color: #64748b;
-            word-break: break-all;
-        }
-
-        .supplier-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 8px;
-            background: #f8fafc;
-            border-radius: 8px;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: #64748b;
-            margin-top: 2px;
-        }
-
-        .supplier-tier {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .tier-premium {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: white;
-        }
-
-        .tier-standard {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-        }
-
-        .tier-basic {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-        }
-
-        /* Category Cards */
-        .category-card {
-            text-align: center;
-        }
-
-        .category-icon {
-            font-size: 3rem;
-            margin-bottom: 16px;
+        .dropdown-label {
             display: block;
-        }
-
-        .category-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #1a202c;
+            font-weight: 600;
+            color: #374151;
             margin-bottom: 8px;
+            font-size: 1rem;
         }
 
-        .category-meta {
-            font-size: 0.9rem;
-            color: #64748b;
+        .dropdown-select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .dropdown-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .dropdown-select:disabled {
+            background: #f9fafb;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Materials Section */
+        .materials-section {
+            display: none;
+        }
+
+        .search-container {
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #9ca3af;
         }
 
         /* Material Cards */
+        .materials-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
         .material-card {
-            position: relative;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .material-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .material-header {
             display: flex;
             align-items: flex-start;
             gap: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .material-checkbox {
@@ -413,7 +346,7 @@
         }
 
         .material-name {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: #1a202c;
             margin-bottom: 4px;
@@ -421,7 +354,7 @@
         }
 
         .material-price {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 700;
             background: linear-gradient(135deg, #10b981, #059669);
             -webkit-background-clip: text;
@@ -440,11 +373,12 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            margin-bottom: 16px;
         }
 
         .meta-tag {
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-size: 0.75rem;
             font-weight: 500;
         }
@@ -452,6 +386,11 @@
         .tag-code {
             background: #f1f5f9;
             color: #64748b;
+        }
+
+        .tag-brand {
+            background: #ede9fe;
+            color: #7c3aed;
         }
 
         .tag-stock {
@@ -472,13 +411,32 @@
             padding: 16px;
             background: #f8fafc;
             border-radius: 12px;
-            margin-top: 16px;
             border-top: 1px solid #e2e8f0;
             flex-wrap: wrap;
         }
 
         .quantity-controls.visible {
             display: flex;
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+
+        .qty-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
         }
 
         .qty-input {
@@ -488,32 +446,66 @@
             border-radius: 8px;
             text-align: center;
             font-weight: 600;
+            font-family: 'Inter', sans-serif;
         }
 
-        .qty-btn {
-            width: 32px;
-            height: 32px;
-            border: 1px solid #d1d5db;
-            background: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: 700;
-            transition: all 0.2s ease;
-        }
-
-        .qty-btn:hover {
-            background: #f3f4f6;
-            border-color: #9ca3af;
+        .unit-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
         }
 
         .subtotal {
             margin-left: auto;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: #059669;
+        }
+
+        /* Pagination */
+        .pagination-container {
+            margin: 30px 0;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-width: 40px;
+        }
+
+        .page-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .page-dots {
+            padding: 8px 4px;
+            color: #9ca3af;
+        }
+
+        .pagination-info {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #64748b;
         }
 
         /* Order Summary */
@@ -703,24 +695,17 @@
                 padding: 24px;
             }
             
-            .smart-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .supplier-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
             .summary-totals {
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            .step-header {
-                flex-wrap: wrap;
+            .pagination {
+                gap: 4px;
             }
             
-            .quantity-controls {
-                justify-content: center;
+            .page-btn {
+                padding: 6px 8px;
+                font-size: 0.9rem;
             }
         }
 
@@ -750,58 +735,12 @@
                 padding: 16px 24px;
             }
             
-            .supplier-stats {
-                grid-template-columns: 1fr;
-            }
-            
             .quantity-controls {
-                flex-direction: column;
-                align-items: center;
-                gap: 8px;
+                justify-content: center;
             }
             
-            .qty-input {
-                width: 100px;
-            }
-        }
-
-        /* Touch-friendly improvements */
-        @media (max-width: 768px) {
-            .smart-card {
-                padding: 20px;
-                min-height: 120px;
-            }
-            
-            .qty-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1.2rem;
-            }
-            
-            .material-checkbox {
-                width: 24px;
-                height: 24px;
-            }
-        }
-
-        /* High contrast mode support */
-        @media (prefers-contrast: high) {
-            .smart-card {
-                border: 2px solid #000;
-            }
-            
-            .smart-card.selected {
-                border-color: #0000ff;
-                background: #e6f3ff;
-            }
-        }
-
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
+            .material-header {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -811,7 +750,7 @@
         <!-- Header -->
         <div class="header">
             <h1>LCMB Smart Procurement</h1>
-            <p>Intelligent Material Ordering System</p>
+            <p>Streamlined Material Ordering System</p>
         </div>
 
         <!-- Loading Overlay -->
@@ -860,8 +799,11 @@
                             <div class="step-number">1</div>
                             <div class="step-title">Choose Your Supplier</div>
                         </div>
-                        <div class="smart-grid" id="supplierGrid">
-                            <!-- Suppliers will be loaded here -->
+                        <div class="dropdown-container">
+                            <label class="dropdown-label">Select Supplier:</label>
+                            <select class="dropdown-select" id="supplierSelect">
+                                <option value="">Loading suppliers...</option>
+                            </select>
                         </div>
                     </div>
 
@@ -871,8 +813,11 @@
                             <div class="step-number">2</div>
                             <div class="step-title">Select Category</div>
                         </div>
-                        <div class="smart-grid" id="categoryGrid">
-                            <!-- Categories will be loaded here -->
+                        <div class="dropdown-container">
+                            <label class="dropdown-label">Select Category:</label>
+                            <select class="dropdown-select" id="categorySelect" disabled>
+                                <option value="">First select a supplier</option>
+                            </select>
                         </div>
                     </div>
 
@@ -882,8 +827,16 @@
                             <div class="step-number">3</div>
                             <div class="step-title">Choose Materials</div>
                         </div>
-                        <div class="smart-grid" id="materialGrid">
-                            <!-- Materials will be loaded here -->
+                        <div class="materials-section" id="materialsSection">
+                            <div class="search-container">
+                                <input type="text" class="search-input" id="materialSearch" placeholder="🔍 Search materials by name, description, code, or brand...">
+                            </div>
+                            <div class="materials-grid" id="materialGrid">
+                                <!-- Materials will be loaded here -->
+                            </div>
+                            <div class="pagination-container" id="paginationContainer">
+                                <!-- Pagination will be loaded here -->
+                            </div>
                         </div>
                     </div>
 
