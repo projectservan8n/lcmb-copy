@@ -1,19 +1,56 @@
 {
   "name": "lcmb-smart-procurement",
   "version": "1.0.0",
-  "description": "LCMB Smart Material Order System Frontend",
+  "description": "LCMB Smart Material Order System Frontend - Complete procurement solution with n8n integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build": "echo 'No build step required for static frontend'",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linting configured'"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
-  "keywords": ["lcmb", "material-order", "frontend", "smart-procurement"],
+  "keywords": [
+    "lcmb",
+    "material-order",
+    "procurement",
+    "smart-ordering",
+    "frontend",
+    "n8n-integration",
+    "google-sheets",
+    "automated-emails",
+    "supplier-management"
+  ],
   "author": "LCMB Group",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lcmb-group/smart-procurement"
+  },
+  "bugs": {
+    "url": "https://github.com/lcmb-group/smart-procurement/issues"
+  },
+  "homepage": "https://lcmbform.up.railway.app",
+  "private": false,
+  "files": [
+    "server.js",
+    "index.html",
+    "script.js",
+    "style.css",
+    "railway.json",
+    "README.md"
+  ]
 }
