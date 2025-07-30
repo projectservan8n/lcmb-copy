@@ -17,7 +17,7 @@
         <!-- Initial Loading State -->
         <div class="loading-initial" id="initialLoading">
             <div class="spinner"></div>
-            <div class="loading-text">Loading materials and suppliers...</div>
+            <div class="loading-text">Loading suppliers and materials...</div>
         </div>
         
         <!-- Main Form Card -->
@@ -31,21 +31,35 @@
             </div>
             
             <form id="materialOrderForm">
-                <!-- Category Selection -->
+                <!-- Step 1: Supplier Selection -->
                 <div class="section">
                     <div class="section-title">
                         <div class="section-icon">1</div>
-                        Select Service Category
+                        Choose Your Preferred Supplier
                     </div>
-                    <div class="category-grid" id="categoryGrid">
-                        <!-- Categories will be loaded dynamically -->
+                    <div class="supplier-grid" id="supplierGrid">
+                        <!-- Suppliers will be loaded dynamically -->
                     </div>
                 </div>
 
-                <!-- Materials Selection -->
+                <!-- Step 2: Category Selection -->
                 <div class="section">
                     <div class="section-title">
                         <div class="section-icon">2</div>
+                        Select Service Category
+                    </div>
+                    <div class="category-grid" id="categoryGrid">
+                        <!-- Categories will be loaded based on selected supplier -->
+                    </div>
+                    <div id="categoryPlaceholder" style="text-align: center; padding: 40px; color: #94a3b8; font-style: italic;">
+                        Please select a supplier first
+                    </div>
+                </div>
+
+                <!-- Step 3: Materials Selection -->
+                <div class="section">
+                    <div class="section-title">
+                        <div class="section-icon">3</div>
                         Select Required Materials & Quantities
                     </div>
                     
@@ -59,7 +73,7 @@
                     </div>
                     
                     <div id="materialsPlaceholder" style="text-align: center; padding: 40px; color: #94a3b8; font-style: italic;">
-                        Please select a service category first
+                        Please select a supplier and category first
                     </div>
                 </div>
 
@@ -85,18 +99,7 @@
                     </div>
                 </div>
 
-                <!-- Supplier Selection -->
-                <div class="section">
-                    <div class="section-title">
-                        <div class="section-icon">3</div>
-                        Choose Supplier
-                    </div>
-                    <div class="supplier-grid" id="supplierGrid">
-                        <!-- Suppliers will be loaded dynamically -->
-                    </div>
-                </div>
-
-                <!-- User Information -->
+                <!-- Step 4: User Information -->
                 <div class="section">
                     <div class="section-title">
                         <div class="section-icon">4</div>
