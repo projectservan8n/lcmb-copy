@@ -1,14 +1,43 @@
-// 🧠 SMART LCMB PROCUREMENT FRONTEND - COMPLETE FIXED VERSION
-// Using correct webhook URLs from your n8n workflow
+// 🧠 SMART LCMB PROCUREMENT FRONTEND - MOBILE FIXED VERSION
+// Solution: Use server proxy to avoid CORS issues on mobile
 
-// Your n8n webhook URLs (from LCMB ORDER SYSTEM.json)
-const N8N_WEBHOOK_BASE = 'https://primary-s0q-production.up.railway.app';
-const API_ENDPOINTS = {
-    materials: N8N_WEBHOOK_BASE + '/webhook/materials-data',  // Webhook ID: 844f5e6d-e51d-4958-90c6-8c68576360da
-    order: N8N_WEBHOOK_BASE + '/webhook/material-order'       // Webhook ID: 73af1374-ec87-4f38-aba9-6470a5eae947
+// Mobile-friendly API configuration
+const API_CONFIG = {
+    // Use relative URLs to proxy through our server (mobile-friendly)
+    proxy: {
+        materials: '/api/n8n-proxy/materials-data',
+        order: '/api/n8n-proxy/material-order'
+    },
+    // Direct n8n URLs (desktop fallback)
+    direct: {
+        materials: 'https://primary-s0q-production.up.railway.app/webhook/materials-data',
+        order: 'https://primary-s0q-production.up.railway.app/webhook/material-order'
+    },
+    // Demo fallback
+    demo: {
+        materials: '/api/materials-data',
+        order: '/api/material-order'
+    }
 };
 
-console.log('🚀 LCMB System Config:', API_ENDPOINTS);
+// Detect if we're on mobile
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const preferProxy = isMobile || window.location.protocol === 'https:';
+
+console.log('📱 Device Detection:', {
+    isMobile,
+    userAgent: navigator.userAgent,
+    protocol: window.location.protocol,
+    preferProxy
+});
+
+// Choose endpoints based on device
+const ENDPOINTS = preferProxy ? API_CONFIG.proxy : API_CONFIG.direct;
+
+console.log('🚀 LCMB System Config:', {
+    endpoints: ENDPOINTS,
+    strategy: preferProxy ? 'proxy' : 'direct'
+});
 
 // Global State
 let smartData = null;
@@ -30,7 +59,7 @@ const errorMessage = document.getElementById('errorMessage');
 const submitBtn = document.getElementById('submitBtn');
 const form = document.getElementById('smartOrderForm');
 
-// Category Icons matching your n8n data structure
+// Category Icons
 const categoryIcons = {
     'AC Install': '❄️',
     'AC Service': '🔧', 
@@ -39,46 +68,78 @@ const categoryIcons = {
     'default': '📋'
 };
 
-// Initialize Smart System
+// Initialize Smart System with Mobile Support
 async function initializeSmartSystem() {
+    const startTime = Date.now();
+    
     try {
         console.log('🚀 Starting Smart Procurement System...');
-        updateLoadingText('Connecting to n8n backend...');
+        updateLoadingText('Connecting to backend...');
         
-        // Fetch data from your n8n workflow
-        const response = await fetch(API_ENDPOINTS.materials, {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
+        // Try multiple connection strategies
+        const strategies = [
+            { name: 'Proxy API', endpoints: API_CONFIG.proxy },
+            { name: 'Direct n8n', endpoints: API_CONFIG.direct },
+            { name: 'Demo Fallback', endpoints: API_CONFIG.demo }
+        ];
+        
+        let connected = false;
+        let lastError = null;
+        
+        for (const strategy of strategies) {
+            try {
+                console.log(`📡 Trying ${strategy.name}...`);
+                updateLoadingText(`Trying ${strategy.name}...`);
+                
+                const response = await fetchWithTimeout(strategy.endpoints.materials, {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                }, 8000); // 8 second timeout
+                
+                console.log(`✅ ${strategy.name} response:`, response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                smartData = await response.json();
+                console.log(`🎯 ${strategy.name} data loaded:`, smartData);
+                
+                // Validate data structure
+                if (smartData && smartData.status === 'success' && smartData.data) {
+                    connected = true;
+                    updateLoadingText('Processing data...');
+                    break;
+                } else {
+                    throw new Error('Invalid data structure received');
+                }
+                
+            } catch (error) {
+                console.warn(`❌ ${strategy.name} failed:`, error.message);
+                lastError = error;
+                continue;
             }
-        });
-
-        console.log('📡 n8n Response status:', response.status);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ n8n Response error:', errorText);
-            throw new Error(`n8n Backend Error ${response.status}: ${response.statusText}`);
         }
-
-        smartData = await response.json();
-        console.log('🎯 n8n Data Loaded:', smartData);
-
-        // Validate expected data structure from your n8n workflow
-        if (smartData.status !== 'success') {
-            throw new Error(smartData.error?.message || 'n8n workflow returned error status');
+        
+        // If no strategy worked, use demo data
+        if (!connected) {
+            console.log('🔄 All strategies failed, loading demo data...');
+            updateLoadingText('Loading demo data...');
+            await loadDemoData();
         }
-
-        if (!smartData.data || !smartData.data.suppliers || !smartData.data.materials) {
-            console.warn('⚠️ Invalid data structure from n8n workflow');
-            throw new Error('Invalid data structure received from n8n workflow');
+        
+        // Ensure we have valid data
+        if (!smartData || !smartData.data) {
+            throw new Error('No valid data available');
         }
-
-        updateLoadingText('Processing supplier data...');
-        await new Promise(resolve => setTimeout(resolve, 800));
-
+        
+        updateLoadingText('Setting up interface...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Update system status
         updateSystemStatus();
         updateRecommendations();
@@ -90,39 +151,50 @@ async function initializeSmartSystem() {
         loadingOverlay.style.display = 'none';
         appContainer.classList.add('loaded');
         
-        showMessage('success', '✅ Smart Procurement System Ready! Connected to live n8n workflow. Select a supplier to begin.');
+        const loadTime = Date.now() - startTime;
+        const statusMessage = connected 
+            ? `✅ Smart Procurement System Ready! Connected via ${strategies.find(s => connected)?.name || 'API'}. (${loadTime}ms)`
+            : `⚠️ Demo Mode Active: Using sample data. All features work except live orders. (${loadTime}ms)`;
+        
+        showMessage('success', statusMessage + ' Select a supplier to begin.');
         
     } catch (error) {
-        console.error('❌ Initialization Error:', error);
+        console.error('❌ Critical Initialization Error:', error);
         
-        // Fallback to demo data
-        console.log('🔄 Falling back to demo data...');
-        updateLoadingText('Loading demo data as fallback...');
+        loadingOverlay.style.display = 'none';
+        appContainer.classList.add('loaded');
         
-        try {
-            await loadDemoData();
-            updateSystemStatus();
-            updateRecommendations();
-            populateSuppliers();
-            
-            loadingOverlay.style.display = 'none';
-            appContainer.classList.add('loaded');
-            
-            showMessage('success', `⚠️ Demo Mode Active: n8n connection failed (${error.message}). Using sample data that matches your Google Sheets structure.`);
-        } catch (demoError) {
-            loadingOverlay.style.display = 'none';
-            appContainer.classList.add('loaded');
-            showMessage('error', `❌ System Error: ${error.message}. Please check your n8n workflow is running.`);
-        }
+        showMessage('error', `❌ System Error: ${error.message}. Please refresh the page or contact support.`);
     }
 }
 
-// Load demo data (exact structure from your n8n workflow)
+// Fetch with timeout for mobile reliability
+async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout - connection too slow');
+        }
+        throw error;
+    }
+}
+
+// Load demo data with mobile optimization
 async function loadDemoData() {
     smartData = {
         status: 'success',
         version: '2.0',
-        system: 'Smart LCMB Procurement',
+        system: 'Smart LCMB Procurement (Demo)',
         timestamp: new Date().toISOString(),
         data: {
             suppliers: [
@@ -158,17 +230,6 @@ async function loadDemoData() {
                     tier: 'Standard',
                     leadTimeDays: 3,
                     minOrderValue: 50
-                },
-                {
-                    id: 'SUP004',
-                    name: 'Brisbane Building Supplies',
-                    email: 'orders@brisbanesupplies.com.au',
-                    phone: '(07) 3333-4444',
-                    specialties: ['Factory Stock', 'AC Service'],
-                    reliabilityScore: 91.2,
-                    tier: 'Premium',
-                    leadTimeDays: 2,
-                    minOrderValue: 150
                 }
             ],
             materials: {
@@ -196,18 +257,6 @@ async function loadDemoData() {
                         brand: 'Olex',
                         stockLevel: 500,
                         availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'EL-SW-1G',
-                        name: 'Light Switch Single Gang',
-                        category: 'Electrical',
-                        unit: 'pcs',
-                        basePrice: 8.50,
-                        description: 'Single gang light switch white',
-                        code: 'EL-SW-1G',
-                        brand: 'Clipsal',
-                        stockLevel: 200,
-                        availabilityStatus: 'In Stock'
                     }
                 ],
                 'AC Install': [
@@ -221,18 +270,6 @@ async function loadDemoData() {
                         code: 'AC-SS-25',
                         brand: 'Daikin',
                         stockLevel: 25,
-                        availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'AC-WMB-HD',
-                        name: 'Wall Mounting Bracket Heavy Duty',
-                        category: 'AC Install',
-                        unit: 'pcs', 
-                        basePrice: 45.00,
-                        description: 'Heavy duty wall mounting bracket for outdoor units',
-                        code: 'AC-WMB-HD',
-                        brand: 'Universal',
-                        stockLevel: 75,
                         availabilityStatus: 'In Stock'
                     }
                 ],
@@ -248,18 +285,6 @@ async function loadDemoData() {
                         brand: 'Chemours',
                         stockLevel: 12,
                         availabilityStatus: 'Low Stock'
-                    },
-                    {
-                        id: 'AC-FILTER-STD',
-                        name: 'Air Filter Standard',
-                        category: 'AC Service',
-                        unit: 'pcs',
-                        basePrice: 15.50,
-                        description: 'Standard washable air filter',
-                        code: 'AC-FILTER-STD',
-                        brand: 'Generic',
-                        stockLevel: 60,
-                        availabilityStatus: 'In Stock'
                     }
                 ],
                 'Factory Stock': [
@@ -274,45 +299,32 @@ async function loadDemoData() {
                         brand: 'ProSafe',
                         stockLevel: 200,
                         availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'FS-VEST-HIVIZ',
-                        name: 'Hi-Vis Safety Vest',
-                        category: 'Factory Stock',
-                        unit: 'pcs',
-                        basePrice: 12.50,
-                        description: 'High visibility safety vest orange',
-                        code: 'FS-VEST-HIVIZ',
-                        brand: 'SafeWork',
-                        stockLevel: 150,
-                        availabilityStatus: 'In Stock'
                     }
                 ]
             },
             categories: ['Electrical', 'AC Install', 'AC Service', 'Factory Stock'],
             supplierCapabilities: {},
             metadata: {
-                totalSuppliers: 4,
-                totalMaterials: 8,
+                totalSuppliers: 3,
+                totalMaterials: 5,
                 totalCategories: 4,
-                averageSupplierScore: 91.65
+                averageSupplierScore: 91.8
             },
             recommendations: {
                 topSuppliers: [
                     { id: 'SUP001', name: 'ElectroSupply Co.', score: 95.5, tier: 'Premium' },
-                    { id: 'SUP002', name: 'AC Parts Direct', score: 92.1, tier: 'Premium' },
-                    { id: 'SUP004', name: 'Brisbane Building Supplies', score: 91.2, tier: 'Premium' }
+                    { id: 'SUP002', name: 'AC Parts Direct', score: 92.1, tier: 'Premium' }
                 ]
             }
         }
     };
     
-    // Build supplier capabilities (matching your n8n "Build Supplier Capabilities" node logic)
+    // Build supplier capabilities
     Object.keys(smartData.data.materials).forEach(category => {
         const materials = smartData.data.materials[category];
         
         smartData.data.suppliers.forEach(supplier => {
-            if (supplier.specialties.includes(category) || supplier.specialties.includes('General')) {
+            if (supplier.specialties.includes(category)) {
                 if (!smartData.data.supplierCapabilities[supplier.id]) {
                     smartData.data.supplierCapabilities[supplier.id] = {
                         categories: [],
@@ -339,8 +351,8 @@ async function loadDemoData() {
         });
     });
     
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    console.log('📋 Demo data loaded with', smartData.data.suppliers.length, 'suppliers');
+    await new Promise(resolve => setTimeout(resolve, 800));
+    console.log('📋 Demo data loaded successfully');
 }
 
 // Update loading text
@@ -671,7 +683,7 @@ function deactivateStep(stepNumber) {
     currentStep = Math.max(1, stepNumber - 1);
 }
 
-// Handle Form Submission
+// Handle Form Submission with Mobile-Friendly Error Handling
 async function handleSubmission(e) {
     e.preventDefault();
     
@@ -689,7 +701,7 @@ async function handleSubmission(e) {
         
         if (!supplier) throw new Error('Selected supplier not found');
         
-        // Build order data matching your n8n workflow structure
+        // Build order data
         const orderData = {
             category: selectedCategory,
             materials: selectedMaterials.map(item => ({
@@ -710,14 +722,14 @@ async function handleSubmission(e) {
 
         console.log('🚀 Submitting Smart Order:', orderData);
 
-        const response = await fetch(API_ENDPOINTS.order, {
+        const response = await fetchWithTimeout(ENDPOINTS.order, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             body: JSON.stringify(orderData)
-        });
+        }, 15000); // 15 second timeout for orders
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -739,17 +751,25 @@ async function handleSubmission(e) {
 <strong>Processing Time:</strong> ${result.estimated_processing}
             
 ✅ Order saved to Google Sheets<br>
-📧 Emails sent to supplier and requestor<br>
-🔄 You'll receive confirmation shortly.`);
+📧 Emails sent to supplier and requestor`);
             
-            setTimeout(() => resetForm(), 4000);
+            setTimeout(() => resetForm(), 5000);
         } else {
             throw new Error(result.message || 'Order submission failed');
         }
         
     } catch (error) {
         console.error('❌ Submission Error:', error);
-        showMessage('error', `Failed to submit order: ${error.message}`);
+        
+        // More user-friendly error messages for mobile
+        let userMessage = error.message;
+        if (error.message.includes('timeout')) {
+            userMessage = 'Connection timeout - please check your internet and try again';
+        } else if (error.message.includes('Failed to fetch')) {
+            userMessage = 'Network error - please check your connection and try again';
+        }
+        
+        showMessage('error', `Failed to submit order: ${userMessage}`);
     } finally {
         setLoading(false);
     }
@@ -780,14 +800,14 @@ function showMessage(type, message) {
     const messageEl = type === 'success' ? successMessage : errorMessage;
     messageEl.innerHTML = message.replace(/\n/g, '<br>');
     messageEl.style.display = 'block';
-    messageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    messageEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
     if (type === 'success') {
         setTimeout(() => {
             if (messageEl.style.display === 'block') {
                 messageEl.style.display = 'none';
             }
-        }, 12000);
+        }, 15000);
     }
 }
 
@@ -804,9 +824,11 @@ function setLoading(loading) {
 // Event Listeners
 form.addEventListener('submit', handleSubmission);
 
-// Initialize on DOM load
+// Initialize with mobile-optimized timing
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initializeSmartSystem, 600);
+    // Faster initialization on mobile
+    const delay = isMobile ? 300 : 600;
+    setTimeout(initializeSmartSystem, delay);
 });
 
 // Debug helper
@@ -815,10 +837,21 @@ window.debugLCMB = {
     get selectedSupplier() { return selectedSupplier; },
     get selectedCategory() { return selectedCategory; },
     get selectedMaterials() { return selectedMaterials; },
-    get endpoints() { return API_ENDPOINTS; },
+    get config() { return { ENDPOINTS, isMobile, preferProxy }; },
     resetForm,
     showMessage,
-    loadDemoData
+    loadDemoData,
+    testConnection: async () => {
+        console.log('🔍 Testing all connection methods...');
+        for (const [name, endpoints] of Object.entries(API_CONFIG)) {
+            try {
+                const response = await fetchWithTimeout(endpoints.materials, {}, 5000);
+                console.log(`✅ ${name}:`, response.status);
+            } catch (error) {
+                console.log(`❌ ${name}:`, error.message);
+            }
+        }
+    }
 };
 
-console.log('🎯 LCMB Smart Procurement System Loaded');
+console.log('🎯 LCMB Smart Procurement System Loaded - Mobile Optimized');
