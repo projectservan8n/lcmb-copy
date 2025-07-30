@@ -3,14 +3,17 @@ const MATERIALS_ENDPOINT = 'https://primary-s0q-production.up.railway.app/webhoo
 const ORDER_ENDPOINT = 'https://primary-s0q-production.up.railway.app/webhook/material-order';
 
 // Global data storage
-let materialsData = {};
 let suppliersData = [];
+let materialsBySupplier = {};
+let allCategories = [];
+let selectedSupplier = null;
+let selectedCategory = null;
 let selectedMaterials = [];
-let allMaterials = [];
 
 // DOM elements
 const initialLoading = document.getElementById('initialLoading');
 const formCard = document.getElementById('formCard');
+const supplierGrid = document.getElementById('supplierGrid');
 const categoryGrid = document.getElementById('categoryGrid');
 const materialsSection = document.getElementById('materialsSection');
 const materialsPlaceholder = document.getElementById('materialsPlaceholder');
@@ -18,17 +21,16 @@ const materialsGrid = document.getElementById('materialsGrid');
 const materialSearch = document.getElementById('materialSearch');
 const selectedMaterialsSection = document.getElementById('selectedMaterials');
 const selectedItems = document.getElementById('selectedItems');
-const supplierGrid = document.getElementById('supplierGrid');
 const form = document.getElementById('materialOrderForm');
 const successMessage = document.getElementById('successMessage');
-const errorMessage = document.getElementById('errorMessage');
+const errorMessage = document.getElementById('errorMessage');  
 const loading = document.getElementById('loading');
 const submitBtn = document.getElementById('submitBtn');
 
 // Category icons mapping
 const categoryIcons = {
     'AC Install': '❄️',
-    'AC Service': '🔧',
+    'AC Service': '🔧', 
     'Electrical': '⚡',
     'Factory Stock': '📦',
     'default': '📋'
@@ -37,8 +39,7 @@ const categoryIcons = {
 // Initialize the application
 async function initializeApp() {
     try {
-        await loadMaterialsAndSuppliers();
-        populateCategories();
+        await loadSuppliersAndMaterials();
         populateSuppliers();
         setupEventListeners();
         
@@ -46,75 +47,84 @@ async function initializeApp() {
         formCard.classList.add('loaded');
     } catch (error) {
         console.error('Failed to initialize app:', error);
-        showError('Failed to load materials and suppliers. Please check your n8n webhooks and try again.');
+        showError('Failed to load data. Please check your n8n webhooks and try again.');
         initialLoading.style.display = 'none';
     }
 }
 
-// Load materials and suppliers from n8n webhooks
-async function loadMaterialsAndSuppliers() {
+// Load suppliers and materials from n8n webhook
+async function loadSuppliersAndMaterials() {
     try {
-        const response = await fetch(MATERIALS_ENDPOINT);
+        console.log('Fetching from:', MATERIALS_ENDPOINT);
+        const response = await fetch(MATERIALS_ENDPOINT, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
         if (!response.ok) {
-            throw new Error('Failed to fetch materials data');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
-        materialsData = data.data.materials;
-        suppliersData = data.data.suppliers;
+        console.log('Received data:', data);
+        
+        if (data.status === 'success' && data.data) {
+            suppliersData = data.data.suppliers || [];
+            materialsBySupplier = data.data.materials_by_supplier || {};
+            allCategories = data.data.all_categories || [];
+            
+            console.log('Loaded suppliers:', suppliersData.length);
+            console.log('Available categories:', allCategories);
+        } else {
+            throw new Error('Invalid data structure received from n8n');
+        }
+        
     } catch (error) {
         console.error('API Error:', error);
-        // Fallback to mock data for demo
-        materialsData = {
-            'AC Install': [
-                { name: 'Split System Unit 2.5kW', unit: 'pcs', price: 899.00, description: 'Energy efficient cooling unit', code: 'AC-SS-25' },
-                { name: 'Copper Refrigerant Line Set 5m', unit: 'pcs', price: 125.00, description: 'Pre-insulated copper lines', code: 'AC-CRL-5M' },
-                { name: 'Wall Mounting Bracket Heavy Duty', unit: 'pcs', price: 45.00, description: 'Heavy duty wall mount', code: 'AC-WMB-HD' }
-            ],
-            'AC Service': [
-                { name: 'R410A Refrigerant Gas', unit: 'kg', price: 28.00, description: 'Eco-friendly refrigerant', code: 'AC-R410A' },
-                { name: 'Air Filter Standard', unit: 'pcs', price: 15.00, description: 'Washable air filter', code: 'AC-FLT-STD' },
-                { name: 'Coil Cleaning Solution', unit: 'liters', price: 18.00, description: 'Professional cleaning solution', code: 'AC-CLN-COIL' }
-            ],
-            'Electrical': [
-                { name: 'Circuit Breaker 20A', unit: 'pcs', price: 25.00, description: 'Single pole circuit breaker', code: 'EL-CB-20A' },
-                { name: 'Power Point Double GPO White', unit: 'pcs', price: 8.50, description: 'Standard power outlet', code: 'EL-PP-DBL-WHT' },
-                { name: 'LED Downlight 10W', unit: 'pcs', price: 15.00, description: 'Warm white LED light', code: 'EL-LED-10W' }
-            ],
-            'Factory Stock': [
-                { name: 'Safety Helmet White', unit: 'pcs', price: 18.00, description: 'Hard hat safety helmet', code: 'FS-HAT-WHT' },
-                { name: 'Safety Vest Hi-Vis Orange', unit: 'pcs', price: 12.00, description: 'High visibility vest', code: 'FS-VST-HIVO' },
-                { name: 'Work Gloves Leather', unit: 'pcs', price: 15.00, description: 'Leather work gloves', code: 'FS-GLV-LTHR' }
-            ]
-        };
-
+        // Fallback to mock data
         suppliersData = [
-            { id: 'supplier1', name: 'ElectroSupply Co.', email: 'orders@electrosupply.com.au', specialties: ['Electrical', 'AC Install'] },
-            { id: 'supplier2', name: 'AC Parts Direct', email: 'sales@acpartsdirect.com.au', specialties: ['AC Install', 'AC Service'] },
-            { id: 'supplier3', name: 'Trade Materials Plus', email: 'sales@tradematerials.com.au', specialties: ['Electrical', 'Factory Stock'] }
+            { 
+                id: 'SUP001', 
+                name: 'ElectroSupply Co.', 
+                email: 'orders@electrosupply.com.au', 
+                specialties: ['Electrical', 'AC Install'],
+                available_categories: ['Electrical', 'AC Install'],
+                materials_count: 5
+            },
+            { 
+                id: 'SUP002', 
+                name: 'AC Parts Direct', 
+                email: 'sales@acpartsdirect.com.au', 
+                specialties: ['AC Install', 'AC Service'],
+                available_categories: ['AC Install', 'AC Service'],
+                materials_count: 8
+            }
         ];
+        
+        materialsBySupplier = {
+            'SUP001': {
+                'Electrical': [
+                    { name: 'Circuit Breaker 20A', unit: 'pcs', price: 25.00, description: 'Single pole circuit breaker', code: 'EL-CB-20A' }
+                ],
+                'AC Install': [
+                    { name: 'Wall Mounting Bracket', unit: 'pcs', price: 45.00, description: 'Heavy duty wall mount', code: 'AC-WMB-HD' }
+                ]
+            },
+            'SUP002': {
+                'AC Install': [
+                    { name: 'Split System Unit 2.5kW', unit: 'pcs', price: 899.00, description: 'Energy efficient cooling unit', code: 'AC-SS-25' }
+                ],
+                'AC Service': [
+                    { name: 'R410A Refrigerant Gas', unit: 'kg', price: 28.00, description: 'Eco-friendly refrigerant', code: 'AC-R410A' }
+                ]
+            }
+        };
     }
 }
 
-// Populate categories
-function populateCategories() {
-    const categories = Object.keys(materialsData);
-    categoryGrid.innerHTML = '';
-
-    categories.forEach(category => {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category-option';
-        categoryDiv.innerHTML = `
-            <input type="radio" name="category" value="${category}" id="category-${category.replace(/\s+/g, '-')}">
-            <label for="category-${category.replace(/\s+/g, '-')}" class="category-label">
-                <span class="category-emoji">${categoryIcons[category] || categoryIcons.default}</span>
-                <div class="category-name">${category}</div>
-            </label>
-        `;
-        categoryGrid.appendChild(categoryDiv);
-    });
-}
-
-// Populate suppliers
+// Populate suppliers (Step 1)
 function populateSuppliers() {
     supplierGrid.innerHTML = '';
 
@@ -127,47 +137,67 @@ function populateSuppliers() {
                 <div class="supplier-name">${supplier.name}</div>
                 <div class="supplier-email">${supplier.email}</div>
                 <div class="supplier-specialties">Specializes in: ${supplier.specialties.join(', ')}</div>
+                <div class="supplier-stats">${supplier.materials_count} materials in ${supplier.categories_count || supplier.available_categories.length} categories</div>
             </label>
         `;
         supplierGrid.appendChild(supplierDiv);
     });
 }
 
-// Setup event listeners
-function setupEventListeners() {
-    // Category change handler
-    document.querySelectorAll('input[name="category"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                populateMaterials(this.value);
-                materialsPlaceholder.style.display = 'none';
-                materialsSection.classList.add('visible');
-            }
-        });
-    });
+// Populate categories based on selected supplier (Step 2)
+function populateCategories(supplierId) {
+    const supplier = suppliersData.find(s => s.id === supplierId);
+    if (!supplier) return;
+    
+    const availableCategories = supplier.available_categories || [];
+    categoryGrid.innerHTML = '';
+    
+    if (availableCategories.length === 0) {
+        categoryGrid.innerHTML = '<p style="text-align: center; color: #64748b; font-style: italic;">No categories available for this supplier</p>';
+        return;
+    }
 
-    // Material search handler
-    materialSearch.addEventListener('input', function() {
-        filterMaterials(this.value);
+    availableCategories.forEach(category => {
+        const materialsCount = materialsBySupplier[supplierId] && materialsBySupplier[supplierId][category] 
+            ? materialsBySupplier[supplierId][category].length 
+            : 0;
+            
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category-option';
+        categoryDiv.innerHTML = `
+            <input type="radio" name="category" value="${category}" id="category-${category.replace(/\s+/g, '-')}">
+            <label for="category-${category.replace(/\s+/g, '-')}" class="category-label">
+                <span class="category-emoji">${categoryIcons[category] || categoryIcons.default}</span>
+                <div class="category-name">${category}</div>
+                <div class="category-count">${materialsCount} materials</div>
+            </label>
+        `;
+        categoryGrid.appendChild(categoryDiv);
     });
-
-    // Form submission handler
-    form.addEventListener('submit', handleFormSubmission);
 }
 
-// Populate materials based on category
-function populateMaterials(category) {
-    const materials = materialsData[category] || [];
-    allMaterials = materials;
-    selectedMaterials = []; // Reset selected materials
+// Populate materials based on supplier and category (Step 3)
+function populateMaterials(supplierId, category) {
+    const materials = (materialsBySupplier[supplierId] && materialsBySupplier[supplierId][category]) || [];
+    selectedMaterials = []; // Reset
     
     renderMaterials(materials);
     updateSelectedMaterialsDisplay();
+    
+    if (materials.length > 0) {
+        materialsPlaceholder.style.display = 'none';
+        materialsSection.classList.add('visible');
+    }
 }
 
 // Render materials in the grid
 function renderMaterials(materials) {
     materialsGrid.innerHTML = '';
+    
+    if (materials.length === 0) {
+        materialsGrid.innerHTML = '<p style="text-align: center; color: #64748b; font-style: italic;">No materials available in this category</p>';
+        return;
+    }
     
     materials.forEach((material, index) => {
         const materialCard = document.createElement('div');
@@ -194,7 +224,7 @@ function renderMaterials(materials) {
             </div>
         `;
         
-        // Add event listeners
+        // Add event listeners (same as before)
         const checkbox = materialCard.querySelector('.material-checkbox');
         const quantityControls = materialCard.querySelector('.quantity-controls');
         const quantityInput = materialCard.querySelector('.quantity-input');
@@ -241,76 +271,54 @@ function renderMaterials(materials) {
     });
 }
 
-// Filter materials based on search
-function filterMaterials(searchTerm) {
-    if (!allMaterials.length) return;
-    
-    const filtered = allMaterials.filter(material => 
-        material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    renderMaterials(filtered);
+// Setup event listeners
+function setupEventListeners() {
+    // Supplier change handler (Step 1 → Step 2)
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'supplier') {
+            selectedSupplier = e.target.value;
+            selectedCategory = null;
+            selectedMaterials = [];
+            
+            // Show categories for selected supplier
+            populateCategories(selectedSupplier);
+            
+            // Hide materials until category is selected
+            materialsSection.classList.remove('visible');
+            materialsPlaceholder.style.display = 'block';
+            updateSelectedMaterialsDisplay();
+        }
+    });
+
+    // Category change handler (Step 2 → Step 3)
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'category') {
+            selectedCategory = e.target.value;
+            
+            if (selectedSupplier && selectedCategory) {
+                populateMaterials(selectedSupplier, selectedCategory);
+            }
+        }
+    });
+
+    // Material search handler
+    materialSearch.addEventListener('input', function() {
+        if (selectedSupplier && selectedCategory && materialsBySupplier[selectedSupplier] && materialsBySupplier[selectedSupplier][selectedCategory]) {
+            const materials = materialsBySupplier[selectedSupplier][selectedCategory];
+            const filtered = materials.filter(material => 
+                material.name.toLowerCase().includes(this.value.toLowerCase()) ||
+                material.description.toLowerCase().includes(this.value.toLowerCase()) ||
+                material.code.toLowerCase().includes(this.value.toLowerCase())
+            );
+            renderMaterials(filtered);
+        }
+    });
+
+    // Form submission handler
+    form.addEventListener('submit', handleFormSubmission);
 }
 
-// Add material to selected list
-function addToSelectedMaterials(material, index, quantity) {
-    const selectedMaterial = {
-        ...material,
-        index: index,
-        quantity: quantity
-    };
-    selectedMaterials.push(selectedMaterial);
-    updateSelectedMaterialsDisplay();
-}
-
-// Remove material from selected list
-function removeFromSelectedMaterials(index) {
-    selectedMaterials = selectedMaterials.filter(item => item.index !== index);
-    updateSelectedMaterialsDisplay();
-}
-
-// Update quantity of selected material
-function updateSelectedMaterialQuantity(index, quantity) {
-    const material = selectedMaterials.find(item => item.index === index);
-    if (material) {
-        material.quantity = quantity;
-        updateSelectedMaterialsDisplay();
-    }
-}
-
-// Update selected materials display
-function updateSelectedMaterialsDisplay() {
-    if (selectedMaterials.length === 0) {
-        selectedMaterialsSection.classList.remove('visible');
-        return;
-    }
-
-    selectedMaterialsSection.classList.add('visible');
-    
-    // Update items list
-    selectedItems.innerHTML = selectedMaterials.map(item => `
-        <div class="selected-item">
-            <div>
-                <div class="item-name">${item.name}</div>
-                <div class="item-details">${item.quantity} ${item.unit} × $${item.price.toFixed(2)}</div>
-            </div>
-            <div class="item-price">$${(item.quantity * item.price).toFixed(2)}</div>
-        </div>
-    `).join('');
-
-    // Update totals
-    const totalItems = selectedMaterials.length;
-    const totalQuantity = selectedMaterials.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-
-    document.getElementById('totalItems').textContent = totalItems;
-    document.getElementById('totalQuantity').textContent = totalQuantity;
-    document.getElementById('totalPrice').textContent = `$${totalPrice.toFixed(2)}`;
-}
-
-// Handle form submission
+// Handle form submission (updated for supplier-first workflow)
 async function handleFormSubmission(e) {
     e.preventDefault();
     
@@ -318,11 +326,10 @@ async function handleFormSubmission(e) {
     showLoading(true);
     
     const formData = new FormData(form);
-    const selectedSupplier = document.querySelector('input[name="supplier"]:checked');
-    const supplierInfo = selectedSupplier ? suppliersData.find(s => s.id === selectedSupplier.value) : null;
+    const supplierInfo = suppliersData.find(s => s.id === selectedSupplier);
     
     const orderData = {
-        category: formData.get('category'),
+        category: selectedCategory,
         materials: selectedMaterials.map(item => ({
             name: item.name,
             quantity: item.quantity,
@@ -340,13 +347,15 @@ async function handleFormSubmission(e) {
     };
 
     // Validate required fields
-    if (!orderData.category || selectedMaterials.length === 0 || !orderData.supplier_email || !orderData.user_name || !orderData.user_email) {
-        showError('Please complete all required fields before submitting.');
+    if (!selectedSupplier || !selectedCategory || selectedMaterials.length === 0 || !orderData.user_name || !orderData.user_email) {
+        showError('Please complete all required fields: select supplier, category, materials, and fill in your information.');
         showLoading(false);
         return;
     }
 
     try {
+        console.log('Submitting order:', orderData);
+        
         const response = await fetch(ORDER_ENDPOINT, {
             method: 'POST',
             headers: {
@@ -356,35 +365,101 @@ async function handleFormSubmission(e) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to submit order');
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
         const result = await response.json();
         
-        const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-        showSuccess(`Order submitted successfully! 
-        
+        if (result.status === 'success') {
+            const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            showSuccess(`Order submitted successfully! 
+            
 Order ID: ${result.order_id}
+Supplier: ${supplierInfo.name}
+Category: ${selectedCategory}
 Total: $${totalPrice.toFixed(2)}
 
 The supplier will be contacted and you'll receive a confirmation email shortly.`);
-        
-        // Reset form
-        form.reset();
-        selectedMaterials = [];
-        updateSelectedMaterialsDisplay();
-        materialsSection.classList.remove('visible');
-        materialsPlaceholder.style.display = 'block';
+            
+            // Reset form
+            resetForm();
+        } else {
+            throw new Error(result.message || 'Order submission failed');
+        }
         
     } catch (error) {
-        showError('Failed to submit order. Please try again or contact support.');
         console.error('Submission error:', error);
+        showError(`Failed to submit order: ${error.message}. Please try again or contact support.`);
     } finally {
         showLoading(false);
     }
 }
 
-// Utility functions
+// Reset form to initial state
+function resetForm() {
+    form.reset();
+    selectedSupplier = null;
+    selectedCategory = null;
+    selectedMaterials = [];
+    
+    // Clear all selections
+    document.querySelectorAll('input[type="radio"]').forEach(input => input.checked = false);
+    
+    // Hide sections
+    categoryGrid.innerHTML = '';
+    materialsSection.classList.remove('visible');
+    materialsPlaceholder.style.display = 'block';
+    updateSelectedMaterialsDisplay();
+}
+
+// Rest of the utility functions remain the same...
+function addToSelectedMaterials(material, index, quantity) {
+    const selectedMaterial = { ...material, index: index, quantity: quantity };
+    selectedMaterials.push(selectedMaterial);
+    updateSelectedMaterialsDisplay();
+}
+
+function removeFromSelectedMaterials(index) {
+    selectedMaterials = selectedMaterials.filter(item => item.index !== index);
+    updateSelectedMaterialsDisplay();
+}
+
+function updateSelectedMaterialQuantity(index, quantity) {
+    const material = selectedMaterials.find(item => item.index === index);
+    if (material) {
+        material.quantity = quantity;
+        updateSelectedMaterialsDisplay();
+    }
+}
+
+function updateSelectedMaterialsDisplay() {
+    if (selectedMaterials.length === 0) {
+        selectedMaterialsSection.classList.remove('visible');
+        return;
+    }
+
+    selectedMaterialsSection.classList.add('visible');
+    
+    selectedItems.innerHTML = selectedMaterials.map(item => `
+        <div class="selected-item">
+            <div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-details">${item.quantity} ${item.unit} × $${item.price.toFixed(2)}</div>
+            </div>
+            <div class="item-price">$${(item.quantity * item.price).toFixed(2)}</div>
+        </div>
+    `).join('');
+
+    const totalItems = selectedMaterials.length;
+    const totalQuantity = selectedMaterials.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+
+    document.getElementById('totalItems').textContent = totalItems;
+    document.getElementById('totalQuantity').textContent = totalQuantity;
+    document.getElementById('totalPrice').textContent = `$${totalPrice.toFixed(2)}`;
+}
+
 function showSuccess(message) {
     successMessage.textContent = message;
     successMessage.style.display = 'block';
