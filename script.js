@@ -1,11 +1,11 @@
-// 🧠 SIMPLE LCMB PROCUREMENT FRONTEND - DIRECT WEBHOOK VERSION
-// Direct connection to your n8n webhooks - no proxy needed
+// 🧠 STREAMLINED LCMB PROCUREMENT FRONTEND - User-Friendly Version
+// Dropdowns for suppliers/categories, search & pagination for materials
 
-// Your actual n8n webhook URLs (from your workflow)
+// Your n8n webhook URLs
 const MATERIALS_ENDPOINT = 'https://primary-s0q-production.up.railway.app/webhook/materials-data';
 const ORDER_ENDPOINT = 'https://primary-s0q-production.up.railway.app/webhook/material-order';
 
-console.log('🚀 LCMB Direct Mode:', { MATERIALS_ENDPOINT, ORDER_ENDPOINT });
+console.log('🚀 LCMB Streamlined Mode:', { MATERIALS_ENDPOINT, ORDER_ENDPOINT });
 
 // Global State
 let smartData = null;
@@ -13,13 +13,19 @@ let selectedSupplier = null;
 let selectedCategory = null;
 let selectedMaterials = [];
 let currentStep = 1;
+let currentMaterials = [];
+let filteredMaterials = [];
+let currentPage = 1;
+const materialsPerPage = 5;
 
 // DOM Elements
 const loadingOverlay = document.getElementById('loadingOverlay');
 const appContainer = document.getElementById('appContainer');
-const supplierGrid = document.getElementById('supplierGrid');
-const categoryGrid = document.getElementById('categoryGrid');
+const supplierSelect = document.getElementById('supplierSelect');
+const categorySelect = document.getElementById('categorySelect');
+const materialSearch = document.getElementById('materialSearch');
 const materialGrid = document.getElementById('materialGrid');
+const paginationContainer = document.getElementById('paginationContainer');
 const orderSummary = document.getElementById('orderSummary');
 const summaryItems = document.getElementById('summaryItems');
 const successMessage = document.getElementById('successMessage');
@@ -36,13 +42,12 @@ const categoryIcons = {
     'default': '📋'
 };
 
-// Initialize System - Simple and Direct
+// Initialize System
 async function initializeSmartSystem() {
     try {
         console.log('🚀 Starting LCMB System...');
         updateLoadingText('Connecting to procurement system...');
         
-        // Direct fetch to your n8n webhook
         const response = await fetch(MATERIALS_ENDPOINT, {
             method: 'GET',
             headers: { 
@@ -59,7 +64,6 @@ async function initializeSmartSystem() {
         smartData = await response.json();
         console.log('✅ Data loaded:', smartData);
 
-        // Validate data structure
         if (!smartData || smartData.status !== 'success' || !smartData.data) {
             throw new Error('Invalid system response. Please contact administrator.');
         }
@@ -70,13 +74,13 @@ async function initializeSmartSystem() {
         // Setup UI
         updateSystemStatus();
         updateRecommendations();
-        populateSuppliers();
+        populateSupplierDropdown();
         
         // Show app
         loadingOverlay.style.display = 'none';
         appContainer.classList.add('loaded');
         
-        showMessage('success', `✅ LCMB Procurement System Ready! Found ${smartData.data.suppliers.length} suppliers and ${smartData.data.metadata.totalMaterials} materials. Select a supplier to begin.`);
+        showMessage('success', `✅ LCMB Procurement System Ready! Found ${smartData.data.suppliers.length} suppliers and ${smartData.data.metadata.totalMaterials} materials.`);
         
     } catch (error) {
         console.error('❌ System Error:', error);
@@ -87,9 +91,6 @@ async function initializeSmartSystem() {
         showMessage('error', `❌ System Unavailable: Unable to connect to the procurement system. Please contact your administrator or try again later. Error: ${error.message}`);
     }
 }
-
-// Remove all demo data - we'll show proper error messages instead
-// No demo data needed for production system
 
 function updateLoadingText(text) {
     const loadingText = document.querySelector('.loading-text');
@@ -121,106 +122,99 @@ function updateRecommendations() {
     }
 }
 
-function populateSuppliers() {
+// Populate Supplier Dropdown
+function populateSupplierDropdown() {
     if (!smartData?.data?.suppliers) {
-        supplierGrid.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No suppliers available</p>';
+        supplierSelect.innerHTML = '<option value="">No suppliers available</option>';
         return;
     }
     
     const suppliers = smartData.data.suppliers;
-    supplierGrid.innerHTML = '';
-
+    
+    // Clear and add default option
+    supplierSelect.innerHTML = '<option value="">Select a supplier...</option>';
+    
+    // Add supplier options
     suppliers.forEach(supplier => {
-        const capabilities = smartData.data.supplierCapabilities?.[supplier.id] || { categories: [], totalMaterials: 0 };
-        const card = document.createElement('div');
-        card.className = 'smart-card supplier-card';
-        card.innerHTML = `
-            <div class="supplier-tier tier-${supplier.tier.toLowerCase()}">${supplier.tier}</div>
-            <div class="supplier-header">
-                <div class="supplier-avatar">${supplier.name.charAt(0)}</div>
-                <div class="supplier-info">
-                    <h3>${supplier.name}</h3>
-                    <div class="supplier-email">${supplier.email}</div>
-                </div>
-            </div>
-            <div class="supplier-stats">
-                <div class="stat-item">
-                    <div class="stat-value">${capabilities.categories.length}</div>
-                    <div class="stat-label">Categories</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${capabilities.totalMaterials}</div>
-                    <div class="stat-label">Materials</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${supplier.reliabilityScore.toFixed(0)}%</div>
-                    <div class="stat-label">Rating</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${supplier.leadTimeDays}d</div>
-                    <div class="stat-label">Lead Time</div>
-                </div>
-            </div>
-        `;
-
-        card.addEventListener('click', () => selectSupplier(supplier.id, card));
-        supplierGrid.appendChild(card);
+        const option = document.createElement('option');
+        option.value = supplier.id;
+        option.textContent = `${supplier.name} (${supplier.tier}) - ${supplier.reliabilityScore.toFixed(0)}%`;
+        supplierSelect.appendChild(option);
     });
+    
+    // Add event listener
+    supplierSelect.addEventListener('change', handleSupplierChange);
 }
 
-function selectSupplier(supplierId, cardElement) {
-    document.querySelectorAll('.supplier-card').forEach(card => 
-        card.classList.remove('selected'));
+// Handle Supplier Selection
+function handleSupplierChange(e) {
+    const supplierId = e.target.value;
     
-    cardElement.classList.add('selected');
+    if (!supplierId) {
+        selectedSupplier = null;
+        categorySelect.innerHTML = '<option value="">First select a supplier</option>';
+        categorySelect.disabled = true;
+        clearMaterials();
+        deactivateStep(2);
+        return;
+    }
+    
     selectedSupplier = supplierId;
-    
-    populateCategories(supplierId);
+    populateCategoryDropdown(supplierId);
     activateStep(2);
     
     console.log('✅ Supplier selected:', supplierId);
 }
 
-function populateCategories(supplierId) {
+// Populate Category Dropdown
+function populateCategoryDropdown(supplierId) {
     const capabilities = smartData.data.supplierCapabilities?.[supplierId];
     const categories = capabilities?.categories || [];
     
-    categoryGrid.innerHTML = '';
-
+    // Clear and enable
+    categorySelect.innerHTML = '<option value="">Select a category...</option>';
+    categorySelect.disabled = false;
+    
     if (categories.length === 0) {
-        categoryGrid.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No categories available for this supplier</p>';
+        categorySelect.innerHTML = '<option value="">No categories available</option>';
+        categorySelect.disabled = true;
         return;
     }
-
+    
+    // Add category options
     categories.forEach(categoryName => {
         const materialsInCategory = capabilities.materials?.filter(m => m.category === categoryName) || [];
-        const card = document.createElement('div');
-        card.className = 'smart-card category-card';
-        card.innerHTML = `
-            <div class="category-icon">${categoryIcons[categoryName] || categoryIcons.default}</div>
-            <div class="category-name">${categoryName}</div>
-            <div class="category-meta">${materialsInCategory.length} materials available</div>
-        `;
-
-        card.addEventListener('click', () => selectCategory(categoryName, card));
-        categoryGrid.appendChild(card);
+        const option = document.createElement('option');
+        option.value = categoryName;
+        option.textContent = `${categoryIcons[categoryName] || categoryIcons.default} ${categoryName} (${materialsInCategory.length} materials)`;
+        categorySelect.appendChild(option);
     });
+    
+    // Add event listener
+    categorySelect.removeEventListener('change', handleCategoryChange);
+    categorySelect.addEventListener('change', handleCategoryChange);
 }
 
-function selectCategory(categoryName, cardElement) {
-    document.querySelectorAll('.category-card').forEach(card => 
-        card.classList.remove('selected'));
+// Handle Category Selection
+function handleCategoryChange(e) {
+    const categoryName = e.target.value;
     
-    cardElement.classList.add('selected');
+    if (!categoryName) {
+        selectedCategory = null;
+        clearMaterials();
+        deactivateStep(3);
+        return;
+    }
+    
     selectedCategory = categoryName;
-    
-    populateMaterials(selectedSupplier, categoryName);
+    loadMaterials(selectedSupplier, categoryName);
     activateStep(3);
     
     console.log('✅ Category selected:', categoryName);
 }
 
-function populateMaterials(supplierId, categoryName) {
+// Load and Display Materials with Search & Pagination
+function loadMaterials(supplierId, categoryName) {
     const capabilities = smartData.data.supplierCapabilities?.[supplierId];
     let materials = [];
     
@@ -234,20 +228,65 @@ function populateMaterials(supplierId, categoryName) {
         }));
     }
     
-    materialGrid.innerHTML = '';
+    currentMaterials = materials;
+    filteredMaterials = materials;
+    currentPage = 1;
     selectedMaterials = [];
+    
+    // Show search bar and materials section
+    document.getElementById('materialsSection').style.display = 'block';
+    
+    // Setup search
+    materialSearch.value = '';
+    materialSearch.removeEventListener('input', handleSearch);
+    materialSearch.addEventListener('input', handleSearch);
+    
+    // Display materials
+    displayMaterials();
+    updateOrderSummary();
+}
 
-    if (materials.length === 0) {
-        materialGrid.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No materials available in this category</p>';
+// Handle Search
+function handleSearch(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    if (!searchTerm) {
+        filteredMaterials = currentMaterials;
+    } else {
+        filteredMaterials = currentMaterials.filter(material => 
+            material.name.toLowerCase().includes(searchTerm) ||
+            material.description.toLowerCase().includes(searchTerm) ||
+            material.code.toLowerCase().includes(searchTerm) ||
+            material.brand.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    currentPage = 1;
+    displayMaterials();
+}
+
+// Display Materials with Pagination
+function displayMaterials() {
+    const startIndex = (currentPage - 1) * materialsPerPage;
+    const endIndex = startIndex + materialsPerPage;
+    const materialsToShow = filteredMaterials.slice(startIndex, endIndex);
+    
+    materialGrid.innerHTML = '';
+    
+    if (filteredMaterials.length === 0) {
+        materialGrid.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No materials found matching your search.</p>';
+        paginationContainer.innerHTML = '';
         return;
     }
-
-    materials.forEach((material, index) => {
+    
+    // Display materials
+    materialsToShow.forEach((material, index) => {
+        const globalIndex = startIndex + index;
         const card = document.createElement('div');
-        card.className = 'smart-card material-card';
+        card.className = 'material-card';
         card.innerHTML = `
             <div class="material-header">
-                <input type="checkbox" class="material-checkbox" data-index="${index}">
+                <input type="checkbox" class="material-checkbox" data-index="${globalIndex}" ${isSelectedMaterial(material.id) ? 'checked' : ''}>
                 <div class="material-info">
                     <div class="material-name">${material.name}</div>
                     <div class="material-price">$${(material.supplierPrice || material.basePrice).toFixed(2)}/${material.unit}</div>
@@ -256,23 +295,29 @@ function populateMaterials(supplierId, categoryName) {
             <div class="material-description">${material.description || 'No description available'}</div>
             <div class="material-meta">
                 <span class="meta-tag tag-code">${material.code}</span>
+                <span class="meta-tag tag-brand">${material.brand}</span>
                 <span class="meta-tag ${material.stockLevel > 50 ? 'tag-stock' : 'tag-low-stock'}">
                     ${material.availabilityStatus}
                 </span>
             </div>
-            <div class="quantity-controls">
-                <button type="button" class="qty-btn" data-action="decrease">−</button>
-                <input type="number" class="qty-input" min="1" value="1" data-index="${index}">
-                <button type="button" class="qty-btn" data-action="increase">+</button>
-                <span class="subtotal">$${(material.supplierPrice || material.basePrice).toFixed(2)}</span>
+            <div class="quantity-controls ${isSelectedMaterial(material.id) ? 'visible' : ''}">
+                <button type="button" class="qty-btn" data-action="decrease" data-material-id="${material.id}">−</button>
+                <input type="number" class="qty-input" min="1" value="${getSelectedQuantity(material.id) || 1}" data-material-id="${material.id}">
+                <button type="button" class="qty-btn" data-action="increase" data-material-id="${material.id}">+</button>
+                <span class="unit-label">${material.unit}</span>
+                <span class="subtotal">$${((material.supplierPrice || material.basePrice) * (getSelectedQuantity(material.id) || 1)).toFixed(2)}</span>
             </div>
         `;
 
-        setupMaterialCard(card, material, index);
+        setupMaterialCard(card, material, globalIndex);
         materialGrid.appendChild(card);
     });
+    
+    // Update pagination
+    createPagination();
 }
 
+// Setup Material Card Events
 function setupMaterialCard(card, material, index) {
     const checkbox = card.querySelector('.material-checkbox');
     const quantityControls = card.querySelector('.quantity-controls');
@@ -283,13 +328,11 @@ function setupMaterialCard(card, material, index) {
 
     checkbox.addEventListener('change', function() {
         if (this.checked) {
-            card.classList.add('selected');
             quantityControls.classList.add('visible');
-            addMaterial(material, index, 1);
+            addMaterial(material, 1);
         } else {
-            card.classList.remove('selected');
             quantityControls.classList.remove('visible');
-            removeMaterial(index);
+            removeMaterial(material.id);
         }
     });
 
@@ -298,7 +341,7 @@ function setupMaterialCard(card, material, index) {
         const price = material.supplierPrice || material.basePrice;
         const subtotal = price * quantity;
         subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
-        updateMaterialQuantity(index, quantity);
+        updateMaterialQuantity(material.id, quantity);
     });
 
     decreaseBtn.addEventListener('click', function() {
@@ -318,19 +361,33 @@ function setupMaterialCard(card, material, index) {
     });
 }
 
-function addMaterial(material, index, quantity) {
+// Material Selection Helper Functions
+function isSelectedMaterial(materialId) {
+    return selectedMaterials.some(item => item.id === materialId);
+}
+
+function getSelectedQuantity(materialId) {
+    const selected = selectedMaterials.find(item => item.id === materialId);
+    return selected ? selected.quantity : null;
+}
+
+function addMaterial(material, quantity) {
+    // Remove if already exists
+    selectedMaterials = selectedMaterials.filter(item => item.id !== material.id);
+    
+    // Add with new quantity
     selectedMaterials.push({
         ...material,
-        index: index,
         quantity: quantity,
         finalPrice: material.supplierPrice || material.basePrice
     });
+    
     updateOrderSummary();
     activateStep(4);
 }
 
-function removeMaterial(index) {
-    selectedMaterials = selectedMaterials.filter(item => item.index !== index);
+function removeMaterial(materialId) {
+    selectedMaterials = selectedMaterials.filter(item => item.id !== materialId);
     updateOrderSummary();
     
     if (selectedMaterials.length === 0) {
@@ -339,14 +396,68 @@ function removeMaterial(index) {
     }
 }
 
-function updateMaterialQuantity(index, quantity) {
-    const material = selectedMaterials.find(item => item.index === index);
+function updateMaterialQuantity(materialId, quantity) {
+    const material = selectedMaterials.find(item => item.id === materialId);
     if (material) {
         material.quantity = quantity;
         updateOrderSummary();
     }
 }
 
+// Create Pagination
+function createPagination() {
+    const totalPages = Math.ceil(filteredMaterials.length / materialsPerPage);
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '<div class="pagination">';
+    
+    // Previous button
+    if (currentPage > 1) {
+        paginationHTML += `<button class="page-btn" onclick="changePage(${currentPage - 1})">← Previous</button>`;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            paginationHTML += `<button class="page-btn active">${i}</button>`;
+        } else if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+            paginationHTML += `<button class="page-btn" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            paginationHTML += `<span class="page-dots">...</span>`;
+        }
+    }
+    
+    // Next button
+    if (currentPage < totalPages) {
+        paginationHTML += `<button class="page-btn" onclick="changePage(${currentPage + 1})">Next →</button>`;
+    }
+    
+    paginationHTML += '</div>';
+    paginationHTML += `<div class="pagination-info">Showing ${((currentPage - 1) * materialsPerPage) + 1}-${Math.min(currentPage * materialsPerPage, filteredMaterials.length)} of ${filteredMaterials.length} materials</div>`;
+    
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+// Change Page Function (global for onclick)
+window.changePage = function(page) {
+    currentPage = page;
+    displayMaterials();
+}
+
+// Clear Materials
+function clearMaterials() {
+    document.getElementById('materialsSection').style.display = 'none';
+    materialGrid.innerHTML = '';
+    paginationContainer.innerHTML = '';
+    selectedMaterials = [];
+    updateOrderSummary();
+}
+
+// Update Order Summary
 function updateOrderSummary() {
     if (selectedMaterials.length === 0) {
         orderSummary.classList.remove('visible');
@@ -374,6 +485,7 @@ function updateOrderSummary() {
     document.getElementById('totalPrice').textContent = `$${totalPrice.toFixed(2)}`;
 }
 
+// Activate/Deactivate Steps
 function activateStep(stepNumber) {
     for (let i = 1; i <= 4; i++) {
         const step = document.getElementById(`step${i}`);
@@ -404,7 +516,7 @@ function deactivateStep(stepNumber) {
     currentStep = Math.max(1, stepNumber - 1);
 }
 
-// Simple order submission - direct to n8n webhook
+// Handle Form Submission
 async function handleSubmission(e) {
     e.preventDefault();
     
@@ -421,7 +533,6 @@ async function handleSubmission(e) {
         
         if (!supplier) throw new Error('Selected supplier not found');
         
-        // Build order data matching your n8n workflow
         const orderData = {
             category: selectedCategory,
             materials: selectedMaterials.map(item => ({
@@ -442,7 +553,6 @@ async function handleSubmission(e) {
 
         console.log('🚀 Submitting order to procurement system:', orderData);
 
-        // Direct POST to your n8n webhook
         const response = await fetch(ORDER_ENDPOINT, {
             method: 'POST',
             headers: { 
@@ -483,24 +593,29 @@ async function handleSubmission(e) {
     }
 }
 
+// Reset Form
 function resetForm() {
     form.reset();
     selectedSupplier = null;
     selectedCategory = null;
     selectedMaterials = [];
+    currentPage = 1;
     
-    document.querySelectorAll('.smart-card').forEach(card => 
-        card.classList.remove('selected'));
+    // Reset dropdowns
+    supplierSelect.value = '';
+    categorySelect.innerHTML = '<option value="">First select a supplier</option>';
+    categorySelect.disabled = true;
     
+    // Reset materials
+    clearMaterials();
+    
+    // Reset steps
     activateStep(1);
-    
-    categoryGrid.innerHTML = '';
-    materialGrid.innerHTML = '';
-    orderSummary.classList.remove('visible');
     
     hideMessages();
 }
 
+// Utility Functions
 function showMessage(type, message) {
     hideMessages();
     const messageEl = type === 'success' ? successMessage : errorMessage;
@@ -535,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initializeSmartSystem, 500);
 });
 
-// Simple debug helper (admin only)
+// Debug helper
 window.debugLCMB = {
     get data() { return smartData; },
     get selected() { return { selectedSupplier, selectedCategory, selectedMaterials }; },
@@ -553,4 +668,4 @@ window.debugLCMB = {
     }
 };
 
-console.log('🎯 LCMB Direct Mode Ready');
+console.log('🎯 LCMB Streamlined Mode Ready');
