@@ -1,7 +1,8 @@
-// 🧠 SMART LCMB PROCUREMENT FRONTEND
-// ✅ Using your existing correct webhook URLs
-const MATERIALS_ENDPOINT = 'https://primary-s0q-production.up.railway.app/webhook/materials-data';
-const ORDER_ENDPOINT = 'https://primary-s0q-production.up.railway.app/webhook/material-order';
+// 🧠 SMART LCMB PROCUREMENT FRONTEND - FIXED VERSION
+// Using correct webhook paths from your n8n workflow
+const API_BASE = 'https://primary-s0q-production.up.railway.app/webhook/';
+const MATERIALS_ENDPOINT = API_BASE + '42bcefd4-fe21-4b42-aeca-ea38ac7b1bc7'; // materials-data
+const ORDER_ENDPOINT = API_BASE + '635a4c96-a2e7-4e65-9c54-229b12faddd1'; // material-order
 
 // Global State
 let smartData = null;
@@ -23,10 +24,10 @@ const errorMessage = document.getElementById('errorMessage');
 const submitBtn = document.getElementById('submitBtn');
 const form = document.getElementById('smartOrderForm');
 
-// Category Icons
+// Category Icons matching your n8n data
 const categoryIcons = {
     'AC Install': '❄️',
-    'AC Service': '🔧',
+    'AC Service': '🔧', 
     'Electrical': '⚡',
     'Factory Stock': '📦',
     'default': '📋'
@@ -35,9 +36,8 @@ const categoryIcons = {
 // Initialize App
 async function initializeSmartSystem() {
     try {
-        showMessage('info', 'Loading smart procurement data...');
-        
-        console.log('🔗 Connecting to:', MATERIALS_ENDPOINT);
+        console.log('🚀 Starting Smart Procurement System...');
+        updateLoadingText('Connecting to backend...');
         
         const response = await fetch(MATERIALS_ENDPOINT, {
             method: 'GET',
@@ -52,21 +52,24 @@ async function initializeSmartSystem() {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Response error:', errorText);
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            throw new Error(`Backend Error ${response.status}: ${response.statusText}`);
         }
 
         smartData = await response.json();
         console.log('🚀 Smart Data Loaded:', smartData);
 
+        // Validate the expected data structure from your n8n workflow
         if (smartData.status !== 'success') {
-            throw new Error(smartData.error?.message || 'Failed to load data');
+            throw new Error(smartData.error?.message || 'Backend returned error status');
         }
 
-        // Validate data structure
         if (!smartData.data || !smartData.data.suppliers || !smartData.data.materials) {
-            console.warn('⚠️ Incomplete data structure, using fallback');
-            useFallbackData();
+            console.warn('⚠️ Invalid data structure from backend');
+            throw new Error('Invalid data structure received from backend');
         }
+
+        updateLoadingText('Processing supplier data...');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Smooth loading
 
         // Update system status
         updateSystemStatus();
@@ -79,28 +82,39 @@ async function initializeSmartSystem() {
         loadingOverlay.style.display = 'none';
         appContainer.classList.add('loaded');
         
-        hideMessages();
-        showMessage('success', '✅ Smart Procurement System Ready!');
+        showMessage('success', '✅ Smart Procurement System Ready! Select a supplier to begin.');
         
     } catch (error) {
         console.error('❌ Initialization Error:', error);
         
-        // Use fallback data for demo
-        console.log('🔄 Loading fallback data...');
-        useFallbackData();
-        
-        // Still show the app
+        // Show error but still provide fallback
         loadingOverlay.style.display = 'none';
         appContainer.classList.add('loaded');
         
-        showMessage('error', `⚠️ Using demo data: ${error.message}`);
+        showMessage('error', `⚠️ Backend Connection Issue: ${error.message}<br><br>Using demo data for testing. Please check your n8n workflow is running.`);
+        
+        // Use fallback data so user can still test the interface
+        useFallbackData();
+        updateSystemStatus();
+        updateRecommendations();
+        populateSuppliers();
     }
 }
 
-// Fallback Data for Demo/Testing
+// Update loading text for better UX
+function updateLoadingText(text) {
+    const loadingText = document.querySelector('.loading-text');
+    if (loadingText) {
+        loadingText.textContent = text;
+    }
+}
+
+// Fallback Data matching your n8n structure
 function useFallbackData() {
     smartData = {
         status: 'success',
+        version: '2.0', 
+        system: 'Smart LCMB Procurement',
         data: {
             suppliers: [
                 {
@@ -112,10 +126,12 @@ function useFallbackData() {
                     reliabilityScore: 95.5,
                     tier: 'Premium',
                     leadTimeDays: 2,
-                    minOrderValue: 100
+                    minOrderValue: 100,
+                    deliveryScore: 96,
+                    qualityScore: 95
                 },
                 {
-                    id: 'SUP002',
+                    id: 'SUP002', 
                     name: 'AC Parts Direct',
                     email: 'sales@acpartsdirect.com.au',
                     phone: '(02) 8765-4321',
@@ -123,103 +139,127 @@ function useFallbackData() {
                     reliabilityScore: 92.1,
                     tier: 'Premium',
                     leadTimeDays: 1,
-                    minOrderValue: 200
+                    minOrderValue: 200,
+                    deliveryScore: 93,
+                    qualityScore: 91
                 },
                 {
                     id: 'SUP003',
-                    name: 'Trade Materials Plus',
+                    name: 'Trade Materials Plus', 
                     email: 'sales@tradematerials.com.au',
                     phone: '(02) 5555-1234',
                     specialties: ['Electrical', 'Factory Stock'],
                     reliabilityScore: 87.8,
                     tier: 'Standard',
                     leadTimeDays: 3,
-                    minOrderValue: 50
+                    minOrderValue: 50,
+                    deliveryScore: 88,
+                    qualityScore: 87
                 }
             ],
+            materials: {
+                'Electrical': [
+                    {
+                        id: 'EL-CB-20A',
+                        name: 'Circuit Breaker 20A',
+                        category: 'Electrical',
+                        unit: 'pcs',
+                        basePrice: 25.00,
+                        description: 'Single pole circuit breaker 20A',
+                        code: 'EL-CB-20A',
+                        brand: 'Schneider',
+                        stockLevel: 150,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'EL-WIRE-25MM',
+                        name: 'Electrical Wire 2.5mm',
+                        category: 'Electrical', 
+                        unit: 'meters',
+                        basePrice: 3.50,
+                        description: 'Twin and earth cable 2.5mm',
+                        code: 'EL-WIRE-25MM',
+                        brand: 'Generic',
+                        stockLevel: 500,
+                        availabilityStatus: 'In Stock'
+                    }
+                ],
+                'AC Install': [
+                    {
+                        id: 'AC-SS-25',
+                        name: 'Split System Unit 2.5kW',
+                        category: 'AC Install',
+                        unit: 'pcs',
+                        basePrice: 899.00,
+                        description: 'Energy efficient cooling unit 2.5kW',
+                        code: 'AC-SS-25',
+                        brand: 'Daikin',
+                        stockLevel: 25,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'AC-WMB-HD',
+                        name: 'Wall Mounting Bracket Heavy Duty',
+                        category: 'AC Install',
+                        unit: 'pcs', 
+                        basePrice: 45.00,
+                        description: 'Heavy duty wall mount bracket',
+                        code: 'AC-WMB-HD',
+                        brand: 'Generic',
+                        stockLevel: 75,
+                        availabilityStatus: 'In Stock'
+                    }
+                ],
+                'AC Service': [
+                    {
+                        id: 'AC-R410A',
+                        name: 'R410A Refrigerant Gas',
+                        category: 'AC Service',
+                        unit: 'kg',
+                        basePrice: 28.00,
+                        description: 'Eco-friendly refrigerant gas',
+                        code: 'AC-R410A',
+                        brand: 'Chemours',
+                        stockLevel: 12,
+                        availabilityStatus: 'Low Stock'
+                    }
+                ],
+                'Factory Stock': [
+                    {
+                        id: 'FS-HAT-WHT',
+                        name: 'Safety Helmet White',
+                        category: 'Factory Stock',
+                        unit: 'pcs',
+                        basePrice: 18.00,
+                        description: 'Hard hat safety helmet white',
+                        code: 'FS-HAT-WHT',
+                        brand: 'Generic',
+                        stockLevel: 200,
+                        availabilityStatus: 'In Stock'
+                    }
+                ]
+            },
+            categories: ['Electrical', 'AC Install', 'AC Service', 'Factory Stock'],
             supplierCapabilities: {
                 'SUP001': {
                     categories: ['Electrical', 'AC Install'],
-                    materials: [
-                        {
-                            id: 'EL-CB-20A',
-                            name: 'Circuit Breaker 20A',
-                            category: 'Electrical',
-                            unit: 'pcs',
-                            basePrice: 25.00,
-                            supplierPrice: 23.50,
-                            description: 'Single pole circuit breaker',
-                            code: 'EL-CB-20A',
-                            stockLevel: 150,
-                            availabilityStatus: 'In Stock'
-                        },
-                        {
-                            id: 'AC-WMB-HD',
-                            name: 'Wall Mounting Bracket Heavy Duty',
-                            category: 'AC Install',
-                            unit: 'pcs',
-                            basePrice: 45.00,
-                            supplierPrice: 42.75,
-                            description: 'Heavy duty wall mount',
-                            code: 'AC-WMB-HD',
-                            stockLevel: 75,
-                            availabilityStatus: 'In Stock'
-                        }
-                    ],
-                    totalMaterials: 2
+                    materials: [],
+                    totalMaterials: 3
                 },
                 'SUP002': {
-                    categories: ['AC Install', 'AC Service'],
-                    materials: [
-                        {
-                            id: 'AC-SS-25',
-                            name: 'Split System Unit 2.5kW',
-                            category: 'AC Install',
-                            unit: 'pcs',
-                            basePrice: 899.00,
-                            supplierPrice: 849.00,
-                            description: 'Energy efficient cooling unit',
-                            code: 'AC-SS-25',
-                            stockLevel: 25,
-                            availabilityStatus: 'In Stock'
-                        },
-                        {
-                            id: 'AC-R410A',
-                            name: 'R410A Refrigerant Gas',
-                            category: 'AC Service',
-                            unit: 'kg',
-                            basePrice: 28.00,
-                            supplierPrice: 26.50,
-                            description: 'Eco-friendly refrigerant',
-                            code: 'AC-R410A',
-                            stockLevel: 12,
-                            availabilityStatus: 'Low Stock'
-                        }
-                    ],
-                    totalMaterials: 2
+                    categories: ['AC Install', 'AC Service'], 
+                    materials: [],
+                    totalMaterials: 3
                 },
                 'SUP003': {
                     categories: ['Electrical', 'Factory Stock'],
-                    materials: [
-                        {
-                            id: 'FS-HAT-WHT',
-                            name: 'Safety Helmet White',
-                            category: 'Factory Stock',
-                            unit: 'pcs',
-                            basePrice: 18.00,
-                            supplierPrice: 16.20,
-                            description: 'Hard hat safety helmet',
-                            code: 'FS-HAT-WHT',
-                            stockLevel: 200,
-                            availabilityStatus: 'In Stock'
-                        }
-                    ],
-                    totalMaterials: 1
+                    materials: [],
+                    totalMaterials: 2
                 }
             },
             metadata: {
                 totalSuppliers: 3,
-                totalMaterials: 5,
+                totalMaterials: 6,
                 totalCategories: 4,
                 averageSupplierScore: 91.8
             },
@@ -231,27 +271,49 @@ function useFallbackData() {
         }
     };
     
-    console.log('📋 Fallback data loaded');
+    // Build supplier capabilities based on materials
+    Object.keys(smartData.data.materials).forEach(category => {
+        const materials = smartData.data.materials[category];
+        
+        smartData.data.suppliers.forEach(supplier => {
+            if (supplier.specialties.includes(category)) {
+                const capabilities = smartData.data.supplierCapabilities[supplier.id];
+                capabilities.materials = capabilities.materials.concat(
+                    materials.map(material => ({
+                        ...material,
+                        supplierTier: 'Preferred',
+                        supplierPrice: material.basePrice * (0.85 + Math.random() * 0.15),
+                        supplierLeadTime: supplier.leadTimeDays
+                    }))
+                );
+                capabilities.totalMaterials = capabilities.materials.length;
+            }
+        });
+    });
+    
+    console.log('📋 Fallback data loaded with', smartData.data.suppliers.length, 'suppliers');
 }
 
 // Update System Status
 function updateSystemStatus() {
+    if (!smartData?.data?.metadata) return;
+    
     const data = smartData.data;
     document.getElementById('supplierCount').textContent = data.metadata.totalSuppliers;
-    document.getElementById('materialCount').textContent = data.metadata.totalMaterials;  
+    document.getElementById('materialCount').textContent = data.metadata.totalMaterials;
     document.getElementById('categoryCount').textContent = data.metadata.totalCategories;
 }
 
 // Update Recommendations
 function updateRecommendations() {
     const recommendations = document.getElementById('recommendations');
-    const topSupplier = smartData.data.recommendations.topSuppliers[0];
+    const topSupplier = smartData?.data?.recommendations?.topSuppliers?.[0];
     
     if (topSupplier) {
         recommendations.innerHTML = `
             <div class="stat-item">
                 <div class="stat-value">⭐</div>
-                <div class="stat-label">Top Rated: ${topSupplier.name}</div>
+                <div class="stat-label">Top: ${topSupplier.name}</div>
             </div>
         `;
     }
@@ -259,11 +321,16 @@ function updateRecommendations() {
 
 // Populate Suppliers
 function populateSuppliers() {
+    if (!smartData?.data?.suppliers) {
+        supplierGrid.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No suppliers available</p>';
+        return;
+    }
+    
     const suppliers = smartData.data.suppliers;
     supplierGrid.innerHTML = '';
 
     suppliers.forEach(supplier => {
-        const capabilities = smartData.data.supplierCapabilities[supplier.id];
+        const capabilities = smartData.data.supplierCapabilities?.[supplier.id] || { categories: [], totalMaterials: 0 };
         const card = document.createElement('div');
         card.className = 'smart-card supplier-card';
         card.innerHTML = `
@@ -277,11 +344,11 @@ function populateSuppliers() {
             </div>
             <div class="supplier-stats">
                 <div class="stat-item">
-                    <div class="stat-value">${capabilities?.categories.length || 0}</div>
+                    <div class="stat-value">${capabilities.categories.length}</div>
                     <div class="stat-label">Categories</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">${capabilities?.totalMaterials || 0}</div>
+                    <div class="stat-value">${capabilities.totalMaterials}</div>
                     <div class="stat-label">Materials</div>
                 </div>
                 <div class="stat-item">
@@ -321,7 +388,7 @@ function selectSupplier(supplierId, cardElement) {
 
 // Populate Categories
 function populateCategories(supplierId) {
-    const capabilities = smartData.data.supplierCapabilities[supplierId];
+    const capabilities = smartData.data.supplierCapabilities?.[supplierId];
     const categories = capabilities?.categories || [];
     
     categoryGrid.innerHTML = '';
@@ -332,7 +399,8 @@ function populateCategories(supplierId) {
     }
 
     categories.forEach(categoryName => {
-        const materialsInCategory = capabilities.materials.filter(m => m.category === categoryName);
+        // Count materials in this category for this supplier
+        const materialsInCategory = capabilities.materials?.filter(m => m.category === categoryName) || [];
         const card = document.createElement('div');
         card.className = 'smart-card category-card';
         card.innerHTML = `
@@ -367,8 +435,21 @@ function selectCategory(categoryName, cardElement) {
 
 // Populate Materials
 function populateMaterials(supplierId, categoryName) {
-    const capabilities = smartData.data.supplierCapabilities[supplierId];
-    const materials = capabilities.materials.filter(m => m.category === categoryName);
+    const capabilities = smartData.data.supplierCapabilities?.[supplierId];
+    let materials = [];
+    
+    if (capabilities && capabilities.materials) {
+        materials = capabilities.materials.filter(m => m.category === categoryName);
+    } else {
+        // Fallback: get materials from main materials object
+        materials = smartData.data.materials?.[categoryName] || [];
+        // Add supplier pricing
+        materials = materials.map(material => ({
+            ...material,
+            supplierPrice: material.basePrice * (0.85 + Math.random() * 0.15),
+            supplierTier: 'Available'
+        }));
+    }
     
     materialGrid.innerHTML = '';
     selectedMaterials = []; // Reset
@@ -386,10 +467,10 @@ function populateMaterials(supplierId, categoryName) {
                 <input type="checkbox" class="material-checkbox" data-index="${index}">
                 <div class="material-info">
                     <div class="material-name">${material.name}</div>
-                    <div class="material-price">$${material.supplierPrice.toFixed(2)}/${material.unit}</div>
+                    <div class="material-price">$${(material.supplierPrice || material.basePrice).toFixed(2)}/${material.unit}</div>
                 </div>
             </div>
-            <div class="material-description">${material.description}</div>
+            <div class="material-description">${material.description || 'No description available'}</div>
             <div class="material-meta">
                 <span class="meta-tag tag-code">${material.code}</span>
                 <span class="meta-tag ${material.stockLevel > 50 ? 'tag-stock' : 'tag-low-stock'}">
@@ -400,7 +481,7 @@ function populateMaterials(supplierId, categoryName) {
                 <button type="button" class="qty-btn" data-action="decrease">−</button>
                 <input type="number" class="qty-input" min="1" value="1" data-index="${index}">
                 <button type="button" class="qty-btn" data-action="increase">+</button>
-                <span class="subtotal">$${material.supplierPrice.toFixed(2)}</span>
+                <span class="subtotal">$${(material.supplierPrice || material.basePrice).toFixed(2)}</span>
             </div>
         `;
 
@@ -433,7 +514,8 @@ function setupMaterialCard(card, material, index) {
 
     quantityInput.addEventListener('input', function() {
         const quantity = parseInt(this.value) || 1;
-        const subtotal = material.supplierPrice * quantity;
+        const price = material.supplierPrice || material.basePrice;
+        const subtotal = price * quantity;
         subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
         updateMaterialQuantity(index, quantity);
     });
@@ -460,7 +542,8 @@ function addMaterial(material, index, quantity) {
     selectedMaterials.push({
         ...material,
         index: index,
-        quantity: quantity
+        quantity: quantity,
+        finalPrice: material.supplierPrice || material.basePrice
     });
     updateOrderSummary();
     activateStep(4);
@@ -500,16 +583,16 @@ function updateOrderSummary() {
         <div class="summary-item">
             <div>
                 <div>${item.name}</div>
-                <div class="item-details">${item.quantity} ${item.unit} × $${item.supplierPrice.toFixed(2)}</div>
+                <div class="item-details">${item.quantity} ${item.unit} × $${item.finalPrice.toFixed(2)}</div>
             </div>
-            <div class="item-price">$${(item.quantity * item.supplierPrice).toFixed(2)}</div>
+            <div class="item-price">$${(item.quantity * item.finalPrice).toFixed(2)}</div>
         </div>
     `).join('');
 
     // Update totals
     const totalItems = selectedMaterials.length;
     const totalQuantity = selectedMaterials.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.supplierPrice), 0);
+    const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.finalPrice), 0);
 
     document.getElementById('totalItems').textContent = totalItems;
     document.getElementById('totalQuantity').textContent = totalQuantity;
@@ -557,10 +640,8 @@ async function handleSubmission(e) {
     setLoading(true);
     
     try {
-        const formData = new FormData(form);
-        const supplier = smartData.data.suppliers.find(s => s.id === selectedSupplier);
-        
-        if (!supplier) {
+        // Validate selections
+        if (!selectedSupplier) {
             throw new Error('Please select a supplier');
         }
         
@@ -572,14 +653,22 @@ async function handleSubmission(e) {
             throw new Error('Please select at least one material');
         }
         
+        const formData = new FormData(form);
+        const supplier = smartData.data.suppliers.find(s => s.id === selectedSupplier);
+        
+        if (!supplier) {
+            throw new Error('Selected supplier not found');
+        }
+        
+        // Build order data matching your n8n workflow expectations
         const orderData = {
             category: selectedCategory,
             materials: selectedMaterials.map(item => ({
                 name: item.name,
                 quantity: item.quantity,
                 unit: item.unit,
-                price: item.supplierPrice,
-                code: item.code
+                price: item.finalPrice,
+                code: item.code || item.id
             })),
             supplier_name: supplier.name,
             supplier_email: supplier.email,
@@ -604,25 +693,28 @@ async function handleSubmission(e) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Order submission error:', errorText);
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            throw new Error(`Submission failed (${response.status}): ${response.statusText}`);
         }
 
         const result = await response.json();
         console.log('✅ Order result:', result);
         
         if (result.status === 'success') {
-            const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.supplierPrice), 0);
+            const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.finalPrice), 0);
             showMessage('success', `🎉 Smart Order Submitted Successfully!
             
-Order ID: ${result.order_id}
-Supplier: ${supplier.name}
-Category: ${selectedCategory}
-Total: $${totalPrice.toFixed(2)}
+<strong>Order ID:</strong> ${result.order_id}<br>
+<strong>Supplier:</strong> ${supplier.name}<br>
+<strong>Category:</strong> ${selectedCategory}<br>
+<strong>Total:</strong> $${totalPrice.toFixed(2)}<br>
+<strong>Processing Time:</strong> ${result.estimated_processing}
             
 Your order has been sent to the supplier and you'll receive confirmation shortly.`);
             
-            // Reset form
-            resetForm();
+            // Reset form after 3 seconds
+            setTimeout(() => {
+                resetForm();
+            }, 3000);
         } else {
             throw new Error(result.message || 'Order submission failed');
         }
@@ -653,6 +745,8 @@ function resetForm() {
     categoryGrid.innerHTML = '';
     materialGrid.innerHTML = '';
     orderSummary.classList.remove('visible');
+    
+    hideMessages();
 }
 
 // Utility Functions
@@ -666,7 +760,9 @@ function showMessage(type, message) {
     // Auto-hide success messages after 10 seconds
     if (type === 'success') {
         setTimeout(() => {
-            messageEl.style.display = 'none';
+            if (messageEl.style.display === 'block') {
+                messageEl.style.display = 'none';
+            }
         }, 10000);
     }
 }
@@ -678,21 +774,26 @@ function hideMessages() {
 
 function setLoading(loading) {
     submitBtn.disabled = loading;
-    submitBtn.textContent = loading ? '⏳ Processing...' : '🚀 Submit Smart Order';
+    submitBtn.textContent = loading ? '⏳ Processing Order...' : '🚀 Submit Smart Order';
 }
 
 // Event Listeners
 form.addEventListener('submit', handleSubmission);
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', initializeSmartSystem);
+// Initialize on load with error handling
+document.addEventListener('DOMContentLoaded', () => {
+    // Add a small delay for better UX
+    setTimeout(initializeSmartSystem, 500);
+});
 
-// Debug helper
+// Debug helper for development
 window.debugLCMB = {
-    smartData,
-    selectedSupplier,
-    selectedCategory,
-    selectedMaterials,
+    get smartData() { return smartData; },
+    get selectedSupplier() { return selectedSupplier; },
+    get selectedCategory() { return selectedCategory; },
+    get selectedMaterials() { return selectedMaterials; },
     resetForm,
-    showMessage
+    showMessage,
+    useFallbackData,
+    endpoints: { MATERIALS_ENDPOINT, ORDER_ENDPOINT }
 };
