@@ -21,10 +21,20 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve static files
+// Serve static files with cache-busting headers
 app.use(express.static('.', {
-    maxAge: '1d',
-    etag: true
+    maxAge: 0, // No caching during development
+    etag: false,
+    lastModified: false,
+    setHeaders: (res, path) => {
+        // Disable all caching for development
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
+        // Add version header for debugging
+        res.setHeader('X-App-Version', Date.now().toString());
+    }
 }));
 
 // Health check for Railway
@@ -32,7 +42,26 @@ app.get('/health', (req, res) => {
     res.json({ 
         status: 'OK',
         service: 'LCMB Smart Procurement',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        version: Date.now(),
+        caching: 'disabled'
+    });
+});
+
+// Force refresh endpoint (for testing deployments)
+app.get('/refresh', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.redirect('/');
+});
+
+// Version check endpoint
+app.get('/version', (req, res) => {
+    res.json({
+        version: Date.now(),
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
     });
 });
 
