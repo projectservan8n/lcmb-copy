@@ -87,17 +87,11 @@ async function initializeSmartSystem() {
     } catch (error) {
         console.error('❌ Initialization Error:', error);
         
-        // Show error but still provide fallback
         loadingOverlay.style.display = 'none';
         appContainer.classList.add('loaded');
         
-        showMessage('error', `⚠️ Backend Connection Issue: ${error.message}<br><br>Using demo data for testing. Please check your n8n workflow is running.`);
-        
-        // Use fallback data so user can still test the interface
-        useFallbackData();
-        updateSystemStatus();
-        updateRecommendations();
-        populateSuppliers();
+        showMessage('error', `❌ Backend Connection Failed: ${error.message}<br><br>Please check your n8n workflow and Google Sheets are properly configured.`);
+    }
     }
 }
 
@@ -109,7 +103,7 @@ function updateLoadingText(text) {
     }
 }
 
-// Fallback Data matching your n8n structure
+// Fallback Data matching your n8n structure - FOR TESTING ONLY
 function useFallbackData() {
     smartData = {
         status: 'success',
@@ -155,6 +149,32 @@ function useFallbackData() {
                     minOrderValue: 50,
                     deliveryScore: 88,
                     qualityScore: 87
+                },
+                {
+                    id: 'SUP004',
+                    name: 'Brisbane Building Supplies',
+                    email: 'orders@brisbanesupplies.com.au',
+                    phone: '(07) 3333-4444',
+                    specialties: ['Factory Stock', 'AC Service'],
+                    reliabilityScore: 91.2,
+                    tier: 'Premium',
+                    leadTimeDays: 2,
+                    minOrderValue: 150,
+                    deliveryScore: 92,
+                    qualityScore: 90
+                },
+                {
+                    id: 'SUP005',
+                    name: 'Quick Fix Electrical',
+                    email: 'orders@quickfixelec.com.au',
+                    phone: '(02) 9999-8888',
+                    specialties: ['Electrical'],
+                    reliabilityScore: 89.3,
+                    tier: 'Standard',
+                    leadTimeDays: 1,
+                    minOrderValue: 75,
+                    deliveryScore: 90,
+                    qualityScore: 88
                 }
             ],
             materials: {
@@ -165,22 +185,46 @@ function useFallbackData() {
                         category: 'Electrical',
                         unit: 'pcs',
                         basePrice: 25.00,
-                        description: 'Single pole circuit breaker 20A',
+                        description: 'Single pole circuit breaker 20A rated',
                         code: 'EL-CB-20A',
-                        brand: 'Schneider',
+                        brand: 'Schneider Electric',
                         stockLevel: 150,
                         availabilityStatus: 'In Stock'
                     },
                     {
                         id: 'EL-WIRE-25MM',
-                        name: 'Electrical Wire 2.5mm',
+                        name: 'Electrical Wire 2.5mm Twin & Earth',
                         category: 'Electrical', 
                         unit: 'meters',
                         basePrice: 3.50,
-                        description: 'Twin and earth cable 2.5mm',
+                        description: 'Twin and earth cable 2.5mm² copper',
                         code: 'EL-WIRE-25MM',
-                        brand: 'Generic',
+                        brand: 'Olex',
                         stockLevel: 500,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'EL-SW-1G',
+                        name: 'Light Switch Single Gang',
+                        category: 'Electrical',
+                        unit: 'pcs',
+                        basePrice: 8.50,
+                        description: 'Single gang light switch white',
+                        code: 'EL-SW-1G',
+                        brand: 'Clipsal',
+                        stockLevel: 200,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'EL-GPO-DBL',
+                        name: 'Double Power Point',
+                        category: 'Electrical',
+                        unit: 'pcs',
+                        basePrice: 12.90,
+                        description: 'Double GPO power outlet white',
+                        code: 'EL-GPO-DBL',
+                        brand: 'Clipsal',
+                        stockLevel: 80,
                         availabilityStatus: 'In Stock'
                     }
                 ],
@@ -191,7 +235,7 @@ function useFallbackData() {
                         category: 'AC Install',
                         unit: 'pcs',
                         basePrice: 899.00,
-                        description: 'Energy efficient cooling unit 2.5kW',
+                        description: 'Energy efficient split system 2.5kW cooling',
                         code: 'AC-SS-25',
                         brand: 'Daikin',
                         stockLevel: 25,
@@ -203,10 +247,22 @@ function useFallbackData() {
                         category: 'AC Install',
                         unit: 'pcs', 
                         basePrice: 45.00,
-                        description: 'Heavy duty wall mount bracket',
+                        description: 'Heavy duty wall mounting bracket for outdoor units',
                         code: 'AC-WMB-HD',
-                        brand: 'Generic',
+                        brand: 'Universal',
                         stockLevel: 75,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'AC-LINE-6M',
+                        name: 'Refrigerant Line Set 6m',
+                        category: 'AC Install',
+                        unit: 'pcs', 
+                        basePrice: 125.00,
+                        description: 'Insulated copper line set 6 meter',
+                        code: 'AC-LINE-6M',
+                        brand: 'Refrion',
+                        stockLevel: 40,
                         availabilityStatus: 'In Stock'
                     }
                 ],
@@ -217,10 +273,34 @@ function useFallbackData() {
                         category: 'AC Service',
                         unit: 'kg',
                         basePrice: 28.00,
-                        description: 'Eco-friendly refrigerant gas',
+                        description: 'Eco-friendly R410A refrigerant gas',
                         code: 'AC-R410A',
                         brand: 'Chemours',
                         stockLevel: 12,
+                        availabilityStatus: 'Low Stock'
+                    },
+                    {
+                        id: 'AC-FILTER-STD',
+                        name: 'Air Filter Standard',
+                        category: 'AC Service',
+                        unit: 'pcs',
+                        basePrice: 15.50,
+                        description: 'Standard washable air filter',
+                        code: 'AC-FILTER-STD',
+                        brand: 'Generic',
+                        stockLevel: 60,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'AC-CLEAN-KIT',
+                        name: 'AC Cleaning Kit Professional',
+                        category: 'AC Service',
+                        unit: 'pcs',
+                        basePrice: 85.00,
+                        description: 'Professional AC cleaning and maintenance kit',
+                        code: 'AC-CLEAN-KIT',
+                        brand: 'CoolClean',
+                        stockLevel: 8,
                         availabilityStatus: 'Low Stock'
                     }
                 ],
@@ -231,41 +311,63 @@ function useFallbackData() {
                         category: 'Factory Stock',
                         unit: 'pcs',
                         basePrice: 18.00,
-                        description: 'Hard hat safety helmet white',
+                        description: 'Hard hat safety helmet white ANSI approved',
                         code: 'FS-HAT-WHT',
-                        brand: 'Generic',
+                        brand: 'ProSafe',
                         stockLevel: 200,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'FS-VEST-HIVIZ',
+                        name: 'Hi-Vis Safety Vest',
+                        category: 'Factory Stock',
+                        unit: 'pcs',
+                        basePrice: 12.50,
+                        description: 'High visibility safety vest orange',
+                        code: 'FS-VEST-HIVIZ',
+                        brand: 'SafeWork',
+                        stockLevel: 150,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'FS-BOOTS-SZ10',
+                        name: 'Steel Cap Boots Size 10',
+                        category: 'Factory Stock',
+                        unit: 'pairs',
+                        basePrice: 89.00,
+                        description: 'Steel cap work boots black leather size 10',
+                        code: 'FS-BOOTS-SZ10',
+                        brand: 'WorkTough',
+                        stockLevel: 25,
+                        availabilityStatus: 'In Stock'
+                    },
+                    {
+                        id: 'FS-GLOVES-L',
+                        name: 'Work Gloves Large',
+                        category: 'Factory Stock',
+                        unit: 'pairs',
+                        basePrice: 8.90,
+                        description: 'Heavy duty work gloves size large',
+                        code: 'FS-GLOVES-L',
+                        brand: 'GripMax',
+                        stockLevel: 100,
                         availabilityStatus: 'In Stock'
                     }
                 ]
             },
             categories: ['Electrical', 'AC Install', 'AC Service', 'Factory Stock'],
-            supplierCapabilities: {
-                'SUP001': {
-                    categories: ['Electrical', 'AC Install'],
-                    materials: [],
-                    totalMaterials: 3
-                },
-                'SUP002': {
-                    categories: ['AC Install', 'AC Service'], 
-                    materials: [],
-                    totalMaterials: 3
-                },
-                'SUP003': {
-                    categories: ['Electrical', 'Factory Stock'],
-                    materials: [],
-                    totalMaterials: 2
-                }
-            },
+            supplierCapabilities: {},
             metadata: {
-                totalSuppliers: 3,
-                totalMaterials: 6,
+                totalSuppliers: 5,
+                totalMaterials: 16,
                 totalCategories: 4,
-                averageSupplierScore: 91.8
+                averageSupplierScore: 91.18
             },
             recommendations: {
                 topSuppliers: [
-                    { id: 'SUP001', name: 'ElectroSupply Co.', score: 95.5, tier: 'Premium' }
+                    { id: 'SUP001', name: 'ElectroSupply Co.', score: 95.5, tier: 'Premium' },
+                    { id: 'SUP002', name: 'AC Parts Direct', score: 92.1, tier: 'Premium' },
+                    { id: 'SUP004', name: 'Brisbane Building Supplies', score: 91.2, tier: 'Premium' }
                 ]
             }
         }
@@ -277,7 +379,20 @@ function useFallbackData() {
         
         smartData.data.suppliers.forEach(supplier => {
             if (supplier.specialties.includes(category)) {
+                if (!smartData.data.supplierCapabilities[supplier.id]) {
+                    smartData.data.supplierCapabilities[supplier.id] = {
+                        categories: [],
+                        materials: [],
+                        totalMaterials: 0
+                    };
+                }
+                
                 const capabilities = smartData.data.supplierCapabilities[supplier.id];
+                
+                if (!capabilities.categories.includes(category)) {
+                    capabilities.categories.push(category);
+                }
+                
                 capabilities.materials = capabilities.materials.concat(
                     materials.map(material => ({
                         ...material,
@@ -291,7 +406,7 @@ function useFallbackData() {
         });
     });
     
-    console.log('📋 Fallback data loaded with', smartData.data.suppliers.length, 'suppliers');
+    console.log('📋 Fallback demo data loaded with', smartData.data.suppliers.length, 'suppliers and', smartData.data.metadata.totalMaterials, 'materials');
 }
 
 // Update System Status
