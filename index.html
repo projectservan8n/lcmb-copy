@@ -3,147 +3,1308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCMB Group - Material Order Request</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>LCMB Smart Procurement System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Loading States */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* Main App */
+        .app-container {
+            display: none;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .app-container.loaded {
+            display: grid;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Messages */
+        .message {
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626;
+            border: 1px solid #f87171;
+        }
+
+        /* Workflow Steps */
+        .workflow-step {
+            margin-bottom: 40px;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step.active {
+            opacity: 1;
+        }
+
+        .workflow-step.completed {
+            opacity: 0.8;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .step-number.completed {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        /* Smart Cards */
+        .smart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .smart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .smart-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .smart-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .smart-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .smart-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+        }
+
+        .smart-card.selected::before {
+            transform: scaleX(1);
+        }
+
+        /* Supplier Cards */
+        .supplier-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .supplier-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .supplier-info h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .supplier-email {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .supplier-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .supplier-tier {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tier-premium {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+        }
+
+        .tier-standard {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+
+        .tier-basic {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+
+        /* Category Cards */
+        .category-card {
+            text-align: center;
+        }
+
+        .category-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .category-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .category-meta {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* Material Cards */
+        .material-card {
+            position: relative;
+        }
+
+        .material-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .material-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-top: 4px;
+            accent-color: #667eea;
+        }
+
+        .material-info {
+            flex: 1;
+        }
+
+        .material-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .material-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .material-description {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .material-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-code {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .tag-stock {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .tag-low-stock {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Quantity Controls */
+        .quantity-controls {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .quantity-controls.visible {
+            display: flex;
+        }
+
+        .qty-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .qty-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .subtotal {
+            margin-left: auto;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        /* Order Summary */
+        .order-summary {
+            background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            display: none;
+        }
+
+        .order-summary.visible {
+            display: block;
+        }
+
+        .summary-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .summary-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .summary-items {
+            margin-bottom: 24px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #c7d2fe;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-details {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .item-price {
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .summary-totals {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            text-align: center;
+        }
+
+        .total-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .total-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .total-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Form Inputs */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Submit Button */
+        .submit-section {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 16px 48px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 250px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .smart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-totals {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>LCMB Group</h1>
-            <p>Material Order Request System</p>
+            <h1>LCMB Smart Procurement</h1>
+            <p>Intelligent Material Ordering System</p>
         </div>
-        
-        <!-- Initial Loading State -->
-        <div class="loading-initial" id="initialLoading">
-            <div class="spinner"></div>
-            <div class="loading-text">Loading suppliers and materials...</div>
-        </div>
-        
-        <!-- Main Form Card -->
-        <div class="form-card" id="formCard">
-            <div class="message success" id="successMessage"></div>
-            <div class="message error" id="errorMessage"></div>
-            
-            <div class="loading" id="loading">
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
                 <div class="spinner"></div>
-                <div class="loading-text">Processing your request...</div>
+                <div class="loading-text">Initializing Smart Procurement System...</div>
             </div>
-            
-            <form id="materialOrderForm">
-                <!-- Step 1: Supplier Selection -->
-                <div class="section">
-                    <div class="section-title">
-                        <div class="section-icon">1</div>
-                        Choose Your Preferred Supplier
+        </div>
+
+        <!-- Main App -->
+        <div class="app-container" id="appContainer">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h3>System Status</h3>
+                <div id="systemStatus">
+                    <div class="stat-item">
+                        <div class="stat-value" id="supplierCount">0</div>
+                        <div class="stat-label">Active Suppliers</div>
                     </div>
-                    <div class="supplier-grid" id="supplierGrid">
-                        <!-- Suppliers will be loaded dynamically -->
+                    <div class="stat-item">
+                        <div class="stat-value" id="materialCount">0</div>
+                        <div class="stat-label">Available Materials</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="categoryCount">0</div>
+                        <div class="stat-label">Categories</div>
                     </div>
                 </div>
 
-                <!-- Step 2: Category Selection -->
-                <div class="section">
-                    <div class="section-title">
-                        <div class="section-icon">2</div>
-                        Select Service Category
-                    </div>
-                    <div class="category-grid" id="categoryGrid">
-                        <!-- Categories will be loaded based on selected supplier -->
-                    </div>
-                    <div id="categoryPlaceholder" style="text-align: center; padding: 40px; color: #94a3b8; font-style: italic;">
-                        Please select a supplier first
-                    </div>
-                </div>
+                <h3 style="margin-top: 30px;">Recommendations</h3>
+                <div id="recommendations"></div>
+            </div>
 
-                <!-- Step 3: Materials Selection -->
-                <div class="section">
-                    <div class="section-title">
-                        <div class="section-icon">3</div>
-                        Select Required Materials & Quantities
-                    </div>
-                    
-                    <div class="materials-section" id="materialsSection">
-                        <div class="search-container">
-                            <input type="text" id="materialSearch" class="search-input" placeholder="Search materials...">
-                        </div>
-                        <div class="materials-grid" id="materialsGrid">
-                            <!-- Materials will be loaded dynamically -->
-                        </div>
-                    </div>
-                    
-                    <div id="materialsPlaceholder" style="text-align: center; padding: 40px; color: #94a3b8; font-style: italic;">
-                        Please select a supplier and category first
-                    </div>
-                </div>
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Messages -->
+                <div class="message success" id="successMessage"></div>
+                <div class="message error" id="errorMessage"></div>
 
-                <!-- Selected Materials Summary -->
-                <div class="selected-materials" id="selectedMaterials">
-                    <div class="summary-title">📋 Selected Materials</div>
-                    <div class="selected-items" id="selectedItems">
-                        <!-- Selected items will be populated here -->
-                    </div>
-                    <div class="summary-totals">
-                        <div class="total-item">
-                            <div class="total-label">Items</div>
-                            <div class="total-value" id="totalItems">0</div>
+                <!-- Workflow Steps -->
+                <form id="smartOrderForm">
+                    <!-- Step 1: Supplier Selection -->
+                    <div class="workflow-step active" id="step1">
+                        <div class="step-header">
+                            <div class="step-number">1</div>
+                            <div class="step-title">Choose Your Supplier</div>
                         </div>
-                        <div class="total-item">
-                            <div class="total-label">Quantity</div>
-                            <div class="total-value" id="totalQuantity">0</div>
-                        </div>
-                        <div class="total-item">
-                            <div class="total-label">Total Price</div>
-                            <div class="total-value" id="totalPrice">$0.00</div>
+                        <div class="smart-grid" id="supplierGrid">
+                            <!-- Suppliers will be loaded here -->
                         </div>
                     </div>
-                </div>
 
-                <!-- Step 4: User Information -->
-                <div class="section">
-                    <div class="section-title">
-                        <div class="section-icon">4</div>
-                        Your Information & Order Details
+                    <!-- Step 2: Category Selection -->
+                    <div class="workflow-step" id="step2">
+                        <div class="step-header">
+                            <div class="step-number">2</div>
+                            <div class="step-title">Select Category</div>
+                        </div>
+                        <div class="smart-grid" id="categoryGrid">
+                            <!-- Categories will be loaded here -->
+                        </div>
                     </div>
-                    <div class="form-row">
+
+                    <!-- Step 3: Material Selection -->
+                    <div class="workflow-step" id="step3">
+                        <div class="step-header">
+                            <div class="step-number">3</div>
+                            <div class="step-title">Choose Materials</div>
+                        </div>
+                        <div class="smart-grid" id="materialGrid">
+                            <!-- Materials will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="order-summary" id="orderSummary">
+                        <div class="summary-header">
+                            <div class="summary-title">📋 Order Summary</div>
+                        </div>
+                        <div class="summary-items" id="summaryItems"></div>
+                        <div class="summary-totals">
+                            <div class="total-item">
+                                <div class="total-label">Items</div>
+                                <div class="total-value" id="totalItems">0</div>
+                            </div>
+                            <div class="total-item">
+                                <div class="total-label">Quantity</div>
+                                <div class="total-value" id="totalQuantity">0</div>
+                            </div>
+                            <div class="total-item">
+                                <div class="total-label">Total</div>
+                                <div class="total-value" id="totalPrice">$0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: User Details -->
+                    <div class="workflow-step" id="step4">
+                        <div class="step-header">
+                            <div class="step-number">4</div>
+                            <div class="step-title">Your Information</div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-input" name="user_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" name="user_email" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Urgency</label>
+                                <select class="form-select" name="urgency">
+                                    <option value="Normal">Normal (3-5 days)</option>
+                                    <option value="High">High (1-2 days)</option>
+                                    <option value="Urgent">Urgent (Same day)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Project Reference</label>
+                                <input type="text" class="form-input" name="project_ref" placeholder="Optional">
+                            </div>
+                        </div>
                         <div class="form-group">
-                            <label for="userName" class="form-label">Full Name</label>
-                            <input type="text" id="userName" name="user_name" class="form-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="userEmail" class="form-label">Email Address</label>
-                            <input type="email" id="userEmail" name="user_email" class="form-input" required>
+                            <label class="form-label">Additional Notes</label>
+                            <textarea class="form-textarea" name="notes" placeholder="Any special requirements..."></textarea>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="urgency" class="form-label">Urgency Level</label>
-                            <select id="urgency" name="urgency" class="form-select">
-                                <option value="Normal">Normal (3-5 days)</option>
-                                <option value="High">High (1-2 days)</option>
-                                <option value="Urgent">Urgent (Same day)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="projectRef" class="form-label">Project Reference (Optional)</label>
-                            <input type="text" id="projectRef" name="project_ref" class="form-input" placeholder="Job #, Site name, etc.">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="notes" class="form-label">Additional Notes (Optional)</label>
-                        <textarea id="notes" name="notes" class="form-textarea" placeholder="Any special requirements, delivery instructions, or additional details..."></textarea>
-                    </div>
-                </div>
 
-                <div class="submit-section">
-                    <button type="submit" class="submit-btn" id="submitBtn">
-                        Submit Material Order Request
-                    </button>
-                </div>
-            </form>
+                    <!-- Submit -->
+                    <div class="submit-section">
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            🚀 Submit Smart Order
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // 🧠 SMART LCMB PROCUREMENT FRONTEND
+        // Replace with your actual n8n webhook URLs
+        const API_BASE = 'https://YOUR_N8N_RAILWAY_URL.com/webhook/';
+        const MATERIALS_ENDPOINT = API_BASE + '42bcefd4-fe21-4b42-aeca-ea38ac7b1bc7';
+        const ORDER_ENDPOINT = API_BASE + '635a4c96-a2e7-4e65-9c54-229b12faddd1';
+
+        // Global State
+        let smartData = null;
+        let selectedSupplier = null;
+        let selectedCategory = null;
+        let selectedMaterials = [];
+        let currentStep = 1;
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const appContainer = document.getElementById('appContainer');
+        const supplierGrid = document.getElementById('supplierGrid');
+        const categoryGrid = document.getElementById('categoryGrid');
+        const materialGrid = document.getElementById('materialGrid');
+        const orderSummary = document.getElementById('orderSummary');
+        const summaryItems = document.getElementById('summaryItems');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const form = document.getElementById('smartOrderForm');
+
+        // Category Icons
+        const categoryIcons = {
+            'AC Install': '❄️',
+            'AC Service': '🔧',
+            'Electrical': '⚡',
+            'Factory Stock': '📦',
+            'default': '📋'
+        };
+
+        // Initialize App
+        async function initializeSmartSystem() {
+            try {
+                showMessage('info', 'Loading smart procurement data...');
+                
+                const response = await fetch(MATERIALS_ENDPOINT, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                smartData = await response.json();
+                console.log('🚀 Smart Data Loaded:', smartData);
+
+                if (smartData.status !== 'success') {
+                    throw new Error(smartData.error?.message || 'Failed to load data');
+                }
+
+                // Update system status
+                updateSystemStatus();
+                updateRecommendations();
+                
+                // Populate suppliers
+                populateSuppliers();
+                
+                // Hide loading and show app
+                loadingOverlay.style.display = 'none';
+                appContainer.classList.add('loaded');
+                
+                showMessage('success', '✅ Smart Procurement System Ready!');
+                
+            } catch (error) {
+                console.error('❌ Initialization Error:', error);
+                showMessage('error', `Failed to initialize: ${error.message}`);
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Update System Status
+        function updateSystemStatus() {
+            const data = smartData.data;
+            document.getElementById('supplierCount').textContent = data.metadata.totalSuppliers;
+            document.getElementById('materialCount').textContent = data.metadata.totalMaterials;
+            document.getElementById('categoryCount').textContent = data.metadata.totalCategories;
+        }
+
+        // Update Recommendations
+        function updateRecommendations() {
+            const recommendations = document.getElementById('recommendations');
+            const topSupplier = smartData.data.recommendations.topSuppliers[0];
+            
+            if (topSupplier) {
+                recommendations.innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">⭐</div>
+                        <div class="stat-label">Top Rated: ${topSupplier.name}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Populate Suppliers
+        function populateSuppliers() {
+            const suppliers = smartData.data.suppliers;
+            supplierGrid.innerHTML = '';
+
+            suppliers.forEach(supplier => {
+                const capabilities = smartData.data.supplierCapabilities[supplier.id];
+                const card = document.createElement('div');
+                card.className = 'smart-card supplier-card';
+                card.innerHTML = `
+                    <div class="supplier-tier tier-${supplier.tier.toLowerCase()}">${supplier.tier}</div>
+                    <div class="supplier-header">
+                        <div class="supplier-avatar">${supplier.name.charAt(0)}</div>
+                        <div class="supplier-info">
+                            <h3>${supplier.name}</h3>
+                            <div class="supplier-email">${supplier.email}</div>
+                        </div>
+                    </div>
+                    <div class="supplier-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${capabilities?.categories.length || 0}</div>
+                            <div class="stat-label">Categories</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${capabilities?.totalMaterials || 0}</div>
+                            <div class="stat-label">Materials</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${supplier.reliabilityScore.toFixed(0)}%</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${supplier.leadTimeDays}d</div>
+                            <div class="stat-label">Lead Time</div>
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => selectSupplier(supplier.id, card));
+                supplierGrid.appendChild(card);
+            });
+        }
+
+        // Select Supplier
+        function selectSupplier(supplierId, cardElement) {
+            // Remove previous selection
+            document.querySelectorAll('.supplier-card').forEach(card => 
+                card.classList.remove('selected'));
+            
+            // Mark as selected
+            cardElement.classList.add('selected');
+            selectedSupplier = supplierId;
+            
+            // Show categories for this supplier
+            populateCategories(supplierId);
+            
+            // Activate step 2
+            activateStep(2);
+            
+            console.log('✅ Supplier selected:', supplierId);
+        }
+
+        // Populate Categories
+        function populateCategories(supplierId) {
+            const capabilities = smartData.data.supplierCapabilities[supplierId];
+            const categories = capabilities?.categories || [];
+            
+            categoryGrid.innerHTML = '';
+
+            categories.forEach(categoryName => {
+                const materialsInCategory = capabilities.materials.filter(m => m.category === categoryName);
+                const card = document.createElement('div');
+                card.className = 'smart-card category-card';
+                card.innerHTML = `
+                    <div class="category-icon">${categoryIcons[categoryName] || categoryIcons.default}</div>
+                    <div class="category-name">${categoryName}</div>
+                    <div class="category-meta">${materialsInCategory.length} materials available</div>
+                `;
+
+                card.addEventListener('click', () => selectCategory(categoryName, card));
+                categoryGrid.appendChild(card);
+            });
+        }
+
+        // Select Category
+        function selectCategory(categoryName, cardElement) {
+            // Remove previous selection
+            document.querySelectorAll('.category-card').forEach(card => 
+                card.classList.remove('selected'));
+            
+            // Mark as selected
+            cardElement.classList.add('selected');
+            selectedCategory = categoryName;
+            
+            // Show materials for this category
+            populateMaterials(selectedSupplier, categoryName);
+            
+            // Activate step 3
+            activateStep(3);
+            
+            console.log('✅ Category selected:', categoryName);
+        }
+
+        // Populate Materials
+        function populateMaterials(supplierId, categoryName) {
+            const capabilities = smartData.data.supplierCapabilities[supplierId];
+            const materials = capabilities.materials.filter(m => m.category === categoryName);
+            
+            materialGrid.innerHTML = '';
+            selectedMaterials = []; // Reset
+
+            materials.forEach((material, index) => {
+                const card = document.createElement('div');
+                card.className = 'smart-card material-card';
+                card.innerHTML = `
+                    <div class="material-header">
+                        <input type="checkbox" class="material-checkbox" data-index="${index}">
+                        <div class="material-info">
+                            <div class="material-name">${material.name}</div>
+                            <div class="material-price">$${material.supplierPrice.toFixed(2)}/${material.unit}</div>
+                        </div>
+                    </div>
+                    <div class="material-description">${material.description}</div>
+                    <div class="material-meta">
+                        <span class="meta-tag tag-code">${material.code}</span>
+                        <span class="meta-tag ${material.stockLevel > 50 ? 'tag-stock' : 'tag-low-stock'}">
+                            ${material.availabilityStatus}
+                        </span>
+                    </div>
+                    <div class="quantity-controls">
+                        <button type="button" class="qty-btn" data-action="decrease">−</button>
+                        <input type="number" class="qty-input" min="1" value="1" data-index="${index}">
+                        <button type="button" class="qty-btn" data-action="increase">+</button>
+                        <span class="subtotal">$${material.supplierPrice.toFixed(2)}</span>
+                    </div>
+                `;
+
+                // Add event listeners
+                setupMaterialCard(card, material, index);
+                materialGrid.appendChild(card);
+            });
+        }
+
+        // Setup Material Card Events
+        function setupMaterialCard(card, material, index) {
+            const checkbox = card.querySelector('.material-checkbox');
+            const quantityControls = card.querySelector('.quantity-controls');
+            const quantityInput = card.querySelector('.qty-input');
+            const subtotalSpan = card.querySelector('.subtotal');
+            const decreaseBtn = card.querySelector('[data-action="decrease"]');
+            const increaseBtn = card.querySelector('[data-action="increase"]');
+
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    card.classList.add('selected');
+                    quantityControls.classList.add('visible');
+                    addMaterial(material, index, 1);
+                } else {
+                    card.classList.remove('selected');
+                    quantityControls.classList.remove('visible');
+                    removeMaterial(index);
+                }
+            });
+
+            quantityInput.addEventListener('input', function() {
+                const quantity = parseInt(this.value) || 1;
+                const subtotal = material.supplierPrice * quantity;
+                subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
+                updateMaterialQuantity(index, quantity);
+            });
+
+            decreaseBtn.addEventListener('click', function() {
+                let quantity = parseInt(quantityInput.value) || 1;
+                if (quantity > 1) {
+                    quantity--;
+                    quantityInput.value = quantity;
+                    quantityInput.dispatchEvent(new Event('input'));
+                }
+            });
+
+            increaseBtn.addEventListener('click', function() {
+                let quantity = parseInt(quantityInput.value) || 1;
+                quantity++;
+                quantityInput.value = quantity;
+                quantityInput.dispatchEvent(new Event('input'));
+            });
+        }
+
+        // Add Material to Selection
+        function addMaterial(material, index, quantity) {
+            selectedMaterials.push({
+                ...material,
+                index: index,
+                quantity: quantity
+            });
+            updateOrderSummary();
+            activateStep(4);
+        }
+
+        // Remove Material from Selection
+        function removeMaterial(index) {
+            selectedMaterials = selectedMaterials.filter(item => item.index !== index);
+            updateOrderSummary();
+            
+            if (selectedMaterials.length === 0) {
+                orderSummary.classList.remove('visible');
+                deactivateStep(4);
+            }
+        }
+
+        // Update Material Quantity
+        function updateMaterialQuantity(index, quantity) {
+            const material = selectedMaterials.find(item => item.index === index);
+            if (material) {
+                material.quantity = quantity;
+                updateOrderSummary();
+            }
+        }
+
+        // Update Order Summary
+        function updateOrderSummary() {
+            if (selectedMaterials.length === 0) {
+                orderSummary.classList.remove('visible');
+                return;
+            }
+
+            orderSummary.classList.add('visible');
+
+            // Update items
+            summaryItems.innerHTML = selectedMaterials.map(item => `
+                <div class="summary-item">
+                    <div>
+                        <div>${item.name}</div>
+                        <div class="item-details">${item.quantity} ${item.unit} × $${item.supplierPrice.toFixed(2)}</div>
+                    </div>
+                    <div class="item-price">$${(item.quantity * item.supplierPrice).toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            // Update totals
+            const totalItems = selectedMaterials.length;
+            const totalQuantity = selectedMaterials.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.supplierPrice), 0);
+
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('totalQuantity').textContent = totalQuantity;
+            document.getElementById('totalPrice').textContent = `$${totalPrice.toFixed(2)}`;
+        }
+
+        // Activate Workflow Step
+        function activateStep(stepNumber) {
+            // Update step states
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step${i}`);
+                const stepIcon = step.querySelector('.step-number');
+                
+                if (i < stepNumber) {
+                    step.classList.add('completed');
+                    step.classList.remove('active');
+                    stepIcon.classList.add('completed');
+                    stepIcon.innerHTML = '✓';
+                } else if (i === stepNumber) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                    stepIcon.classList.remove('completed');
+                    stepIcon.innerHTML = i;
+                } else {
+                    step.classList.remove('active', 'completed');
+                    stepIcon.classList.remove('completed');
+                    stepIcon.innerHTML = i;
+                }
+            }
+            currentStep = stepNumber;
+        }
+
+        // Deactivate Step
+        function deactivateStep(stepNumber) {
+            const step = document.getElementById(`step${stepNumber}`);
+            step.classList.remove('active');
+            currentStep = Math.max(1, stepNumber - 1);
+        }
+
+        // Handle Form Submission
+        async function handleSubmission(e) {
+            e.preventDefault();
+            
+            hideMessages();
+            setLoading(true);
+            
+            try {
+                const formData = new FormData(form);
+                const supplier = smartData.data.suppliers.find(s => s.id === selectedSupplier);
+                
+                const orderData = {
+                    category: selectedCategory,
+                    materials: selectedMaterials.map(item => ({
+                        name: item.name,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        price: item.supplierPrice,
+                        code: item.code
+                    })),
+                    supplier_name: supplier.name,
+                    supplier_email: supplier.email,
+                    user_name: formData.get('user_name'),
+                    user_email: formData.get('user_email'),
+                    urgency: formData.get('urgency') || 'Normal',
+                    project_ref: formData.get('project_ref') || '',
+                    notes: formData.get('notes') || ''
+                };
+
+                console.log('🚀 Submitting Smart Order:', orderData);
+
+                const response = await fetch(ORDER_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.supplierPrice), 0);
+                    showMessage('success', `🎉 Smart Order Submitted Successfully!
+                    
+Order ID: ${result.order_id}
+Supplier: ${supplier.name}
+Total: $${totalPrice.toFixed(2)}
+                    
+Your order has been sent to the supplier and you'll receive confirmation shortly.`);
+                    
+                    // Reset form
+                    resetForm();
+                } else {
+                    throw new Error(result.message || 'Order submission failed');
+                }
+                
+            } catch (error) {
+                console.error('❌ Submission Error:', error);
+                showMessage('error', `Failed to submit order: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Reset Form
+        function resetForm() {
+            form.reset();
+            selectedSupplier = null;
+            selectedCategory = null;
+            selectedMaterials = [];
+            
+            // Clear selections
+            document.querySelectorAll('.smart-card').forEach(card => 
+                card.classList.remove('selected'));
+            
+            // Reset steps
+            activateStep(1);
+            
+            // Clear grids
+            categoryGrid.innerHTML = '';
+            materialGrid.innerHTML = '';
+            orderSummary.classList.remove('visible');
+        }
+
+        // Utility Functions
+        function showMessage(type, message) {
+            hideMessages();
+            const messageEl = type === 'success' ? successMessage : errorMessage;
+            messageEl.innerHTML = message.replace(/\n/g, '<br>');
+            messageEl.style.display = 'block';
+            messageEl.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideMessages() {
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+        }
+
+        function setLoading(loading) {
+            submitBtn.disabled = loading;
+            submitBtn.textContent = loading ? '⏳ Processing...' : '🚀 Submit Smart Order';
+        }
+
+        // Event Listeners
+        form.addEventListener('submit', handleSubmission);
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeSmartSystem);
+    </script>
 </body>
 </html>
