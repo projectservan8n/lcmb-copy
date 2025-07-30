@@ -1,8 +1,14 @@
-// 🧠 SMART LCMB PROCUREMENT FRONTEND - FIXED VERSION
-// Using correct webhook PATHS from your n8n workflow
-const API_BASE = 'https://primary-s0q-production.up.railway.app/webhook/';
-const MATERIALS_ENDPOINT = API_BASE + 'materials-data';
-const ORDER_ENDPOINT = API_BASE + 'material-order';
+// 🧠 SMART LCMB PROCUREMENT FRONTEND - COMPLETE FIXED VERSION
+// Using correct webhook URLs from your n8n workflow
+
+// Your n8n webhook URLs (from LCMB ORDER SYSTEM.json)
+const N8N_WEBHOOK_BASE = 'https://primary-s0q-production.up.railway.app';
+const API_ENDPOINTS = {
+    materials: N8N_WEBHOOK_BASE + '/webhook/materials-data',  // Webhook ID: 844f5e6d-e51d-4958-90c6-8c68576360da
+    order: N8N_WEBHOOK_BASE + '/webhook/material-order'       // Webhook ID: 73af1374-ec87-4f38-aba9-6470a5eae947
+};
+
+console.log('🚀 LCMB System Config:', API_ENDPOINTS);
 
 // Global State
 let smartData = null;
@@ -24,7 +30,7 @@ const errorMessage = document.getElementById('errorMessage');
 const submitBtn = document.getElementById('submitBtn');
 const form = document.getElementById('smartOrderForm');
 
-// Category Icons matching your n8n data
+// Category Icons matching your n8n data structure
 const categoryIcons = {
     'AC Install': '❄️',
     'AC Service': '🔧', 
@@ -33,43 +39,45 @@ const categoryIcons = {
     'default': '📋'
 };
 
-// Initialize App
+// Initialize Smart System
 async function initializeSmartSystem() {
     try {
         console.log('🚀 Starting Smart Procurement System...');
-        updateLoadingText('Connecting to backend...');
+        updateLoadingText('Connecting to n8n backend...');
         
-        const response = await fetch(MATERIALS_ENDPOINT, {
+        // Fetch data from your n8n workflow
+        const response = await fetch(API_ENDPOINTS.materials, {
             method: 'GET',
             headers: { 
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
             }
         });
 
-        console.log('📡 Response status:', response.status);
+        console.log('📡 n8n Response status:', response.status);
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Response error:', errorText);
-            throw new Error(`Backend Error ${response.status}: ${response.statusText}`);
+            console.error('❌ n8n Response error:', errorText);
+            throw new Error(`n8n Backend Error ${response.status}: ${response.statusText}`);
         }
 
         smartData = await response.json();
-        console.log('🚀 Smart Data Loaded:', smartData);
+        console.log('🎯 n8n Data Loaded:', smartData);
 
-        // Validate the expected data structure from your n8n workflow
+        // Validate expected data structure from your n8n workflow
         if (smartData.status !== 'success') {
-            throw new Error(smartData.error?.message || 'Backend returned error status');
+            throw new Error(smartData.error?.message || 'n8n workflow returned error status');
         }
 
         if (!smartData.data || !smartData.data.suppliers || !smartData.data.materials) {
-            console.warn('⚠️ Invalid data structure from backend');
-            throw new Error('Invalid data structure received from backend');
+            console.warn('⚠️ Invalid data structure from n8n workflow');
+            throw new Error('Invalid data structure received from n8n workflow');
         }
 
         updateLoadingText('Processing supplier data...');
-        await new Promise(resolve => setTimeout(resolve, 500)); // Smooth loading
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         // Update system status
         updateSystemStatus();
@@ -82,33 +90,40 @@ async function initializeSmartSystem() {
         loadingOverlay.style.display = 'none';
         appContainer.classList.add('loaded');
         
-        showMessage('success', '✅ Smart Procurement System Ready! Select a supplier to begin.');
+        showMessage('success', '✅ Smart Procurement System Ready! Connected to live n8n workflow. Select a supplier to begin.');
         
     } catch (error) {
         console.error('❌ Initialization Error:', error);
         
-        loadingOverlay.style.display = 'none';
-        appContainer.classList.add('loaded');
+        // Fallback to demo data
+        console.log('🔄 Falling back to demo data...');
+        updateLoadingText('Loading demo data as fallback...');
         
-        showMessage('error', `❌ Backend Connection Failed: ${error.message}<br><br>Please check your n8n workflow and Google Sheets are properly configured.`);
-    }
+        try {
+            await loadDemoData();
+            updateSystemStatus();
+            updateRecommendations();
+            populateSuppliers();
+            
+            loadingOverlay.style.display = 'none';
+            appContainer.classList.add('loaded');
+            
+            showMessage('success', `⚠️ Demo Mode Active: n8n connection failed (${error.message}). Using sample data that matches your Google Sheets structure.`);
+        } catch (demoError) {
+            loadingOverlay.style.display = 'none';
+            appContainer.classList.add('loaded');
+            showMessage('error', `❌ System Error: ${error.message}. Please check your n8n workflow is running.`);
+        }
     }
 }
 
-// Update loading text for better UX
-function updateLoadingText(text) {
-    const loadingText = document.querySelector('.loading-text');
-    if (loadingText) {
-        loadingText.textContent = text;
-    }
-}
-
-// Fallback Data matching your n8n structure - FOR TESTING ONLY
-function useFallbackData() {
+// Load demo data (exact structure from your n8n workflow)
+async function loadDemoData() {
     smartData = {
         status: 'success',
-        version: '2.0', 
+        version: '2.0',
         system: 'Smart LCMB Procurement',
+        timestamp: new Date().toISOString(),
         data: {
             suppliers: [
                 {
@@ -120,9 +135,7 @@ function useFallbackData() {
                     reliabilityScore: 95.5,
                     tier: 'Premium',
                     leadTimeDays: 2,
-                    minOrderValue: 100,
-                    deliveryScore: 96,
-                    qualityScore: 95
+                    minOrderValue: 100
                 },
                 {
                     id: 'SUP002', 
@@ -133,9 +146,7 @@ function useFallbackData() {
                     reliabilityScore: 92.1,
                     tier: 'Premium',
                     leadTimeDays: 1,
-                    minOrderValue: 200,
-                    deliveryScore: 93,
-                    qualityScore: 91
+                    minOrderValue: 200
                 },
                 {
                     id: 'SUP003',
@@ -146,9 +157,7 @@ function useFallbackData() {
                     reliabilityScore: 87.8,
                     tier: 'Standard',
                     leadTimeDays: 3,
-                    minOrderValue: 50,
-                    deliveryScore: 88,
-                    qualityScore: 87
+                    minOrderValue: 50
                 },
                 {
                     id: 'SUP004',
@@ -159,22 +168,7 @@ function useFallbackData() {
                     reliabilityScore: 91.2,
                     tier: 'Premium',
                     leadTimeDays: 2,
-                    minOrderValue: 150,
-                    deliveryScore: 92,
-                    qualityScore: 90
-                },
-                {
-                    id: 'SUP005',
-                    name: 'Quick Fix Electrical',
-                    email: 'orders@quickfixelec.com.au',
-                    phone: '(02) 9999-8888',
-                    specialties: ['Electrical'],
-                    reliabilityScore: 89.3,
-                    tier: 'Standard',
-                    leadTimeDays: 1,
-                    minOrderValue: 75,
-                    deliveryScore: 90,
-                    qualityScore: 88
+                    minOrderValue: 150
                 }
             ],
             materials: {
@@ -214,18 +208,6 @@ function useFallbackData() {
                         brand: 'Clipsal',
                         stockLevel: 200,
                         availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'EL-GPO-DBL',
-                        name: 'Double Power Point',
-                        category: 'Electrical',
-                        unit: 'pcs',
-                        basePrice: 12.90,
-                        description: 'Double GPO power outlet white',
-                        code: 'EL-GPO-DBL',
-                        brand: 'Clipsal',
-                        stockLevel: 80,
-                        availabilityStatus: 'In Stock'
                     }
                 ],
                 'AC Install': [
@@ -251,18 +233,6 @@ function useFallbackData() {
                         code: 'AC-WMB-HD',
                         brand: 'Universal',
                         stockLevel: 75,
-                        availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'AC-LINE-6M',
-                        name: 'Refrigerant Line Set 6m',
-                        category: 'AC Install',
-                        unit: 'pcs', 
-                        basePrice: 125.00,
-                        description: 'Insulated copper line set 6 meter',
-                        code: 'AC-LINE-6M',
-                        brand: 'Refrion',
-                        stockLevel: 40,
                         availabilityStatus: 'In Stock'
                     }
                 ],
@@ -290,18 +260,6 @@ function useFallbackData() {
                         brand: 'Generic',
                         stockLevel: 60,
                         availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'AC-CLEAN-KIT',
-                        name: 'AC Cleaning Kit Professional',
-                        category: 'AC Service',
-                        unit: 'pcs',
-                        basePrice: 85.00,
-                        description: 'Professional AC cleaning and maintenance kit',
-                        code: 'AC-CLEAN-KIT',
-                        brand: 'CoolClean',
-                        stockLevel: 8,
-                        availabilityStatus: 'Low Stock'
                     }
                 ],
                 'Factory Stock': [
@@ -328,40 +286,16 @@ function useFallbackData() {
                         brand: 'SafeWork',
                         stockLevel: 150,
                         availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'FS-BOOTS-SZ10',
-                        name: 'Steel Cap Boots Size 10',
-                        category: 'Factory Stock',
-                        unit: 'pairs',
-                        basePrice: 89.00,
-                        description: 'Steel cap work boots black leather size 10',
-                        code: 'FS-BOOTS-SZ10',
-                        brand: 'WorkTough',
-                        stockLevel: 25,
-                        availabilityStatus: 'In Stock'
-                    },
-                    {
-                        id: 'FS-GLOVES-L',
-                        name: 'Work Gloves Large',
-                        category: 'Factory Stock',
-                        unit: 'pairs',
-                        basePrice: 8.90,
-                        description: 'Heavy duty work gloves size large',
-                        code: 'FS-GLOVES-L',
-                        brand: 'GripMax',
-                        stockLevel: 100,
-                        availabilityStatus: 'In Stock'
                     }
                 ]
             },
             categories: ['Electrical', 'AC Install', 'AC Service', 'Factory Stock'],
             supplierCapabilities: {},
             metadata: {
-                totalSuppliers: 5,
-                totalMaterials: 16,
+                totalSuppliers: 4,
+                totalMaterials: 8,
                 totalCategories: 4,
-                averageSupplierScore: 91.18
+                averageSupplierScore: 91.65
             },
             recommendations: {
                 topSuppliers: [
@@ -373,12 +307,12 @@ function useFallbackData() {
         }
     };
     
-    // Build supplier capabilities based on materials
+    // Build supplier capabilities (matching your n8n "Build Supplier Capabilities" node logic)
     Object.keys(smartData.data.materials).forEach(category => {
         const materials = smartData.data.materials[category];
         
         smartData.data.suppliers.forEach(supplier => {
-            if (supplier.specialties.includes(category)) {
+            if (supplier.specialties.includes(category) || supplier.specialties.includes('General')) {
                 if (!smartData.data.supplierCapabilities[supplier.id]) {
                     smartData.data.supplierCapabilities[supplier.id] = {
                         categories: [],
@@ -396,7 +330,6 @@ function useFallbackData() {
                 capabilities.materials = capabilities.materials.concat(
                     materials.map(material => ({
                         ...material,
-                        supplierTier: 'Preferred',
                         supplierPrice: material.basePrice * (0.85 + Math.random() * 0.15),
                         supplierLeadTime: supplier.leadTimeDays
                     }))
@@ -406,7 +339,16 @@ function useFallbackData() {
         });
     });
     
-    console.log('📋 Fallback demo data loaded with', smartData.data.suppliers.length, 'suppliers and', smartData.data.metadata.totalMaterials, 'materials');
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    console.log('📋 Demo data loaded with', smartData.data.suppliers.length, 'suppliers');
+}
+
+// Update loading text
+function updateLoadingText(text) {
+    const loadingText = document.querySelector('.loading-text');
+    if (loadingText) {
+        loadingText.textContent = text;
+    }
 }
 
 // Update System Status
@@ -484,18 +426,13 @@ function populateSuppliers() {
 
 // Select Supplier
 function selectSupplier(supplierId, cardElement) {
-    // Remove previous selection
     document.querySelectorAll('.supplier-card').forEach(card => 
         card.classList.remove('selected'));
     
-    // Mark as selected
     cardElement.classList.add('selected');
     selectedSupplier = supplierId;
     
-    // Show categories for this supplier
     populateCategories(supplierId);
-    
-    // Activate step 2
     activateStep(2);
     
     console.log('✅ Supplier selected:', supplierId);
@@ -514,7 +451,6 @@ function populateCategories(supplierId) {
     }
 
     categories.forEach(categoryName => {
-        // Count materials in this category for this supplier
         const materialsInCategory = capabilities.materials?.filter(m => m.category === categoryName) || [];
         const card = document.createElement('div');
         card.className = 'smart-card category-card';
@@ -531,18 +467,13 @@ function populateCategories(supplierId) {
 
 // Select Category
 function selectCategory(categoryName, cardElement) {
-    // Remove previous selection
     document.querySelectorAll('.category-card').forEach(card => 
         card.classList.remove('selected'));
     
-    // Mark as selected
     cardElement.classList.add('selected');
     selectedCategory = categoryName;
     
-    // Show materials for this category
     populateMaterials(selectedSupplier, categoryName);
-    
-    // Activate step 3
     activateStep(3);
     
     console.log('✅ Category selected:', categoryName);
@@ -556,18 +487,15 @@ function populateMaterials(supplierId, categoryName) {
     if (capabilities && capabilities.materials) {
         materials = capabilities.materials.filter(m => m.category === categoryName);
     } else {
-        // Fallback: get materials from main materials object
         materials = smartData.data.materials?.[categoryName] || [];
-        // Add supplier pricing
         materials = materials.map(material => ({
             ...material,
-            supplierPrice: material.basePrice * (0.85 + Math.random() * 0.15),
-            supplierTier: 'Available'
+            supplierPrice: material.basePrice * (0.85 + Math.random() * 0.15)
         }));
     }
     
     materialGrid.innerHTML = '';
-    selectedMaterials = []; // Reset
+    selectedMaterials = [];
 
     if (materials.length === 0) {
         materialGrid.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No materials available in this category</p>';
@@ -600,7 +528,6 @@ function populateMaterials(supplierId, categoryName) {
             </div>
         `;
 
-        // Add event listeners
         setupMaterialCard(card, material, index);
         materialGrid.appendChild(card);
     });
@@ -693,7 +620,6 @@ function updateOrderSummary() {
 
     orderSummary.classList.add('visible');
 
-    // Update items
     summaryItems.innerHTML = selectedMaterials.map(item => `
         <div class="summary-item">
             <div>
@@ -704,7 +630,6 @@ function updateOrderSummary() {
         </div>
     `).join('');
 
-    // Update totals
     const totalItems = selectedMaterials.length;
     const totalQuantity = selectedMaterials.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = selectedMaterials.reduce((sum, item) => sum + (item.quantity * item.finalPrice), 0);
@@ -716,7 +641,6 @@ function updateOrderSummary() {
 
 // Activate Workflow Step
 function activateStep(stepNumber) {
-    // Update step states
     for (let i = 1; i <= 4; i++) {
         const step = document.getElementById(`step${i}`);
         const stepIcon = step.querySelector('.step-number');
@@ -756,26 +680,16 @@ async function handleSubmission(e) {
     
     try {
         // Validate selections
-        if (!selectedSupplier) {
-            throw new Error('Please select a supplier');
-        }
-        
-        if (!selectedCategory) {
-            throw new Error('Please select a category');
-        }
-        
-        if (selectedMaterials.length === 0) {
-            throw new Error('Please select at least one material');
-        }
+        if (!selectedSupplier) throw new Error('Please select a supplier');
+        if (!selectedCategory) throw new Error('Please select a category');
+        if (selectedMaterials.length === 0) throw new Error('Please select at least one material');
         
         const formData = new FormData(form);
         const supplier = smartData.data.suppliers.find(s => s.id === selectedSupplier);
         
-        if (!supplier) {
-            throw new Error('Selected supplier not found');
-        }
+        if (!supplier) throw new Error('Selected supplier not found');
         
-        // Build order data matching your n8n workflow expectations
+        // Build order data matching your n8n workflow structure
         const orderData = {
             category: selectedCategory,
             materials: selectedMaterials.map(item => ({
@@ -796,7 +710,7 @@ async function handleSubmission(e) {
 
         console.log('🚀 Submitting Smart Order:', orderData);
 
-        const response = await fetch(ORDER_ENDPOINT, {
+        const response = await fetch(API_ENDPOINTS.order, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -824,12 +738,11 @@ async function handleSubmission(e) {
 <strong>Total:</strong> $${totalPrice.toFixed(2)}<br>
 <strong>Processing Time:</strong> ${result.estimated_processing}
             
-Your order has been sent to the supplier and you'll receive confirmation shortly.`);
+✅ Order saved to Google Sheets<br>
+📧 Emails sent to supplier and requestor<br>
+🔄 You'll receive confirmation shortly.`);
             
-            // Reset form after 3 seconds
-            setTimeout(() => {
-                resetForm();
-            }, 3000);
+            setTimeout(() => resetForm(), 4000);
         } else {
             throw new Error(result.message || 'Order submission failed');
         }
@@ -849,14 +762,11 @@ function resetForm() {
     selectedCategory = null;
     selectedMaterials = [];
     
-    // Clear selections
     document.querySelectorAll('.smart-card').forEach(card => 
         card.classList.remove('selected'));
     
-    // Reset steps
     activateStep(1);
     
-    // Clear grids
     categoryGrid.innerHTML = '';
     materialGrid.innerHTML = '';
     orderSummary.classList.remove('visible');
@@ -872,13 +782,12 @@ function showMessage(type, message) {
     messageEl.style.display = 'block';
     messageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     
-    // Auto-hide success messages after 10 seconds
     if (type === 'success') {
         setTimeout(() => {
             if (messageEl.style.display === 'block') {
                 messageEl.style.display = 'none';
             }
-        }, 10000);
+        }, 12000);
     }
 }
 
@@ -895,23 +804,21 @@ function setLoading(loading) {
 // Event Listeners
 form.addEventListener('submit', handleSubmission);
 
-// Initialize on load with error handling
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
-    // Add a small delay for better UX
-    setTimeout(initializeSmartSystem, 500);
+    setTimeout(initializeSmartSystem, 600);
 });
 
-// Debug helper for development
+// Debug helper
 window.debugLCMB = {
     get smartData() { return smartData; },
     get selectedSupplier() { return selectedSupplier; },
     get selectedCategory() { return selectedCategory; },
     get selectedMaterials() { return selectedMaterials; },
+    get endpoints() { return API_ENDPOINTS; },
     resetForm,
     showMessage,
-    useFallbackData,
-    endpoints: { 
-        MATERIALS_ENDPOINT: 'https://primary-s0q-production.up.railway.app/webhook/materials-data', 
-        ORDER_ENDPOINT: 'https://primary-s0q-production.up.railway.app/webhook/material-order' 
-    }
+    loadDemoData
 };
+
+console.log('🎯 LCMB Smart Procurement System Loaded');
