@@ -628,3 +628,85 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Additional CSS for supplier-first workflow */
+
+.supplier-stats {
+    font-size: 0.75rem;
+    color: #059669;
+    background: #f0fdf4;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.category-count {
+    font-size: 0.75rem;
+    color: #0369a1;
+    background: #f0f9ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    text-align: center;
+}
+
+/* Update category label to accommodate count */
+.category-label {
+    padding: 20px 16px;
+}
+
+/* Category placeholder styling */
+#categoryPlaceholder {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+    font-style: italic;
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+}
+
+/* Hide category grid initially */
+.category-grid:empty + #categoryPlaceholder {
+    display: block;
+}
+
+.category-grid:not(:empty) + #categoryPlaceholder {
+    display: none;
+}
+
+/* Progressive disclosure styling */
+.section {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.section.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Step indicators for better UX */
+.section-icon {
+    position: relative;
+}
+
+.section-icon.completed {
+    background: #10b981;
+}
+
+.section-icon.active {
+    background: #3b82f6;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
