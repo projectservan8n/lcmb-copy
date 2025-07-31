@@ -1,0 +1,212 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCMB Material Management | LCMB Group</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="https://lcmbgroup.com.au/wp-content/uploads/2025/04/logo-lcmb-for-header.png" alt="LCMB Group" class="logo-img">
+                </div>
+                <div class="header-info">
+                    <div class="contact-info">
+                        <span class="phone">📞 0447 563 718</span>
+                        <span class="tagline">Gold Coast's Premium Electrical & HVAC Specialists</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Material Management System</h1>
+                <p class="hero-subtitle">Streamline your material orders and quote requests</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Loading State -->
+            <div id="loading" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading form data...</p>
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorAlert" class="alert alert-error" style="display: none;">
+                <strong>⚠️ Error:</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Success Display -->
+            <div id="successAlert" class="alert alert-success" style="display: none;">
+                <strong>✅ Success:</strong> <span id="successMessage"></span>
+                <div class="success-details">
+                    <p><strong>Reference ID:</strong> <span id="referenceId" class="reference-id"></span></p>
+                    <p><strong>Supplier:</strong> <span id="successSupplier"></span></p>
+                </div>
+                <button onclick="resetForm()" class="btn btn-secondary">Submit Another Request</button>
+            </div>
+
+            <!-- Main Form -->
+            <div class="form-container" id="mainForm">
+                <div class="form-header">
+                    <h2>Submit Material Request</h2>
+                    <p>Select your request type and fill in the details below</p>
+                </div>
+
+                <form id="materialForm" class="material-form">
+                    <!-- Request Type -->
+                    <div class="form-group">
+                        <label class="form-label">Request Type *</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="requestType" value="order" checked>
+                                <span class="radio-custom"></span>
+                                <div class="radio-content">
+                                    <strong>Material Order</strong>
+                                    <p>Place an order for immediate delivery</p>
+                                </div>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="requestType" value="quote">
+                                <span class="radio-custom"></span>
+                                <div class="radio-content">
+                                    <strong>Quote Request</strong>
+                                    <p>Request pricing information</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label for="category" class="form-label">Category *</label>
+                        <select id="category" name="category" class="form-select" required>
+                            <option value="">Select a category...</option>
+                        </select>
+                    </div>
+
+                    <!-- Supplier -->
+                    <div class="form-group">
+                        <label for="supplier" class="form-label">Supplier *</label>
+                        <select id="supplier" name="supplier" class="form-select" required>
+                            <option value="">First select a category...</option>
+                        </select>
+                        <div id="supplierInfo" class="supplier-info" style="display: none;">
+                            <div class="supplier-details">
+                                <span id="supplierEmail"></span>
+                                <span id="supplierPhone"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Materials -->
+                    <div class="form-group">
+                        <label class="form-label">Materials Required *</label>
+                        <div class="materials-container">
+                            <select id="materialsSelect" class="form-select" disabled>
+                                <option value="">Select category and supplier first...</option>
+                            </select>
+                            <button type="button" id="addMaterial" class="btn btn-secondary" disabled>Add Material</button>
+                        </div>
+                        <div id="selectedMaterials" class="selected-materials">
+                            <!-- Selected materials will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Requestor Information -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="requestorName" class="form-label">Your Name *</label>
+                            <input type="text" id="requestorName" name="requestorName" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="requestorEmail" class="form-label">Your Email *</label>
+                            <input type="email" id="requestorEmail" name="requestorEmail" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <!-- Additional Details -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="urgency" class="form-label">Priority Level</label>
+                            <select id="urgency" name="urgency" class="form-select">
+                                <option value="Normal">Normal</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectRef" class="form-label">Project Reference</label>
+                            <input type="text" id="projectRef" name="projectRef" class="form-input" placeholder="Optional">
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Special Instructions</label>
+                        <textarea id="notes" name="notes" class="form-textarea" rows="3" placeholder="Any special requirements or instructions..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-actions">
+                        <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+                            <span class="btn-text">Submit Request</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner-small"></span>
+                                Submitting...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>LCMB Electrical & Air Conditioning</h4>
+                    <p>Solar + Battery Systems</p>
+                    <p>15+ Years Experience | Licensed & Insured</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li>Electrical Installation</li>
+                        <li>Air Conditioning</li>
+                        <li>Solar Systems</li>
+                        <li>24/7 Emergency Service</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>📞 0447 563 718</p>
+                    <p>✉️ info@lcmbgroup.com.au</p>
+                    <p>📍 Gold Coast, QLD</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 LCMB Group. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
