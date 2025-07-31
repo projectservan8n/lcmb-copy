@@ -176,17 +176,21 @@ function updateSystemStatus() {
     document.getElementById('materialCount').textContent = data.metadata.totalMaterials;
     document.getElementById('categoryCount').textContent = data.metadata.totalCategories;
     
-    // Add performance indicator
-    const performanceScore = data.insights?.performance?.avgSupplierScore || 0;
-    const performanceElement = document.createElement('div');
-    performanceElement.className = 'stat-item';
-    performanceElement.innerHTML = `
-        <div class="stat-value">${performanceScore.toFixed(0)}%</div>
-        <div class="stat-label">System Health</div>
-    `;
-    
+    // Add performance indicator (check if it doesn't already exist)
     const systemStatus = document.getElementById('systemStatus');
-    if (systemStatus && !systemStatus.querySelector('.stat-label:contains("System Health")')) {
+    const existingHealthStat = Array.from(systemStatus.children).find(child => 
+        child.querySelector('.stat-label')?.textContent?.includes('System Health')
+    );
+    
+    if (!existingHealthStat) {
+        const performanceScore = data.insights?.performance?.totalValue || 0;
+        const performanceElement = document.createElement('div');
+        performanceElement.className = 'stat-item';
+        performanceElement.innerHTML = `
+            <div class="stat-value">✅</div>
+            <div class="stat-label">System Health</div>
+        `;
+        
         systemStatus.appendChild(performanceElement);
     }
 }
