@@ -210,7 +210,7 @@ function updateRecommendations() {
         recommendationsHTML += `
             <div class="stat-item">
                 <div class="stat-value">⭐</div>
-                <div class="stat-label">Top: ${topSupplier.name}<br>${topSupplier.tier} Tier</div>
+                <div class="stat-label">Top: ${topSupplier.name}</div>
             </div>
         `;
     }
@@ -222,6 +222,16 @@ function updateRecommendations() {
             <div class="stat-item">
                 <div class="stat-value">${categoryIcons[topCategory.name] || '📋'}</div>
                 <div class="stat-label">Popular: ${topCategory.name}<br>${topCategory.materialCount} items</div>
+            </div>
+        `;
+    }
+    
+    // If no insights available, show basic info
+    if (!recommendationsHTML && smartData?.data?.suppliers?.length > 0) {
+        recommendationsHTML = `
+            <div class="stat-item">
+                <div class="stat-value">✅</div>
+                <div class="stat-label">System Ready</div>
             </div>
         `;
     }
