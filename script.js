@@ -1,3 +1,4 @@
+// script.js
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
