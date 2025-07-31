@@ -530,8 +530,15 @@ function setupMaterialCard(card, material, index) {
         }
         
         const price = material.supplierPrice || material.basePrice || 0;
-        const subtotal = price * quantity;
-        subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
+        
+        // Handle pricing display
+        if (price === 'Unavailable' || price === 0) {
+            subtotalSpan.textContent = 'Quote required';
+        } else {
+            const subtotal = parseFloat(price) * quantity;
+            subtotalSpan.textContent = `${subtotal.toFixed(2)}`;
+        }
+        
         updateMaterialQuantity(material.id, quantity);
     });
 
@@ -580,11 +587,12 @@ function addMaterial(material, quantity) {
         name: material.name,
         code: material.materialCode || material.code || material.id,
         category: material.category || selectedCategory,
+        subcategory: material.subcategory || '',
         quantity: quantity,
         unit: material.unit || 'pcs',
-        unitPrice: material.supplierPrice || material.basePrice || 0,
+        unitPrice: material.supplierPrice || material.basePrice || 'Unavailable',
         brand: material.brand || 'Generic',
-        lineTotal: (material.supplierPrice || material.basePrice || 0) * quantity,
+        lineTotal: (material.supplierPrice === 'Unavailable' || material.basePrice === 'Unavailable' || !material.supplierPrice) ? 'Quote required' : (material.supplierPrice || material.basePrice || 0) * quantity,
         notes: material.notes || ''
     });
     
@@ -697,23 +705,37 @@ function updateOrderSummary() {
                 <div style="font-weight: 600;">${item.name}</div>
                 <div class="item-details">
                     ${item.code ? `Code: ${item.code} • ` : ''}
-                    ${item.quantity} ${item.unit} × $${item.unitPrice.toFixed(2)}
+                    ${item.quantity} ${item.unit} × ${item.unitPrice === 'Unavailable' ? 'Price on request' : `${parseFloat(item.unitPrice).toFixed(2)}`}
                     ${item.brand !== 'Generic' ? ` • ${item.brand}` : ''}
+                    ${item.subcategory ? ` • ${item.subcategory}` : ''}
                 </div>
             </div>
-            <div class="item-price">$${item.lineTotal.toFixed(2)}</div>
+            <div class="item-price">${item.lineTotal === 'Quote required' ? 'Quote required' : `${parseFloat(item.lineTotal).toFixed(2)}`}</div>
         </div>
     `).join('');
 
-    // Calculate totals
+    // Calculate totals (only for items with pricing)
     const totalItems = selectedMaterials.length;
     const totalQuantity = selectedMaterials.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = selectedMaterials.reduce((sum, item) => sum + item.lineTotal, 0);
+    
+    // Calculate total price only for items with actual pricing
+    const pricedItems = selectedMaterials.filter(item => item.lineTotal !== 'Quote required' && item.unitPrice !== 'Unavailable');
+    const totalPrice = pricedItems.reduce((sum, item) => sum + parseFloat(item.lineTotal), 0);
+    const hasUnpricedItems = selectedMaterials.length > pricedItems.length;
 
     // Update totals display
     document.getElementById('totalItems').textContent = totalItems;
     document.getElementById('totalQuantity').textContent = totalQuantity;
-    document.getElementById('totalPrice').textContent = `$${totalPrice.toFixed(2)}`;
+    
+    // Handle total price display
+    if (hasUnpricedItems && totalPrice > 0) {
+        document.getElementById('totalPrice').textContent = `${totalPrice.toFixed(2)}*`;
+        document.getElementById('totalPrice').title = 'Total excludes items requiring quotes';
+    } else if (hasUnpricedItems && totalPrice === 0) {
+        document.getElementById('totalPrice').textContent = 'Quote required';
+    } else {
+        document.getElementById('totalPrice').textContent = `${totalPrice.toFixed(2)}`;
+    }
 
     // Scroll summary into view if not visible
     if (!isElementInViewport(orderSummary)) {
@@ -857,7 +879,9 @@ async function handleSubmission(e) {
         console.log('✅ Order submitted successfully:', result);
         
         if (result.status === 'success') {
-            const totalPrice = selectedMaterials.reduce((sum, item) => sum + item.lineTotal, 0);
+            const totalPrice = selectedMaterials.reduce((sum, item) => {
+                return item.lineTotal !== 'Quote required' ? sum + parseFloat(item.lineTotal) : sum;
+            }, 0);
             
             showMessage('success', `🎉 Order Submitted Successfully!
             
@@ -865,7 +889,7 @@ async function handleSubmission(e) {
 <strong>Supplier:</strong> ${supplier.name}<br>
 <strong>Category:</strong> ${selectedCategory}<br>
 <strong>Items:</strong> ${selectedMaterials.length} different materials<br>
-<strong>Total Value:</strong> $${totalPrice.toFixed(2)}<br>
+<strong>Total Value:</strong> ${totalPrice > 0 ? `${totalPrice.toFixed(2)} AUD` : 'Quote required'}<br>
 <strong>Urgency:</strong> ${orderData.urgency}<br>
 <strong>Est. Processing:</strong> ${result.estimated_processing}
 
@@ -878,7 +902,8 @@ async function handleSubmission(e) {
 🎯 <strong>Next Steps:</strong><br>
 • ${supplier.name} will confirm availability<br>
 • You'll receive delivery updates via email<br>
-• Contact ${supplier.email} for urgent queries`);
+• Contact ${supplier.email} for urgent queries<br>
+${totalPrice === 0 ? '• Pricing quotes will be provided separately' : ''}`);
             
             // Auto-reset form after success
             setTimeout(() => resetForm(), 8000);
