@@ -60,8 +60,11 @@ async function initializeSmartSystem() {
             method: 'GET',
             headers: { 
                 'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
             },
+            cache: 'no-store',
             signal: controller.signal
         });
 
@@ -74,6 +77,8 @@ async function initializeSmartSystem() {
 
         smartData = await response.json();
         console.log('✅ Smart Data loaded:', smartData);
+        console.log('🔍 DEBUG: Suppliers structure:', smartData.data?.suppliers);
+        console.log('🔍 DEBUG: First supplier:', smartData.data?.suppliers?.[0]);
 
         // Enhanced validation for new data structure
         if (!smartData || smartData.status !== 'success' || !smartData.data) {
@@ -1037,42 +1042,41 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initializeSmartSystem, 800);
 });
 
-// Enhanced debug helper
-window.debugLCMB = {
-    get data() { return smartData; },
-    get selected() { 
-        return { 
-            supplier: selectedSupplier, 
-            category: selectedCategory, 
-            materials: selectedMaterials,
-            currentStep
-        }; 
-    },
-    get materials() { return { current: currentMaterials, filtered: filteredMaterials }; },
-    endpoints: { MATERIALS_ENDPOINT, ORDER_ENDPOINT },
-    actions: {
-        resetForm,
-        testConnection: async () => {
-            try {
-                const response = await fetch(MATERIALS_ENDPOINT);
-                console.log('Connection test:', response.status, response.statusText);
-                const data = await response.json();
-                console.log('Test data:', data);
-                return response.ok;
-            } catch (error) {
-                console.error('Connection test failed:', error);
-                return false;
-            }
-        },
-        simulateOrder: () => {
-            console.log('Simulating order with current selections...');
-            if (selectedMaterials.length > 0) {
-                handleSubmission(new Event('submit'));
-            } else {
-                console.log('No materials selected for simulation');
-            }
-        }
+// Debug helper - run this in console to force clear everything
+window.debugClearAll = function() {
+    console.log('🧹 Forcing complete cache clear...');
+    
+    // Clear all storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Clear service worker caches
+    if ('caches' in window) {
+        caches.keys().then(function(names) {
+            for (let name of names) caches.delete(name);
+        });
     }
+    
+    // Clear any existing data
+    window.smartData = null;
+    window.lcmbRealData = null;
+    
+    console.log('🧹 Cache cleared, reloading...');
+    
+    // Force reload
+    setTimeout(() => {
+        window.location.reload(true);
+    }, 500);
+};
+
+// Debug helper to check current data structure
+window.debugCheckData = function() {
+    console.log('📊 Current smartData:', window.smartData);
+    if (window.smartData?.data?.suppliers) {
+        console.log('🏪 Suppliers:', window.smartData.data.suppliers);
+        console.log('📋 First supplier keys:', Object.keys(window.smartData.data.suppliers[0] || {}));
+    }
+    return window.smartData;
 };
 
 console.log('🎯 LCMB Enhanced Frontend Ready - Debug available via window.debugLCMB');
