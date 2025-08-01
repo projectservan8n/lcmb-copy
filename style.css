@@ -601,3 +601,427 @@ body {
     gap: 0.5rem;
   }
 }
+/* Enhanced CSS for Material Search and Quantity Control */
+
+/* Materials Selection Container */
+.materials-selection-container {
+  background: var(--gray-50);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.materials-search {
+  margin-bottom: 1rem;
+}
+
+.search-result-info {
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Materials List */
+.materials-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+.material-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--gray-100);
+  transition: var(--transition);
+}
+
+.material-option:last-child {
+  border-bottom: none;
+}
+
+.material-option:hover {
+  background: var(--accent-blue);
+}
+
+.material-info {
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.material-name {
+  font-weight: 500;
+  color: var(--gray-800);
+  margin-bottom: 0.25rem;
+}
+
+.material-meta {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+}
+
+.material-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.quantity-input {
+  width: 70px;
+  padding: 0.5rem;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.quantity-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue);
+}
+
+.add-material-btn {
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.add-material-btn:hover {
+  background: var(--primary-blue-dark);
+  transform: translateY(-1px);
+}
+
+.no-materials {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray-500);
+}
+
+/* Selected Materials Section */
+.selected-materials-section {
+  margin-top: 1.5rem;
+}
+
+.selected-materials-section h4 {
+  color: var(--primary-blue);
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.materials-summary {
+  background: var(--accent-blue);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--primary-blue-dark);
+}
+
+.selected-materials {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  min-height: 120px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.no-selection {
+  text-align: center;
+  color: var(--gray-500);
+  font-style: italic;
+  padding: 2rem;
+}
+
+.selected-material-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--gray-50);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+  border-left: 4px solid var(--primary-blue);
+  box-shadow: var(--shadow-sm);
+}
+
+.selected-material-item:last-child {
+  margin-bottom: 0;
+}
+
+.selected-material-item .material-info {
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.material-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+}
+
+.qty-btn {
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.qty-btn:hover {
+  background: var(--primary-blue-dark);
+  transform: scale(1.05);
+}
+
+.qty-btn.minus {
+  background: var(--warning-orange);
+}
+
+.qty-btn.minus:hover {
+  background: #d97706;
+}
+
+.quantity-display {
+  min-width: 80px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--gray-800);
+  font-size: 0.9rem;
+}
+
+.remove-material {
+  background: var(--error-red);
+  color: var(--white);
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.remove-material:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design for Enhanced Features */
+@media (max-width: 768px) {
+  .materials-selection-container {
+    padding: 1rem;
+  }
+  
+  .material-option {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .material-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .selected-material-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .material-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .quantity-controls {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .materials-list {
+    max-height: 300px;
+  }
+  
+  .selected-materials {
+    max-height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .material-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .quantity-input {
+    width: 60px;
+  }
+  
+  .add-material-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .material-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .quantity-controls {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Improved Scrollbar Styling */
+.materials-list::-webkit-scrollbar,
+.selected-materials::-webkit-scrollbar {
+  width: 8px;
+}
+
+.materials-list::-webkit-scrollbar-track,
+.selected-materials::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+}
+
+.materials-list::-webkit-scrollbar-thumb,
+.selected-materials::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: var(--radius-sm);
+}
+
+.materials-list::-webkit-scrollbar-thumb:hover,
+.selected-materials::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* Enhanced Loading States */
+.materials-list.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: var(--gray-500);
+}
+
+.materials-list.loading::before {
+  content: "Loading materials...";
+}
+
+/* Search Input Enhancement */
+.materials-search .form-input {
+  background: var(--white);
+  border: 2px solid var(--primary-blue);
+  box-shadow: var(--shadow-sm);
+}
+
+.materials-search .form-input:focus {
+  box-shadow: 0 0 0 3px var(--accent-blue), var(--shadow-md);
+}
+
+.materials-search .form-input:disabled {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
+/* Animation for Material Addition */
+@keyframes materialAdded {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+    background: var(--success-green);
+  }
+  50% {
+    transform: scale(1.02);
+    background: var(--accent-blue);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    background: var(--gray-50);
+  }
+}
+
+.selected-material-item.just-added {
+  animation: materialAdded 0.6s ease-out;
+}
+
+/* Enhanced Form Section Spacing */
+.form-group:has(.materials-selection-container) {
+  margin-bottom: 2rem;
+}
+
+.selected-materials-section {
+  border-top: 2px solid var(--gray-200);
+  padding-top: 1.5rem;
+}
+
+/* Accessibility Improvements */
+.qty-btn:focus,
+.add-material-btn:focus,
+.remove-material:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+.material-option:focus-within {
+  background: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--primary-blue);
+}
+
+/* Print Styles */
+@media print {
+  .materials-selection-container,
+  .material-actions,
+  .material-controls {
+    display: none !important;
+  }
+  
+  .selected-materials {
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+  
+  .selected-material-item {
+    break-inside: avoid;
+    border-left: 2px solid #000;
+  }
+}
