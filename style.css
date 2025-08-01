@@ -603,6 +603,13 @@ body {
 }
 /* Enhanced CSS for Material Search and Quantity Control */
 
+.form-help-text {
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
 /* Materials Selection Container */
 .materials-selection-container {
   background: var(--gray-50);
