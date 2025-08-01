@@ -1,4 +1,4 @@
-<!-- index.html -->
+<!-- Enhanced index.html with Material Search and Quantity Control -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,18 +113,47 @@
                         </div>
                     </div>
 
-                    <!-- Materials -->
+                    <!-- Subcategory (Hidden initially) -->
+                    <div class="form-group" id="subcategoryGroup" style="display: none;">
+                        <label for="subcategory" class="form-label">Subcategory</label>
+                        <select id="subcategory" name="subcategory" class="form-select">
+                            <option value="">All subcategories</option>
+                        </select>
+                    </div>
+
+                    <!-- Enhanced Materials Selection -->
                     <div class="form-group">
                         <label class="form-label">Materials Required *</label>
-                        <div class="materials-container">
-                            <select id="materialsSelect" class="form-select" disabled>
-                                <option value="">Select category and supplier first...</option>
-                            </select>
-                            <button type="button" id="addMaterial" class="btn btn-secondary" disabled>Add Material</button>
+                        
+                        <!-- Materials Search and List Container -->
+                        <div id="materialsContainer" class="materials-selection-container" style="display: none;">
+                            <!-- Search Bar -->
+                            <div class="materials-search">
+                                <input type="text" 
+                                       id="materialSearch" 
+                                       class="form-input" 
+                                       placeholder="Select category and supplier first..."
+                                       disabled>
+                                <div id="materialsResultInfo" class="search-result-info"></div>
+                            </div>
+
+                            <!-- Materials List -->
+                            <div id="materialsList" class="materials-list">
+                                <!-- Materials will be populated here -->
+                            </div>
                         </div>
-                        <div id="selectedMaterials" class="selected-materials">
-                            <!-- Selected materials will appear here -->
+
+                        <!-- Selected Materials -->
+                        <div class="selected-materials-section">
+                            <h4>Selected Materials</h4>
+                            <div id="materialsSummary" class="materials-summary"></div>
+                            <div id="selectedMaterials" class="selected-materials">
+                                <div class="no-selection">No materials selected yet...</div>
+                            </div>
                         </div>
+
+                        <!-- Legacy Add Material Button (Hidden) -->
+                        <button type="button" id="addMaterial" class="btn btn-secondary" disabled style="display: none;">Add Material</button>
                     </div>
 
                     <!-- Requestor Information -->
