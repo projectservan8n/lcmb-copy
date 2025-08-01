@@ -1,14 +1,16 @@
-// script.js
+// Enhanced script.js with Material Search and Quantity Control
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
         this.selectedMaterials = [];
+        this.filteredMaterials = [];
+        this.selectedSubcategory = '';
     }
 
     init() {
-        console.log('🚀 Initializing LCMB Material Management App');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App');
         
-        // THIS IS THE BIG CHANGE: Check if server already loaded data
+        // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
             console.log('📊 Using initial form data from server');
             this.formData = window.INITIAL_FORM_DATA;
@@ -27,7 +29,7 @@ class MaterialManagementApp {
 
     setupEventListeners() {
         try {
-            console.log('⚙️ Setting up event listeners...');
+            console.log('⚙️ Setting up enhanced event listeners...');
             
             // Request type change
             const requestTypeInputs = document.querySelectorAll('input[name="requestType"]');
@@ -37,35 +39,42 @@ class MaterialManagementApp {
                         input.addEventListener('change', () => this.handleRequestTypeChange());
                     }
                 });
-                console.log(`✅ Added listeners to ${requestTypeInputs.length} request type inputs`);
             }
 
             // Category change
             const categorySelect = document.getElementById('category');
             if (categorySelect) {
                 categorySelect.addEventListener('change', () => this.handleCategoryChange());
-                console.log('✅ Added category change listener');
             }
 
             // Supplier change
             const supplierSelect = document.getElementById('supplier');
             if (supplierSelect) {
                 supplierSelect.addEventListener('change', () => this.handleSupplierChange());
-                console.log('✅ Added supplier change listener');
+            }
+
+            // Subcategory change
+            const subcategorySelect = document.getElementById('subcategory');
+            if (subcategorySelect) {
+                subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
+            }
+
+            // Material search
+            const materialSearch = document.getElementById('materialSearch');
+            if (materialSearch) {
+                materialSearch.addEventListener('input', () => this.handleMaterialSearch());
             }
 
             // Add material button
             const addMaterialBtn = document.getElementById('addMaterial');
             if (addMaterialBtn) {
                 addMaterialBtn.addEventListener('click', () => this.addMaterial());
-                console.log('✅ Added material button listener');
             }
 
             // Form submission
             const form = document.getElementById('materialForm');
             if (form) {
                 form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-                console.log('✅ Added form submit listener');
                 
                 // Form validation on input changes
                 const formInputs = form.querySelectorAll('input, select, textarea');
@@ -76,19 +85,15 @@ class MaterialManagementApp {
                             input.addEventListener('input', () => this.validateForm());
                         }
                     });
-                    console.log(`✅ Added validation listeners to ${formInputs.length} form inputs`);
                 }
-            } else {
-                console.warn('⚠️ Form element not found');
             }
             
-            console.log('✅ Event listeners setup complete');
+            console.log('✅ Enhanced event listeners setup complete');
         } catch (error) {
             console.error('❌ Error setting up event listeners:', error);
         }
     }
 
-    // This now only runs as fallback if server didn't provide data
     async loadFormData() {
         try {
             this.showLoading(true);
@@ -124,7 +129,7 @@ class MaterialManagementApp {
                 return;
             }
 
-            console.log('📋 Populating form with data:', {
+            console.log('📋 Populating enhanced form with data:', {
                 suppliers: data.data.suppliers?.length || 0,
                 categories: data.data.categories?.length || 0,
                 materials: Object.keys(data.data.materials || {}).length
@@ -144,11 +149,8 @@ class MaterialManagementApp {
                     categorySelect.appendChild(option);
                 });
                 console.log(`✅ Populated ${data.data.categories.length} categories`);
-            } else {
-                console.warn('⚠️ Category select element not found or no categories data');
             }
 
-            // Hide loading and show form
             this.showLoading(false);
         } catch (error) {
             console.error('❌ Error populating form:', error);
@@ -180,7 +182,9 @@ class MaterialManagementApp {
         try {
             const categorySelect = document.getElementById('category');
             const supplierSelect = document.getElementById('supplier');
-            const materialsSelect = document.getElementById('materialsSelect');
+            const subcategorySelect = document.getElementById('subcategory');
+            const materialSearch = document.getElementById('materialSearch');
+            const materialsContainer = document.getElementById('materialsContainer');
             const addMaterialBtn = document.getElementById('addMaterial');
             
             if (!categorySelect) return;
@@ -192,13 +196,7 @@ class MaterialManagementApp {
             if (supplierSelect) {
                 supplierSelect.innerHTML = '<option value="">Select a supplier...</option>';
             }
-            if (materialsSelect) {
-                materialsSelect.innerHTML = '<option value="">Select materials...</option>';
-                materialsSelect.disabled = true;
-            }
-            if (addMaterialBtn) {
-                addMaterialBtn.disabled = true;
-            }
+            this.resetMaterialSelection();
             this.hideSupplierInfo();
 
             if (!selectedCategory || !this.formData?.data) {
@@ -211,7 +209,6 @@ class MaterialManagementApp {
             
             if (suppliers.length === 0 && this.formData.data.suppliers) {
                 // Fallback: show suppliers that match the category
-                console.log('🔄 Using fallback supplier matching for category:', selectedCategory);
                 const allSuppliers = this.formData.data.suppliers;
                 allSuppliers.forEach(supplier => {
                     if (supplier.specialties?.some(specialty => 
@@ -249,9 +246,8 @@ class MaterialManagementApp {
     handleSupplierChange() {
         try {
             const supplierSelect = document.getElementById('supplier');
-            const materialsSelect = document.getElementById('materialsSelect');
-            const addMaterialBtn = document.getElementById('addMaterial');
             const categorySelect = document.getElementById('category');
+            const subcategorySelect = document.getElementById('subcategory');
             
             if (!supplierSelect) return;
             
@@ -259,14 +255,8 @@ class MaterialManagementApp {
             const selectedCategory = categorySelect?.value;
             console.log('🏢 Supplier changed to:', selectedSupplier);
             
-            // Reset materials
-            if (materialsSelect) {
-                materialsSelect.innerHTML = '<option value="">Select materials...</option>';
-                materialsSelect.disabled = true;
-            }
-            if (addMaterialBtn) {
-                addMaterialBtn.disabled = true;
-            }
+            // Reset material selection
+            this.resetMaterialSelection();
 
             if (!selectedSupplier) {
                 this.hideSupplierInfo();
@@ -280,29 +270,365 @@ class MaterialManagementApp {
                 this.showSupplierInfo(selectedOption);
             }
 
-            // Populate materials for selected category
+            // Populate subcategories for selected category
             if (selectedCategory && this.formData?.data?.materials?.[selectedCategory]) {
-                const materials = this.formData.data.materials[selectedCategory];
-                console.log(`📦 Loading ${materials.length} materials for category ${selectedCategory}`);
-                
-                materials.forEach(material => {
-                    const option = document.createElement('option');
-                    option.value = material.name;
-                    option.dataset.id = material.id || '';
-                    option.dataset.code = material.code || '';
-                    option.dataset.unit = material.unit || 'pcs';
-                    option.dataset.subcategory = material.subcategory || '';
-                    option.textContent = `${material.name} (${material.unit || 'pcs'})`;
-                    materialsSelect?.appendChild(option);
-                });
-
-                if (materialsSelect) materialsSelect.disabled = false;
-                if (addMaterialBtn) addMaterialBtn.disabled = false;
+                this.populateSubcategories(selectedCategory);
             }
 
             this.validateForm();
         } catch (error) {
             console.error('❌ Error handling supplier change:', error);
+        }
+    }
+
+    populateSubcategories(category) {
+        try {
+            const subcategorySelect = document.getElementById('subcategory');
+            if (!subcategorySelect) return;
+
+            const materials = this.formData.data.materials[category] || [];
+            const subcategories = [...new Set(materials.map(m => m.subcategory).filter(sub => sub))];
+            
+            subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
+            subcategories.forEach(subcategory => {
+                const option = document.createElement('option');
+                option.value = subcategory;
+                option.textContent = subcategory;
+                subcategorySelect.appendChild(option);
+            });
+
+            // Show subcategory dropdown
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+            if (subcategoryGroup) {
+                subcategoryGroup.style.display = 'block';
+            }
+
+            // Enable material search and populate all materials initially
+            this.populateMaterials(category, '');
+            
+        } catch (error) {
+            console.error('❌ Error populating subcategories:', error);
+        }
+    }
+
+    handleSubcategoryChange() {
+        try {
+            const subcategorySelect = document.getElementById('subcategory');
+            const categorySelect = document.getElementById('category');
+            
+            if (!subcategorySelect || !categorySelect) return;
+            
+            const selectedSubcategory = subcategorySelect.value;
+            const selectedCategory = categorySelect.value;
+            
+            this.selectedSubcategory = selectedSubcategory;
+            console.log('📁 Subcategory changed to:', selectedSubcategory || 'All');
+            
+            // Repopulate materials based on subcategory
+            this.populateMaterials(selectedCategory, selectedSubcategory);
+            
+        } catch (error) {
+            console.error('❌ Error handling subcategory change:', error);
+        }
+    }
+
+    populateMaterials(category, subcategory = '') {
+        try {
+            const materialSearch = document.getElementById('materialSearch');
+            const materialsContainer = document.getElementById('materialsContainer');
+            const addMaterialBtn = document.getElementById('addMaterial');
+            
+            if (!category || !this.formData?.data?.materials?.[category]) return;
+
+            let materials = this.formData.data.materials[category];
+            
+            // Filter by subcategory if selected
+            if (subcategory) {
+                materials = materials.filter(m => m.subcategory === subcategory);
+            }
+
+            this.filteredMaterials = materials;
+            
+            // Enable search and show materials container
+            if (materialSearch) {
+                materialSearch.disabled = false;
+                materialSearch.placeholder = `Search from ${materials.length} materials...`;
+            }
+            
+            if (materialsContainer) {
+                materialsContainer.style.display = 'block';
+            }
+            
+            if (addMaterialBtn) {
+                addMaterialBtn.disabled = false;
+            }
+
+            // Render materials
+            this.renderMaterialsList();
+            
+            console.log(`📦 Populated ${materials.length} materials for ${category}${subcategory ? ` > ${subcategory}` : ''}`);
+            
+        } catch (error) {
+            console.error('❌ Error populating materials:', error);
+        }
+    }
+
+    handleMaterialSearch() {
+        try {
+            const materialSearch = document.getElementById('materialSearch');
+            if (!materialSearch) return;
+            
+            const searchTerm = materialSearch.value.toLowerCase();
+            console.log('🔍 Searching materials:', searchTerm);
+            
+            this.renderMaterialsList(searchTerm);
+            
+        } catch (error) {
+            console.error('❌ Error handling material search:', error);
+        }
+    }
+
+    renderMaterialsList(searchTerm = '') {
+        try {
+            const materialsList = document.getElementById('materialsList');
+            if (!materialsList) return;
+
+            let materialsToShow = this.filteredMaterials;
+
+            // Apply search filter
+            if (searchTerm) {
+                materialsToShow = this.filteredMaterials.filter(material => 
+                    material.name.toLowerCase().includes(searchTerm) ||
+                    material.code.toLowerCase().includes(searchTerm) ||
+                    material.subcategory.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Limit results for performance
+            const maxResults = 50;
+            const displayMaterials = materialsToShow.slice(0, maxResults);
+
+            if (displayMaterials.length === 0) {
+                materialsList.innerHTML = `
+                    <div class="no-materials">
+                        <p>No materials found${searchTerm ? ` for "${searchTerm}"` : ''}.</p>
+                        ${searchTerm ? '<p>Try a different search term.</p>' : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            materialsList.innerHTML = displayMaterials.map(material => `
+                <div class="material-option" data-material-id="${material.id}">
+                    <div class="material-info">
+                        <div class="material-name">${material.name}</div>
+                        <div class="material-meta">
+                            ${material.code ? `Code: ${material.code} • ` : ''}
+                            Unit: ${material.unit} • 
+                            ${material.subcategory}
+                        </div>
+                    </div>
+                    <div class="material-actions">
+                        <input type="number" 
+                               class="quantity-input" 
+                               value="1" 
+                               min="1" 
+                               max="9999"
+                               data-material-id="${material.id}">
+                        <button type="button" 
+                                class="add-material-btn" 
+                                data-material-id="${material.id}">
+                            Add
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add event listeners to add buttons
+            materialsList.querySelectorAll('.add-material-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const materialId = e.target.dataset.materialId;
+                    const quantityInput = materialsList.querySelector(`.quantity-input[data-material-id="${materialId}"]`);
+                    const quantity = parseInt(quantityInput?.value || 1);
+                    this.addMaterialById(materialId, quantity);
+                });
+            });
+
+            // Show result count
+            const resultInfo = document.getElementById('materialsResultInfo');
+            if (resultInfo) {
+                resultInfo.textContent = `Showing ${displayMaterials.length}${materialsToShow.length > maxResults ? ` of ${materialsToShow.length}` : ''} materials`;
+            }
+
+        } catch (error) {
+            console.error('❌ Error rendering materials list:', error);
+        }
+    }
+
+    addMaterialById(materialId, quantity = 1) {
+        try {
+            const material = this.filteredMaterials.find(m => m.id === materialId);
+            if (!material) {
+                this.showError('Material not found.');
+                return;
+            }
+
+            // Check if material already selected
+            const existingIndex = this.selectedMaterials.findIndex(m => m.id === materialId);
+            if (existingIndex !== -1) {
+                // Update quantity
+                this.selectedMaterials[existingIndex].quantity += quantity;
+                console.log(`➕ Updated quantity for ${material.name}: ${this.selectedMaterials[existingIndex].quantity}`);
+            } else {
+                // Add new material
+                const newMaterial = {
+                    id: material.id,
+                    name: material.name,
+                    code: material.code || '',
+                    unit: material.unit || 'pcs',
+                    subcategory: material.subcategory || '',
+                    quantity: quantity,
+                    supplierId: material.supplierId,
+                    supplierName: material.supplierName
+                };
+
+                this.selectedMaterials.push(newMaterial);
+                console.log(`➕ Added material: ${material.name} (${quantity} ${material.unit})`);
+            }
+
+            this.renderSelectedMaterials();
+            this.validateForm();
+
+            // Reset quantity input
+            const quantityInput = document.querySelector(`.quantity-input[data-material-id="${materialId}"]`);
+            if (quantityInput) {
+                quantityInput.value = 1;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error adding material:', error);
+        }
+    }
+
+    addMaterial() {
+        // This method is kept for backward compatibility but now materials are added via the list
+        this.showError('Please select materials from the list below.');
+    }
+
+    renderSelectedMaterials() {
+        try {
+            const container = document.getElementById('selectedMaterials');
+            if (!container) return;
+            
+            if (this.selectedMaterials.length === 0) {
+                container.innerHTML = '<div class="no-selection">No materials selected yet...</div>';
+                return;
+            }
+
+            container.innerHTML = this.selectedMaterials.map((material, index) => `
+                <div class="selected-material-item" data-index="${index}">
+                    <div class="material-info">
+                        <div class="material-name">${material.name}</div>
+                        <div class="material-meta">
+                            ${material.code ? `Code: ${material.code} • ` : ''}
+                            Unit: ${material.unit} • 
+                            ${material.subcategory}
+                        </div>
+                    </div>
+                    <div class="material-controls">
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn minus" onclick="window.app.updateQuantity(${index}, -1)">−</button>
+                            <span class="quantity-display">${material.quantity} ${material.unit}</span>
+                            <button type="button" class="qty-btn plus" onclick="window.app.updateQuantity(${index}, 1)">+</button>
+                        </div>
+                        <button type="button" class="remove-material" onclick="window.app.removeMaterial(${index})">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update summary
+            const totalItems = this.selectedMaterials.length;
+            const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
+            
+            const summary = document.getElementById('materialsSummary');
+            if (summary) {
+                summary.innerHTML = `
+                    <strong>${totalItems} unique materials, ${totalQuantity} total items</strong>
+                `;
+            }
+        } catch (error) {
+            console.error('❌ Error rendering selected materials:', error);
+        }
+    }
+
+    updateQuantity(index, change) {
+        try {
+            if (index >= 0 && index < this.selectedMaterials.length) {
+                const newQuantity = this.selectedMaterials[index].quantity + change;
+                if (newQuantity > 0) {
+                    this.selectedMaterials[index].quantity = newQuantity;
+                    console.log(`🔄 Updated quantity for ${this.selectedMaterials[index].name}: ${newQuantity}`);
+                    this.renderSelectedMaterials();
+                    this.validateForm();
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error updating quantity:', error);
+        }
+    }
+
+    removeMaterial(index) {
+        try {
+            if (index >= 0 && index < this.selectedMaterials.length) {
+                const removed = this.selectedMaterials.splice(index, 1)[0];
+                console.log('➖ Removed material:', removed.name);
+                this.renderSelectedMaterials();
+                this.validateForm();
+            }
+        } catch (error) {
+            console.error('❌ Error removing material:', error);
+        }
+    }
+
+    resetMaterialSelection() {
+        try {
+            const subcategorySelect = document.getElementById('subcategory');
+            const materialSearch = document.getElementById('materialSearch');
+            const materialsContainer = document.getElementById('materialsContainer');
+            const addMaterialBtn = document.getElementById('addMaterial');
+            
+            // Hide and reset subcategory
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+            if (subcategoryGroup) {
+                subcategoryGroup.style.display = 'none';
+            }
+            if (subcategorySelect) {
+                subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
+            }
+            
+            // Reset material search and container
+            if (materialSearch) {
+                materialSearch.value = '';
+                materialSearch.disabled = true;
+                materialSearch.placeholder = 'Select category and supplier first...';
+            }
+            
+            if (materialsContainer) {
+                materialsContainer.style.display = 'none';
+            }
+            
+            if (addMaterialBtn) {
+                addMaterialBtn.disabled = true;
+            }
+
+            // Clear filtered materials
+            this.filteredMaterials = [];
+            this.selectedSubcategory = '';
+            
+        } catch (error) {
+            console.error('❌ Error resetting material selection:', error);
         }
     }
 
@@ -330,91 +656,6 @@ class MaterialManagementApp {
             }
         } catch (error) {
             console.error('❌ Error hiding supplier info:', error);
-        }
-    }
-
-    addMaterial() {
-        try {
-            const materialsSelect = document.getElementById('materialsSelect');
-            if (!materialsSelect) return;
-            
-            const selectedOption = materialsSelect.selectedOptions[0];
-            
-            if (!selectedOption || !selectedOption.value) {
-                this.showError('Please select a material first.');
-                return;
-            }
-
-            // Check if material already selected
-            const materialExists = this.selectedMaterials.some(m => m.id === selectedOption.dataset.id);
-            if (materialExists) {
-                this.showError('Material already added.');
-                return;
-            }
-
-            // Add material to selected list
-            const material = {
-                id: selectedOption.dataset.id || `mat-${Date.now()}`,
-                name: selectedOption.value,
-                code: selectedOption.dataset.code || '',
-                unit: selectedOption.dataset.unit || 'pcs',
-                subcategory: selectedOption.dataset.subcategory || '',
-                quantity: 1
-            };
-
-            this.selectedMaterials.push(material);
-            console.log('➕ Added material:', material.name);
-            this.renderSelectedMaterials();
-            
-            // Reset select
-            materialsSelect.value = '';
-            
-            this.validateForm();
-        } catch (error) {
-            console.error('❌ Error adding material:', error);
-        }
-    }
-
-    renderSelectedMaterials() {
-        try {
-            const container = document.getElementById('selectedMaterials');
-            if (!container) return;
-            
-            if (this.selectedMaterials.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            container.innerHTML = this.selectedMaterials.map((material, index) => `
-                <div class="material-item" data-index="${index}">
-                    <div class="material-info">
-                        <div class="material-name">${material.name}</div>
-                        <div class="material-meta">
-                            ${material.code ? `Code: ${material.code} • ` : ''}
-                            Unit: ${material.unit} • 
-                            Category: ${material.subcategory}
-                        </div>
-                    </div>
-                    <button type="button" class="remove-material" onclick="window.app && window.app.removeMaterial(${index})">
-                        Remove
-                    </button>
-                </div>
-            `).join('');
-        } catch (error) {
-            console.error('❌ Error rendering selected materials:', error);
-        }
-    }
-
-    removeMaterial(index) {
-        try {
-            if (index >= 0 && index < this.selectedMaterials.length) {
-                const removed = this.selectedMaterials.splice(index, 1)[0];
-                console.log('➖ Removed material:', removed.name);
-                this.renderSelectedMaterials();
-                this.validateForm();
-            }
-        } catch (error) {
-            console.error('❌ Error removing material:', error);
         }
     }
 
@@ -475,10 +716,10 @@ class MaterialManagementApp {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            // Add selected materials
+            // Add selected materials with quantities
             data.materials = this.selectedMaterials;
             
-            console.log('📦 Submitting form data:', data);
+            console.log('📦 Submitting enhanced form data:', data);
             
             // Determine endpoint
             const requestType = data.requestType;
@@ -596,7 +837,10 @@ function resetForm() {
         // Reset app state
         if (window.app) {
             window.app.selectedMaterials = [];
+            window.app.filteredMaterials = [];
+            window.app.selectedSubcategory = '';
             window.app.renderSelectedMaterials();
+            window.app.resetMaterialSelection();
             window.app.validateForm();
         }
         
@@ -607,10 +851,10 @@ function resetForm() {
     }
 }
 
-// CHANGED: Better initialization
+// Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting App');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
