@@ -402,42 +402,78 @@ class MaterialManagementApp {
                 return;
             }
 
-            // NEW: Checkbox-based material selection
+            // NEW: Grid-based material cards with full clickability
             materialsList.innerHTML = displayMaterials.map(material => {
                 const isSelected = this.selectedMaterials.some(m => m.id === material.id);
                 return `
-                    <div class="material-option-checkbox" data-material-id="${material.id}">
-                        <div class="material-checkbox-section">
-                            <label class="material-checkbox-label">
+                    <div class="material-card ${isSelected ? 'selected' : ''}" data-material-id="${material.id}">
+                        <div class="material-card-header">
+                            <div class="material-checkbox-section">
                                 <input type="checkbox" 
                                        class="material-checkbox" 
                                        data-material-id="${material.id}"
                                        ${isSelected ? 'checked' : ''}>
                                 <span class="checkbox-custom"></span>
-                            </label>
+                            </div>
+                            <div class="material-status">
+                                ${isSelected ? '<span class="selected-badge">✓ Selected</span>' : '<span class="select-badge">Click to Select</span>'}
+                            </div>
                         </div>
-                        <div class="material-info-section">
+                        <div class="material-card-body">
                             <div class="material-name">${material.name}</div>
                             <div class="material-meta">
-                                ${material.code ? `Code: ${material.code} • ` : ''}
-                                Unit: ${material.unit} • 
-                                ${material.subcategory}
+                                ${material.code ? `<span class="material-code">Code: ${material.code}</span>` : ''}
+                                <span class="material-unit">Unit: ${material.unit}</span>
+                                <span class="material-category">${material.subcategory}</span>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
 
-            // Add event listeners to checkboxes
-            materialsList.querySelectorAll('.material-checkbox').forEach(checkbox => {
+            // Add event listeners to entire cards for clickability
+            materialsList.querySelectorAll('.material-card').forEach(card => {
+                const materialId = card.dataset.materialId;
+                const checkbox = card.querySelector('.material-checkbox');
+                
+                // Make entire card clickable
+                card.addEventListener('click', (e) => {
+                    // Don't trigger if clicking directly on checkbox (prevent double toggle)
+                    if (e.target.type === 'checkbox') return;
+                    
+                    // Toggle checkbox
+                    checkbox.checked = !checkbox.checked;
+                    
+                    // Trigger change event
+                    if (checkbox.checked) {
+                        this.addMaterialById(materialId, 1);
+                        card.classList.add('selected');
+                    } else {
+                        this.removeMaterialById(materialId);
+                        card.classList.remove('selected');
+                    }
+                    
+                    // Update status badge
+                    const statusBadge = card.querySelector('.material-status');
+                    if (checkbox.checked) {
+                        statusBadge.innerHTML = '<span class="selected-badge">✓ Selected</span>';
+                    } else {
+                        statusBadge.innerHTML = '<span class="select-badge">Click to Select</span>';
+                    }
+                });
+
+                // Also handle direct checkbox clicks
                 checkbox.addEventListener('change', (e) => {
-                    const materialId = e.target.dataset.materialId;
                     const isChecked = e.target.checked;
                     
                     if (isChecked) {
-                        this.addMaterialById(materialId, 1); // Default quantity = 1
+                        this.addMaterialById(materialId, 1);
+                        card.classList.add('selected');
+                        card.querySelector('.material-status').innerHTML = '<span class="selected-badge">✓ Selected</span>';
                     } else {
                         this.removeMaterialById(materialId);
+                        card.classList.remove('selected');
+                        card.querySelector('.material-status').innerHTML = '<span class="select-badge">Click to Select</span>';
                     }
                 });
             });
