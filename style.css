@@ -667,40 +667,65 @@ body {
 
 .material-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 0.75rem;
+  min-width: 180px;
+}
+
+.quantity-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.quantity-label {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  font-weight: 500;
 }
 
 .quantity-input {
-  width: 70px;
+  width: 80px;
   padding: 0.5rem;
   border: 2px solid var(--gray-200);
   border-radius: var(--radius-sm);
   text-align: center;
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
-.quantity-input:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 2px var(--accent-blue);
+.unit-label {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  font-weight: 500;
+  min-width: 30px;
 }
 
-.add-material-btn {
+.add-to-order-btn {
   background: var(--primary-blue);
   color: var(--white);
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
   transition: var(--transition);
+  white-space: nowrap;
 }
 
-.add-material-btn:hover {
+.add-to-order-btn:hover {
   background: var(--primary-blue-dark);
   transform: translateY(-1px);
+}
+
+.add-to-order-btn.disabled {
+  background: var(--gray-400);
+  cursor: not-allowed;
+  transform: none;
 }
 
 .no-materials {
@@ -809,8 +834,11 @@ body {
   background: var(--warning-orange);
 }
 
-.qty-btn.minus:hover {
-  background: #d97706;
+.qty-btn:disabled {
+  background: var(--gray-300);
+  color: var(--gray-500);
+  cursor: not-allowed;
+  transform: none;
 }
 
 .quantity-display {
@@ -847,12 +875,23 @@ body {
   .material-option {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 1rem;
   }
   
   .material-actions {
     width: 100%;
-    justify-content: space-between;
+    align-items: stretch;
+    min-width: auto;
+  }
+  
+  .quantity-section {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .add-to-order-btn {
+    width: 100%;
+    text-align: center;
   }
   
   .selected-material-item {
