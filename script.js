@@ -1,4 +1,4 @@
-// Enhanced script.js with Material Search and Quantity Control
+// Enhanced script.js with Checkbox Material Selection
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
@@ -8,7 +8,7 @@ class MaterialManagementApp {
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode)');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -63,12 +63,6 @@ class MaterialManagementApp {
             const materialSearch = document.getElementById('materialSearch');
             if (materialSearch) {
                 materialSearch.addEventListener('input', () => this.handleMaterialSearch());
-            }
-
-            // Add material button
-            const addMaterialBtn = document.getElementById('addMaterial');
-            if (addMaterialBtn) {
-                addMaterialBtn.addEventListener('click', () => this.addMaterial());
             }
 
             // Form submission
@@ -182,10 +176,6 @@ class MaterialManagementApp {
         try {
             const categorySelect = document.getElementById('category');
             const supplierSelect = document.getElementById('supplier');
-            const subcategorySelect = document.getElementById('subcategory');
-            const materialSearch = document.getElementById('materialSearch');
-            const materialsContainer = document.getElementById('materialsContainer');
-            const addMaterialBtn = document.getElementById('addMaterial');
             
             if (!categorySelect) return;
             
@@ -247,7 +237,6 @@ class MaterialManagementApp {
         try {
             const supplierSelect = document.getElementById('supplier');
             const categorySelect = document.getElementById('category');
-            const subcategorySelect = document.getElementById('subcategory');
             
             if (!supplierSelect) return;
             
@@ -336,7 +325,6 @@ class MaterialManagementApp {
         try {
             const materialSearch = document.getElementById('materialSearch');
             const materialsContainer = document.getElementById('materialsContainer');
-            const addMaterialBtn = document.getElementById('addMaterial');
             
             if (!category || !this.formData?.data?.materials?.[category]) return;
 
@@ -358,12 +346,8 @@ class MaterialManagementApp {
             if (materialsContainer) {
                 materialsContainer.style.display = 'block';
             }
-            
-            if (addMaterialBtn) {
-                addMaterialBtn.disabled = false;
-            }
 
-            // Render materials
+            // Render materials with checkbox approach
             this.renderMaterialsList();
             
             console.log(`📦 Populated ${materials.length} materials for ${category}${subcategory ? ` > ${subcategory}` : ''}`);
@@ -405,7 +389,7 @@ class MaterialManagementApp {
             }
 
             // Limit results for performance
-            const maxResults = 50;
+            const maxResults = 100;
             const displayMaterials = materialsToShow.slice(0, maxResults);
 
             if (displayMaterials.length === 0) {
@@ -418,80 +402,42 @@ class MaterialManagementApp {
                 return;
             }
 
-            materialsList.innerHTML = displayMaterials.map(material => `
-                <div class="material-option" data-material-id="${material.id}">
-                    <div class="material-info">
-                        <div class="material-name">${material.name}</div>
-                        <div class="material-meta">
-                            ${material.code ? `Code: ${material.code} • ` : ''}
-                            Unit: ${material.unit} • 
-                            ${material.subcategory}
+            // NEW: Checkbox-based material selection
+            materialsList.innerHTML = displayMaterials.map(material => {
+                const isSelected = this.selectedMaterials.some(m => m.id === material.id);
+                return `
+                    <div class="material-option-checkbox" data-material-id="${material.id}">
+                        <div class="material-checkbox-section">
+                            <label class="material-checkbox-label">
+                                <input type="checkbox" 
+                                       class="material-checkbox" 
+                                       data-material-id="${material.id}"
+                                       ${isSelected ? 'checked' : ''}>
+                                <span class="checkbox-custom"></span>
+                            </label>
+                        </div>
+                        <div class="material-info-section">
+                            <div class="material-name">${material.name}</div>
+                            <div class="material-meta">
+                                ${material.code ? `Code: ${material.code} • ` : ''}
+                                Unit: ${material.unit} • 
+                                ${material.subcategory}
+                            </div>
                         </div>
                     </div>
-                    <div class="material-actions">
-                        <div class="quantity-section">
-                            <label class="quantity-label">Quantity:</label>
-                            <input type="number" 
-                                   class="quantity-input" 
-                                   value="0" 
-                                   min="0" 
-                                   max="9999"
-                                   placeholder="0"
-                                   data-material-id="${material.id}">
-                            <span class="unit-label">${material.unit}</span>
-                        </div>
-                        <button type="button" 
-                                class="add-to-order-btn" 
-                                data-material-id="${material.id}">
-                            Add to Order
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
-            // Add event listeners to add buttons
-            materialsList.querySelectorAll('.add-to-order-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+            // Add event listeners to checkboxes
+            materialsList.querySelectorAll('.material-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
                     const materialId = e.target.dataset.materialId;
-                    const quantityInput = materialsList.querySelector(`.quantity-input[data-material-id="${materialId}"]`);
-                    let quantity = parseInt(quantityInput?.value || 0);
+                    const isChecked = e.target.checked;
                     
-                    if (quantity <= 0) {
-                        this.showError('Please enter a quantity greater than 0.');
-                        quantityInput?.focus();
-                        return;
-                    }
-                    
-                    this.addMaterialById(materialId, quantity);
-                });
-            });
-
-            // Add event listeners to quantity inputs for enter key
-            materialsList.querySelectorAll('.quantity-input').forEach(input => {
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        const materialId = e.target.dataset.materialId;
-                        const btn = materialsList.querySelector(`.add-to-order-btn[data-material-id="${materialId}"]`);
-                        btn?.click();
-                    }
-                });
-                
-                // Auto-update button text based on quantity
-                input.addEventListener('input', (e) => {
-                    const materialId = e.target.dataset.materialId;
-                    const btn = materialsList.querySelector(`.add-to-order-btn[data-material-id="${materialId}"]`);
-                    const quantity = parseInt(e.target.value || 0);
-                    
-                    if (btn) {
-                        if (quantity > 0) {
-                            btn.textContent = `Add ${quantity} to Order`;
-                            btn.disabled = false;
-                            btn.classList.remove('disabled');
-                        } else {
-                            btn.textContent = 'Add to Order';
-                            btn.disabled = false;
-                            btn.classList.remove('disabled');
-                        }
+                    if (isChecked) {
+                        this.addMaterialById(materialId, 1); // Default quantity = 1
+                    } else {
+                        this.removeMaterialById(materialId);
                     }
                 });
             });
@@ -518,48 +464,45 @@ class MaterialManagementApp {
             // Check if material already selected
             const existingIndex = this.selectedMaterials.findIndex(m => m.id === materialId);
             if (existingIndex !== -1) {
-                // Update quantity
-                this.selectedMaterials[existingIndex].quantity += quantity;
-                console.log(`➕ Updated quantity for ${material.name}: ${this.selectedMaterials[existingIndex].quantity}`);
-            } else {
-                // Add new material
-                const newMaterial = {
-                    id: material.id,
-                    name: material.name,
-                    code: material.code || '',
-                    unit: material.unit || 'pcs',
-                    subcategory: material.subcategory || '',
-                    quantity: quantity,
-                    supplierId: material.supplierId,
-                    supplierName: material.supplierName
-                };
-
-                this.selectedMaterials.push(newMaterial);
-                console.log(`➕ Added material: ${material.name} (${quantity} ${material.unit})`);
+                // Material already exists, don't add again (checkbox prevents this)
+                return;
             }
+
+            // Add new material with default quantity
+            const newMaterial = {
+                id: material.id,
+                name: material.name,
+                code: material.code || '',
+                unit: material.unit || 'pcs',
+                subcategory: material.subcategory || '',
+                quantity: quantity,
+                supplierId: material.supplierId,
+                supplierName: material.supplierName
+            };
+
+            this.selectedMaterials.push(newMaterial);
+            console.log(`✅ Added material: ${material.name} (${quantity} ${material.unit})`);
 
             this.renderSelectedMaterials();
             this.validateForm();
-
-            // Reset quantity input
-            const quantityInput = document.querySelector(`.quantity-input[data-material-id="${materialId}"]`);
-            if (quantityInput) {
-                quantityInput.value = 0;
-                // Update button text
-                const btn = document.querySelector(`.add-to-order-btn[data-material-id="${materialId}"]`);
-                if (btn) {
-                    btn.textContent = 'Add to Order';
-                }
-            }
             
         } catch (error) {
             console.error('❌ Error adding material:', error);
         }
     }
 
-    addMaterial() {
-        // This method is kept for backward compatibility but now materials are added via the list
-        this.showError('Please select materials from the list below.');
+    removeMaterialById(materialId) {
+        try {
+            const index = this.selectedMaterials.findIndex(m => m.id === materialId);
+            if (index !== -1) {
+                const removed = this.selectedMaterials.splice(index, 1)[0];
+                console.log('➖ Removed material:', removed.name);
+                this.renderSelectedMaterials();
+                this.validateForm();
+            }
+        } catch (error) {
+            console.error('❌ Error removing material by ID:', error);
+        }
     }
 
     renderSelectedMaterials() {
@@ -631,6 +574,13 @@ class MaterialManagementApp {
             if (index >= 0 && index < this.selectedMaterials.length) {
                 const removed = this.selectedMaterials.splice(index, 1)[0];
                 console.log('➖ Removed material:', removed.name);
+                
+                // Uncheck the corresponding checkbox in the materials list
+                const checkbox = document.querySelector(`.material-checkbox[data-material-id="${removed.id}"]`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+                
                 this.renderSelectedMaterials();
                 this.validateForm();
             }
@@ -644,7 +594,6 @@ class MaterialManagementApp {
             const subcategorySelect = document.getElementById('subcategory');
             const materialSearch = document.getElementById('materialSearch');
             const materialsContainer = document.getElementById('materialsContainer');
-            const addMaterialBtn = document.getElementById('addMaterial');
             
             // Hide and reset subcategory
             const subcategoryGroup = document.getElementById('subcategoryGroup');
@@ -665,14 +614,14 @@ class MaterialManagementApp {
             if (materialsContainer) {
                 materialsContainer.style.display = 'none';
             }
-            
-            if (addMaterialBtn) {
-                addMaterialBtn.disabled = true;
-            }
 
-            // Clear filtered materials
+            // Clear filtered materials and selected materials
             this.filteredMaterials = [];
+            this.selectedMaterials = [];
             this.selectedSubcategory = '';
+            
+            // Update display
+            this.renderSelectedMaterials();
             
         } catch (error) {
             console.error('❌ Error resetting material selection:', error);
@@ -901,7 +850,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox Mode)');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
