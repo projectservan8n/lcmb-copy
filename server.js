@@ -9,9 +9,9 @@ const PORT = process.env.PORT || 3000;
 
 // Webhook URLs
 const WEBHOOKS = {
-  DATA_LOAD: 'https://primary-s0q-production.up.railway.app/webhook/data/load',
-  ORDER_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/order/submit',
-  QUOTE_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/quote/submit'
+  DATA_LOAD: 'https://primary-s0q-production.up.railway.app/webhook/dataload',
+  ORDER_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/ordersubmit',
+  QUOTE_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/quotesubmit'
 };
 
 // Middleware
