@@ -1071,36 +1071,67 @@ body {
     border-left: 2px solid #000;
   }
 }
-/* Enhanced CSS for Checkbox Material Selection */
+/* Complete Material Selection CSS - Grid Layout + Enhanced Features */
 
-/* Checkbox-based Material Options */
-.material-option-checkbox {
-  display: flex;
-  align-items: center;
+/* ===============================================
+   GRID LAYOUT FOR MATERIAL CARDS
+   =============================================== */
+
+/* Materials List Container */
+.materials-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid var(--gray-100);
-  transition: var(--transition);
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--gray-50);
+}
+
+/* Material Card */
+.material-card {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
   cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
 }
 
-.material-option-checkbox:last-child {
-  border-bottom: none;
-}
-
-.material-option-checkbox:hover {
+.material-card:hover {
+  border-color: var(--primary-blue);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
   background: var(--accent-blue);
 }
 
-.material-checkbox-section {
-  margin-right: 1rem;
-  flex-shrink: 0;
+.material-card.selected {
+  border-color: var(--primary-blue);
+  background: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
 }
 
-.material-checkbox-label {
+.material-card.selected:hover {
+  background: #e0f1ff;
+}
+
+/* Card Header */
+.material-card-header {
   display: flex;
-  align-items: center;
-  cursor: pointer;
-  margin: 0;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.material-checkbox-section {
+  flex-shrink: 0;
 }
 
 .material-checkbox {
@@ -1108,21 +1139,22 @@ body {
 }
 
 .checkbox-custom {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border: 2px solid var(--gray-300);
   border-radius: var(--radius-sm);
   position: relative;
   transition: var(--transition);
   background: var(--white);
+  display: block;
 }
 
-.material-checkbox:checked + .checkbox-custom {
+.material-card.selected .checkbox-custom {
   background: var(--primary-blue);
   border-color: var(--primary-blue);
 }
 
-.material-checkbox:checked + .checkbox-custom::after {
+.material-card.selected .checkbox-custom::after {
   content: '✓';
   position: absolute;
   top: 50%;
@@ -1130,31 +1162,132 @@ body {
   transform: translate(-50%, -50%);
   color: var(--white);
   font-weight: bold;
-  font-size: 14px;
+  font-size: 12px;
 }
 
-.material-checkbox-label:hover .checkbox-custom {
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 2px var(--accent-blue);
+/* Status Badges */
+.material-status {
+  flex-shrink: 0;
 }
 
-.material-info-section {
-  flex: 1;
-}
-
-.material-info-section .material-name {
-  font-weight: 500;
-  color: var(--gray-800);
-  margin-bottom: 0.25rem;
-  font-size: 1rem;
-}
-
-.material-info-section .material-meta {
-  font-size: 0.85rem;
+.select-badge {
+  background: var(--gray-100);
   color: var(--gray-600);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--gray-200);
 }
 
-/* Enhanced Selected Materials Section */
+.selected-badge {
+  background: var(--success-green);
+  color: var(--white);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+}
+
+.material-card:hover .select-badge {
+  background: var(--primary-blue);
+  color: var(--white);
+  border-color: var(--primary-blue);
+}
+
+/* Card Body */
+.material-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.material-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.3;
+  min-height: 2.6rem; /* Ensures consistent height */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.material-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: auto;
+}
+
+.material-code,
+.material-unit,
+.material-category {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.material-code {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+
+.material-unit {
+  background: var(--accent-blue);
+  color: var(--primary-blue);
+  border: 1px solid var(--primary-blue);
+}
+
+.material-category {
+  background: var(--gray-50);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-300);
+}
+
+/* Search Result Info */
+.search-result-info {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 0.75rem;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* No Materials State */
+.no-materials {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--gray-500);
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--gray-300);
+}
+
+.no-materials::before {
+  content: '🔍';
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* ===============================================
+   ENHANCED SELECTED MATERIALS SECTION
+   =============================================== */
+
 .selected-materials-section {
   margin-top: 2rem;
   border-top: 2px solid var(--gray-200);
@@ -1334,38 +1467,41 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* Materials List Enhancements */
-.materials-list {
-  max-height: 500px;
-  overflow-y: auto;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  background: var(--white);
+/* ===============================================
+   RESPONSIVE DESIGN
+   =============================================== */
+
+@media (max-width: 1200px) {
+  .materials-list {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
 }
 
-.search-result-info {
-  font-size: 0.9rem;
-  color: var(--gray-600);
-  margin-top: 0.5rem;
-  text-align: center;
-  padding: 0.5rem;
-  background: var(--gray-50);
-  border-radius: var(--radius-sm);
-}
-
-/* Mobile Responsiveness for Checkbox Design */
 @media (max-width: 768px) {
-  .material-option-checkbox {
+  .materials-list {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
     padding: 0.75rem;
+    max-height: 500px;
   }
   
-  .material-checkbox-section {
-    margin-right: 0.75rem;
+  .material-card {
+    padding: 0.75rem;
+    min-height: 110px;
+  }
+  
+  .material-name {
+    font-size: 0.9rem;
+    min-height: 2.4rem;
+  }
+  
+  .material-card-header {
+    margin-bottom: 0.5rem;
   }
   
   .checkbox-custom {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
   
   .selected-material-item {
@@ -1390,16 +1526,32 @@ body {
     min-width: 80px;
   }
   
-  .materials-list {
-    max-height: 400px;
-  }
-  
   .selected-materials {
     max-height: 350px;
   }
 }
 
 @media (max-width: 480px) {
+  .materials-list {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .material-card {
+    padding: 1rem;
+  }
+  
+  .material-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .material-status {
+    align-self: flex-end;
+  }
+  
   .material-controls {
     flex-direction: column;
     gap: 0.75rem;
@@ -1428,18 +1580,28 @@ body {
   }
 }
 
-/* Accessibility Improvements for Checkboxes */
-.material-checkbox:focus + .checkbox-custom {
-  outline: 2px solid var(--primary-blue);
-  outline-offset: 2px;
+/* ===============================================
+   ANIMATIONS & INTERACTIONS
+   =============================================== */
+
+/* Animation for Card Selection */
+@keyframes cardSelect {
+  0% {
+    transform: translateY(-2px) scale(0.98);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.02);
+  }
+  100% {
+    transform: translateY(-2px) scale(1);
+  }
 }
 
-.material-option-checkbox:focus-within {
-  background: var(--accent-blue);
-  box-shadow: 0 0 0 2px var(--primary-blue);
+.material-card.selected {
+  animation: cardSelect 0.3s ease-out;
 }
 
-/* Animation for Selection */
+/* Animation for Checkbox Selection */
 @keyframes checkboxSelect {
   0% {
     transform: scale(0.8);
@@ -1452,31 +1614,8 @@ body {
   }
 }
 
-.material-checkbox:checked + .checkbox-custom {
+.material-card.selected .checkbox-custom {
   animation: checkboxSelect 0.2s ease-out;
-}
-
-/* Scrollbar Styling for Materials List */
-.materials-list::-webkit-scrollbar,
-.selected-materials::-webkit-scrollbar {
-  width: 10px;
-}
-
-.materials-list::-webkit-scrollbar-track,
-.selected-materials::-webkit-scrollbar-track {
-  background: var(--gray-100);
-  border-radius: var(--radius-sm);
-}
-
-.materials-list::-webkit-scrollbar-thumb,
-.selected-materials::-webkit-scrollbar-thumb {
-  background: var(--gray-400);
-  border-radius: var(--radius-sm);
-}
-
-.materials-list::-webkit-scrollbar-thumb:hover,
-.selected-materials::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-500);
 }
 
 /* Success State for Selected Items */
@@ -1489,24 +1628,68 @@ body {
   color: var(--success-green);
 }
 
-/* Empty State Enhancement */
-.no-materials {
-  text-align: center;
-  padding: 3rem 2rem;
-  color: var(--gray-500);
+/* ===============================================
+   SCROLLBARS & ACCESSIBILITY
+   =============================================== */
+
+/* Scrollbar for Grid */
+.materials-list::-webkit-scrollbar,
+.selected-materials::-webkit-scrollbar {
+  width: 12px;
 }
 
-.no-materials::before {
-  content: '🔍';
-  display: block;
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
+.materials-list::-webkit-scrollbar-track,
+.selected-materials::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
 }
 
-/* Print Styles */
+.materials-list::-webkit-scrollbar-thumb,
+.selected-materials::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--gray-100);
+}
+
+.materials-list::-webkit-scrollbar-thumb:hover,
+.selected-materials::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* Focus States for Accessibility */
+.material-card:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+.material-card:focus-visible {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+.material-checkbox:focus + .checkbox-custom {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* ===============================================
+   PRINT STYLES
+   =============================================== */
+
 @media print {
-  .material-option-checkbox,
+  .materials-list {
+    display: block !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  .material-card {
+    break-inside: avoid;
+    border: 1px solid #000 !important;
+    background: transparent !important;
+    margin-bottom: 0.5rem;
+  }
+  
   .material-controls,
   .materials-selection-container {
     display: none !important;
