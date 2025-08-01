@@ -429,28 +429,70 @@ class MaterialManagementApp {
                         </div>
                     </div>
                     <div class="material-actions">
-                        <input type="number" 
-                               class="quantity-input" 
-                               value="1" 
-                               min="1" 
-                               max="9999"
-                               data-material-id="${material.id}">
+                        <div class="quantity-section">
+                            <label class="quantity-label">Quantity:</label>
+                            <input type="number" 
+                                   class="quantity-input" 
+                                   value="0" 
+                                   min="0" 
+                                   max="9999"
+                                   placeholder="0"
+                                   data-material-id="${material.id}">
+                            <span class="unit-label">${material.unit}</span>
+                        </div>
                         <button type="button" 
-                                class="add-material-btn" 
+                                class="add-to-order-btn" 
                                 data-material-id="${material.id}">
-                            Add
+                            Add to Order
                         </button>
                     </div>
                 </div>
             `).join('');
 
             // Add event listeners to add buttons
-            materialsList.querySelectorAll('.add-material-btn').forEach(btn => {
+            materialsList.querySelectorAll('.add-to-order-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const materialId = e.target.dataset.materialId;
                     const quantityInput = materialsList.querySelector(`.quantity-input[data-material-id="${materialId}"]`);
-                    const quantity = parseInt(quantityInput?.value || 1);
+                    let quantity = parseInt(quantityInput?.value || 0);
+                    
+                    if (quantity <= 0) {
+                        this.showError('Please enter a quantity greater than 0.');
+                        quantityInput?.focus();
+                        return;
+                    }
+                    
                     this.addMaterialById(materialId, quantity);
+                });
+            });
+
+            // Add event listeners to quantity inputs for enter key
+            materialsList.querySelectorAll('.quantity-input').forEach(input => {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const materialId = e.target.dataset.materialId;
+                        const btn = materialsList.querySelector(`.add-to-order-btn[data-material-id="${materialId}"]`);
+                        btn?.click();
+                    }
+                });
+                
+                // Auto-update button text based on quantity
+                input.addEventListener('input', (e) => {
+                    const materialId = e.target.dataset.materialId;
+                    const btn = materialsList.querySelector(`.add-to-order-btn[data-material-id="${materialId}"]`);
+                    const quantity = parseInt(e.target.value || 0);
+                    
+                    if (btn) {
+                        if (quantity > 0) {
+                            btn.textContent = `Add ${quantity} to Order`;
+                            btn.disabled = false;
+                            btn.classList.remove('disabled');
+                        } else {
+                            btn.textContent = 'Add to Order';
+                            btn.disabled = false;
+                            btn.classList.remove('disabled');
+                        }
+                    }
                 });
             });
 
@@ -502,7 +544,12 @@ class MaterialManagementApp {
             // Reset quantity input
             const quantityInput = document.querySelector(`.quantity-input[data-material-id="${materialId}"]`);
             if (quantityInput) {
-                quantityInput.value = 1;
+                quantityInput.value = 0;
+                // Update button text
+                const btn = document.querySelector(`.add-to-order-btn[data-material-id="${materialId}"]`);
+                if (btn) {
+                    btn.textContent = 'Add to Order';
+                }
             }
             
         } catch (error) {
@@ -537,7 +584,7 @@ class MaterialManagementApp {
                     </div>
                     <div class="material-controls">
                         <div class="quantity-controls">
-                            <button type="button" class="qty-btn minus" onclick="window.app.updateQuantity(${index}, -1)">−</button>
+                            <button type="button" class="qty-btn minus" onclick="window.app.updateQuantity(${index}, -1)" ${material.quantity <= 1 ? 'disabled' : ''}>−</button>
                             <span class="quantity-display">${material.quantity} ${material.unit}</span>
                             <button type="button" class="qty-btn plus" onclick="window.app.updateQuantity(${index}, 1)">+</button>
                         </div>
@@ -567,7 +614,7 @@ class MaterialManagementApp {
         try {
             if (index >= 0 && index < this.selectedMaterials.length) {
                 const newQuantity = this.selectedMaterials[index].quantity + change;
-                if (newQuantity > 0) {
+                if (newQuantity >= 1) {  // Don't allow quantity to go below 1
                     this.selectedMaterials[index].quantity = newQuantity;
                     console.log(`🔄 Updated quantity for ${this.selectedMaterials[index].name}: ${newQuantity}`);
                     this.renderSelectedMaterials();
