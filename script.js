@@ -1,14 +1,15 @@
-// Enhanced script.js with Checkbox Material Selection
+// Enhanced script.js with Checkbox Material Selection and Confirmation Page
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
         this.selectedMaterials = [];
         this.filteredMaterials = [];
         this.selectedSubcategory = '';
+        this.pendingSubmissionData = null; // Store form data for confirmation
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode)');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode + Confirmation)');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -65,7 +66,7 @@ class MaterialManagementApp {
                 materialSearch.addEventListener('input', () => this.handleMaterialSearch());
             }
 
-            // Form submission
+            // Form submission (now goes to confirmation page)
             const form = document.getElementById('materialForm');
             if (form) {
                 form.addEventListener('submit', (e) => this.handleFormSubmit(e));
@@ -80,6 +81,22 @@ class MaterialManagementApp {
                         }
                     });
                 }
+            }
+
+            // NEW: Confirmation page event listeners
+            const backToEditBtn = document.getElementById('backToEditBtn');
+            if (backToEditBtn) {
+                backToEditBtn.addEventListener('click', () => this.goBackToEdit());
+            }
+
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            if (confirmSubmitBtn) {
+                confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
+            }
+
+            const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
+            if (addMoreMaterialsBtn) {
+                addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
             }
             
             console.log('✅ Enhanced event listeners setup complete');
@@ -161,10 +178,10 @@ class MaterialManagementApp {
             if (!selectedType || !submitBtn || !btnText) return;
             
             if (selectedType === 'order') {
-                btnText.textContent = 'Submit Order';
+                btnText.textContent = 'Review Order';
                 submitBtn.style.background = 'linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%)';
             } else {
-                btnText.textContent = 'Request Quote';
+                btnText.textContent = 'Review Quote Request';
                 submitBtn.style.background = 'linear-gradient(135deg, var(--warning-orange) 0%, #f59e0b 100%)';
             }
         } catch (error) {
@@ -615,6 +632,12 @@ class MaterialManagementApp {
                 const checkbox = document.querySelector(`.material-checkbox[data-material-id="${removed.id}"]`);
                 if (checkbox) {
                     checkbox.checked = false;
+                    // Also update the card appearance
+                    const card = checkbox.closest('.material-card');
+                    if (card) {
+                        card.classList.remove('selected');
+                        card.querySelector('.material-status').innerHTML = '<span class="select-badge">Click to Select</span>';
+                    }
                 }
                 
                 this.renderSelectedMaterials();
@@ -730,28 +753,207 @@ class MaterialManagementApp {
         }
     }
 
+    // NEW: Form submission now goes to confirmation page instead of directly submitting
     async handleFormSubmit(e) {
         e.preventDefault();
         
         try {
             const form = e.target;
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = submitBtn?.querySelector('.btn-text');
-            const btnLoading = submitBtn?.querySelector('.btn-loading');
             
-            // Disable form
-            if (submitBtn) submitBtn.disabled = true;
-            if (btnText) btnText.style.display = 'none';
-            if (btnLoading) btnLoading.style.display = 'flex';
-
-            // Prepare form data
+            // Prepare form data for confirmation
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
             // Add selected materials with quantities
             data.materials = this.selectedMaterials;
             
-            console.log('📦 Submitting enhanced form data:', data);
+            // Get supplier details
+            const supplierSelect = document.getElementById('supplier');
+            const selectedOption = supplierSelect.selectedOptions[0];
+            if (selectedOption) {
+                data.supplierEmail = selectedOption.dataset.email || '';
+                data.supplierPhone = selectedOption.dataset.phone || '';
+                data.supplierId = selectedOption.dataset.id || '';
+            }
+            
+            console.log('📋 Form data prepared for confirmation:', data);
+            
+            // Store data for later submission
+            this.pendingSubmissionData = data;
+            
+            // Show confirmation page
+            this.showConfirmationPage(data);
+            
+        } catch (error) {
+            console.error('❌ Form preparation error:', error);
+            this.showError(`Error preparing form: ${error.message}`);
+        }
+    }
+
+    // NEW: Show confirmation page with all details
+    showConfirmationPage(data) {
+        try {
+            console.log('📋 Displaying confirmation page');
+            
+            // Hide main form and show confirmation page
+            const mainForm = document.getElementById('mainForm');
+            const confirmationPage = document.getElementById('confirmationPage');
+            
+            if (mainForm) mainForm.style.display = 'none';
+            if (confirmationPage) confirmationPage.style.display = 'block';
+            
+            // Update titles based on request type
+            const requestType = data.requestType;
+            const confirmationTitle = document.getElementById('confirmationTitle');
+            const confirmationSubtitle = document.getElementById('confirmationSubtitle');
+            const confirmSubmitText = document.getElementById('confirmSubmitText');
+            
+            if (requestType === 'order') {
+                if (confirmationTitle) confirmationTitle.textContent = 'Review Your Order';
+                if (confirmationSubtitle) confirmationSubtitle.textContent = 'Please review all details before sending to supplier';
+                if (confirmSubmitText) confirmSubmitText.textContent = 'Confirm & Send Order';
+            } else {
+                if (confirmationTitle) confirmationTitle.textContent = 'Review Your Quote Request';
+                if (confirmationSubtitle) confirmationSubtitle.textContent = 'Please review all details before sending to supplier';
+                if (confirmSubmitText) confirmSubmitText.textContent = 'Confirm & Send Quote Request';
+            }
+            
+            // Populate order summary
+            this.populateElement('confirmRequestType', requestType === 'order' ? 'Material Order' : 'Quote Request');
+            this.populateElement('confirmCategory', data.category);
+            this.populateElement('confirmUrgency', data.urgency, 'Normal');
+            this.populateElement('confirmProjectRef', data.projectRef, 'Not specified');
+            
+            // Populate supplier information
+            this.populateElement('confirmSupplierName', data.supplier);
+            this.populateElement('confirmSupplierEmail', data.supplierEmail, 'Not available');
+            this.populateElement('confirmSupplierPhone', data.supplierPhone, 'Not available');
+            
+            // Populate requestor information
+            this.populateElement('confirmRequestorName', data.requestorName);
+            this.populateElement('confirmRequestorEmail', data.requestorEmail);
+            
+            // Populate materials
+            this.populateConfirmationMaterials(data.materials);
+            
+            // Handle special instructions
+            const notesSection = document.getElementById('notesSection');
+            const confirmNotes = document.getElementById('confirmNotes');
+            if (data.notes && data.notes.trim()) {
+                if (notesSection) notesSection.style.display = 'block';
+                this.populateElement('confirmNotes', data.notes);
+            } else {
+                if (notesSection) notesSection.style.display = 'none';
+            }
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+        } catch (error) {
+            console.error('❌ Error showing confirmation page:', error);
+            this.showError('Error displaying confirmation page: ' + error.message);
+        }
+    }
+
+    // NEW: Populate confirmation materials list
+    populateConfirmationMaterials(materials) {
+        try {
+            const materialsSummary = document.getElementById('confirmMaterialsSummary');
+            const materialsList = document.getElementById('confirmMaterialsList');
+            
+            if (!materials || materials.length === 0) return;
+            
+            // Summary
+            const totalItems = materials.length;
+            const totalQuantity = materials.reduce((sum, m) => sum + m.quantity, 0);
+            
+            if (materialsSummary) {
+                materialsSummary.innerHTML = `
+                    <div class="summary-stat">
+                        <span class="stat-number">${totalItems}</span>
+                        <span class="stat-label">Unique Materials</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="stat-number">${totalQuantity}</span>
+                        <span class="stat-label">Total Items</span>
+                    </div>
+                `;
+            }
+            
+            // Materials list
+            if (materialsList) {
+                materialsList.innerHTML = materials.map((material, index) => `
+                    <div class="confirm-material-item">
+                        <div class="material-details">
+                            <div class="material-name">${material.name}</div>
+                            <div class="material-info">
+                                ${material.code ? `<span class="info-tag">Code: ${material.code}</span>` : ''}
+                                <span class="info-tag">Unit: ${material.unit}</span>
+                                <span class="info-tag">${material.subcategory}</span>
+                            </div>
+                        </div>
+                        <div class="material-quantity">
+                            <span class="quantity-badge">${material.quantity} ${material.unit}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error populating confirmation materials:', error);
+        }
+    }
+
+    // NEW: Helper function to populate elements safely
+    populateElement(elementId, value, defaultValue = '') {
+        try {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = value || defaultValue;
+            }
+        } catch (error) {
+            console.error(`❌ Error populating element ${elementId}:`, error);
+        }
+    }
+
+    // NEW: Go back to edit form
+    goBackToEdit() {
+        try {
+            console.log('🔄 Going back to edit form');
+            
+            const mainForm = document.getElementById('mainForm');
+            const confirmationPage = document.getElementById('confirmationPage');
+            
+            if (mainForm) mainForm.style.display = 'block';
+            if (confirmationPage) confirmationPage.style.display = 'none';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+        } catch (error) {
+            console.error('❌ Error going back to edit:', error);
+        }
+    }
+
+    // NEW: Handle confirmed submission to supplier
+    async handleConfirmedSubmission() {
+        if (!this.pendingSubmissionData) {
+            this.showError('No submission data found. Please go back and fill the form again.');
+            return;
+        }
+        
+        try {
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            const btnText = confirmSubmitBtn?.querySelector('.btn-text');
+            const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
+            
+            // Disable form
+            if (confirmSubmitBtn) confirmSubmitBtn.disabled = true;
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoading) btnLoading.style.display = 'flex';
+
+            const data = this.pendingSubmissionData;
+            console.log('📤 Submitting confirmed request to supplier:', data);
             
             // Determine endpoint
             const requestType = data.requestType;
@@ -767,7 +969,7 @@ class MaterialManagementApp {
             });
 
             const result = await response.json();
-            console.log('✅ Submission result:', result);
+            console.log('✅ Confirmed submission result:', result);
 
             if (result.success !== false) {
                 const type = requestType === 'order' ? 'order' : 'quote';
@@ -778,15 +980,15 @@ class MaterialManagementApp {
             }
 
         } catch (error) {
-            console.error('❌ Form submission error:', error);
+            console.error('❌ Confirmed submission error:', error);
             this.showError(`Submission failed: ${error.message}`);
         } finally {
             // Re-enable form
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = submitBtn?.querySelector('.btn-text');
-            const btnLoading = submitBtn?.querySelector('.btn-loading');
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            const btnText = confirmSubmitBtn?.querySelector('.btn-text');
+            const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
             
-            if (submitBtn) submitBtn.disabled = false;
+            if (confirmSubmitBtn) confirmSubmitBtn.disabled = false;
             if (btnText) btnText.style.display = 'inline';
             if (btnLoading) btnLoading.style.display = 'none';
         }
@@ -794,18 +996,23 @@ class MaterialManagementApp {
 
     showSuccess(type, id, supplier) {
         try {
-            // Hide form and show success
+            // Hide both form and confirmation page, show success
             const mainForm = document.getElementById('mainForm');
+            const confirmationPage = document.getElementById('confirmationPage');
             const successAlert = document.getElementById('successAlert');
             const successMessage = document.getElementById('successMessage');
             const referenceId = document.getElementById('referenceId');
             const successSupplier = document.getElementById('successSupplier');
 
             if (mainForm) mainForm.style.display = 'none';
+            if (confirmationPage) confirmationPage.style.display = 'none';
             if (successAlert) successAlert.style.display = 'block';
-            if (successMessage) successMessage.textContent = `Your ${type} request has been submitted successfully!`;
+            if (successMessage) successMessage.textContent = `Your ${type} request has been submitted successfully and sent to the supplier!`;
             if (referenceId) referenceId.textContent = id;
             if (successSupplier) successSupplier.textContent = supplier;
+
+            // Clear pending data
+            this.pendingSubmissionData = null;
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -855,10 +1062,12 @@ class MaterialManagementApp {
 function resetForm() {
     try {
         const mainForm = document.getElementById('mainForm');
+        const confirmationPage = document.getElementById('confirmationPage');
         const successAlert = document.getElementById('successAlert');
         const errorAlert = document.getElementById('errorAlert');
         
         if (mainForm) mainForm.style.display = 'block';
+        if (confirmationPage) confirmationPage.style.display = 'none';
         if (successAlert) successAlert.style.display = 'none';
         if (errorAlert) errorAlert.style.display = 'none';
         
@@ -871,6 +1080,7 @@ function resetForm() {
             window.app.selectedMaterials = [];
             window.app.filteredMaterials = [];
             window.app.selectedSubcategory = '';
+            window.app.pendingSubmissionData = null;
             window.app.renderSelectedMaterials();
             window.app.resetMaterialSelection();
             window.app.validateForm();
@@ -886,7 +1096,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox Mode)');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox Mode + Confirmation)');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
