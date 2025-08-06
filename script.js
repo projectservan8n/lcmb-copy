@@ -1,4 +1,4 @@
-// Enhanced script.js with Checkbox Material Selection and Confirmation Page
+// Enhanced script.js with Checkbox Material Selection, Confirmation Page, and Supplier_ID Filtering
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
@@ -9,7 +9,7 @@ class MaterialManagementApp {
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode + Confirmation)');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode + Confirmation + Supplier_ID Filter)');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -83,7 +83,7 @@ class MaterialManagementApp {
                 }
             }
 
-            // NEW: Confirmation page event listeners
+            // Confirmation page event listeners
             const backToEditBtn = document.getElementById('backToEditBtn');
             if (backToEditBtn) {
                 backToEditBtn.addEventListener('click', () => this.goBackToEdit());
@@ -143,7 +143,8 @@ class MaterialManagementApp {
             console.log('📋 Populating enhanced form with data:', {
                 suppliers: data.data.suppliers?.length || 0,
                 categories: data.data.categories?.length || 0,
-                materials: Object.keys(data.data.materials || {}).length
+                materials: Object.keys(data.data.materials || {}).length,
+                materialsByCategoryAndSupplier: data.data.materialsByCategoryAndSupplier ? 'Available' : 'Not Available'
             });
 
             // Populate categories
@@ -245,7 +246,7 @@ class MaterialManagementApp {
         option.value = supplier.name;
         option.dataset.email = supplier.email || '';
         option.dataset.phone = supplier.phone || '';
-        option.dataset.id = supplier.id || '';
+        option.dataset.id = supplier.id || '';  // ✅ CRITICAL: Include supplier ID for filtering
         option.textContent = supplier.name;
         supplierSelect.appendChild(option);
     }
@@ -274,11 +275,13 @@ class MaterialManagementApp {
             const selectedOption = supplierSelect.selectedOptions[0];
             if (selectedOption) {
                 this.showSupplierInfo(selectedOption);
+                console.log('🔍 Selected Supplier ID:', selectedOption.dataset.id);
             }
 
-            // Populate subcategories for selected category
-            if (selectedCategory && this.formData?.data?.materials?.[selectedCategory]) {
+            // Populate subcategories and materials for selected category and supplier
+            if (selectedCategory) {
                 this.populateSubcategories(selectedCategory);
+                this.populateMaterials(selectedCategory, '');
             }
 
             this.validateForm();
@@ -290,9 +293,24 @@ class MaterialManagementApp {
     populateSubcategories(category) {
         try {
             const subcategorySelect = document.getElementById('subcategory');
-            if (!subcategorySelect) return;
+            const supplierSelect = document.getElementById('supplier');
+            
+            if (!subcategorySelect || !supplierSelect.value) return;
 
-            const materials = this.formData.data.materials[category] || [];
+            // Get selected supplier ID
+            const selectedOption = supplierSelect.selectedOptions[0];
+            const selectedSupplierId = selectedOption?.dataset.id;
+
+            if (!selectedSupplierId) return;
+
+            // Get materials for this category and supplier to extract subcategories
+            let materials = [];
+            if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
+                materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
+            } else if (this.formData?.data?.materials?.[category]) {
+                materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
+            }
+
             const subcategories = [...new Set(materials.map(m => m.subcategory).filter(sub => sub))];
             
             subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
@@ -309,8 +327,7 @@ class MaterialManagementApp {
                 subcategoryGroup.style.display = 'block';
             }
 
-            // Enable material search and populate all materials initially
-            this.populateMaterials(category, '');
+            console.log(`📁 Found ${subcategories.length} subcategories for ${category} supplier ${selectedSupplierId}`);
             
         } catch (error) {
             console.error('❌ Error populating subcategories:', error);
@@ -338,21 +355,59 @@ class MaterialManagementApp {
         }
     }
 
+    // 🔥 ENHANCED: Materials population with proper Supplier_ID filtering
     populateMaterials(category, subcategory = '') {
         try {
             const materialSearch = document.getElementById('materialSearch');
             const materialsContainer = document.getElementById('materialsContainer');
+            const supplierSelect = document.getElementById('supplier');
             
-            if (!category || !this.formData?.data?.materials?.[category]) return;
+            if (!category || !supplierSelect.value) {
+                console.log('⚠️ Missing category or supplier');
+                return;
+            }
 
-            let materials = this.formData.data.materials[category];
+            // Get selected supplier ID from the option's dataset
+            const selectedOption = supplierSelect.selectedOptions[0];
+            if (!selectedOption) {
+                console.log('⚠️ No supplier option selected');
+                return;
+            }
+            
+            const selectedSupplierId = selectedOption.dataset.id;
+            if (!selectedSupplierId) {
+                console.log('⚠️ No supplier ID found in dataset');
+                return;
+            }
+
+            console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}, Subcategory: ${subcategory || 'All'}`);
+
+            // Get materials for this specific category and supplier ID
+            let materials = [];
+            
+            // Check if we have the new grouped structure (preferred)
+            if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
+                materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
+                console.log('✅ Using materialsByCategoryAndSupplier structure');
+            } else if (this.formData?.data?.materials?.[category]) {
+                // Fallback: filter from the flat structure
+                materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
+                console.log('⚠️ Using fallback materials filtering');
+            } else {
+                console.log('❌ No materials found for category:', category);
+                materials = [];
+            }
             
             // Filter by subcategory if selected
             if (subcategory) {
+                const beforeFilter = materials.length;
                 materials = materials.filter(m => m.subcategory === subcategory);
+                console.log(`📁 Filtered by subcategory: ${beforeFilter} → ${materials.length} materials`);
             }
 
             this.filteredMaterials = materials;
+            
+            console.log(`📦 Final result: ${materials.length} materials for supplier ${selectedSupplierId}`);
             
             // Enable search and show materials container
             if (materialSearch) {
@@ -366,8 +421,6 @@ class MaterialManagementApp {
 
             // Render materials with checkbox approach
             this.renderMaterialsList();
-            
-            console.log(`📦 Populated ${materials.length} materials for ${category}${subcategory ? ` > ${subcategory}` : ''}`);
             
         } catch (error) {
             console.error('❌ Error populating materials:', error);
@@ -400,8 +453,8 @@ class MaterialManagementApp {
             if (searchTerm) {
                 materialsToShow = this.filteredMaterials.filter(material => 
                     material.name.toLowerCase().includes(searchTerm) ||
-                    material.code.toLowerCase().includes(searchTerm) ||
-                    material.subcategory.toLowerCase().includes(searchTerm)
+                    (material.code && material.code.toLowerCase().includes(searchTerm)) ||
+                    (material.subcategory && material.subcategory.toLowerCase().includes(searchTerm))
                 );
             }
 
@@ -419,7 +472,7 @@ class MaterialManagementApp {
                 return;
             }
 
-            // NEW: Grid-based material cards with full clickability
+            // Grid-based material cards with full clickability
             materialsList.innerHTML = displayMaterials.map(material => {
                 const isSelected = this.selectedMaterials.some(m => m.id === material.id);
                 return `
@@ -534,7 +587,7 @@ class MaterialManagementApp {
             };
 
             this.selectedMaterials.push(newMaterial);
-            console.log(`✅ Added material: ${material.name} (${quantity} ${material.unit})`);
+            console.log(`✅ Added material: ${material.name} (${quantity} ${material.unit}) from supplier ${material.supplierId}`);
 
             this.renderSelectedMaterials();
             this.validateForm();
@@ -575,7 +628,8 @@ class MaterialManagementApp {
                         <div class="material-meta">
                             ${material.code ? `Code: ${material.code} • ` : ''}
                             Unit: ${material.unit} • 
-                            ${material.subcategory}
+                            ${material.subcategory} • 
+                            Supplier: ${material.supplierName}
                         </div>
                     </div>
                     <div class="material-controls">
@@ -753,7 +807,7 @@ class MaterialManagementApp {
         }
     }
 
-    // NEW: Form submission now goes to confirmation page instead of directly submitting
+    // Form submission now goes to confirmation page instead of directly submitting
     async handleFormSubmit(e) {
         e.preventDefault();
         
@@ -790,7 +844,7 @@ class MaterialManagementApp {
         }
     }
 
-    // NEW: Show confirmation page with all details
+    // Show confirmation page with all details
     showConfirmationPage(data) {
         try {
             console.log('📋 Displaying confirmation page');
@@ -855,7 +909,7 @@ class MaterialManagementApp {
         }
     }
 
-    // NEW: Populate confirmation materials list
+    // Populate confirmation materials list
     populateConfirmationMaterials(materials) {
         try {
             const materialsSummary = document.getElementById('confirmMaterialsSummary');
@@ -890,6 +944,7 @@ class MaterialManagementApp {
                                 ${material.code ? `<span class="info-tag">Code: ${material.code}</span>` : ''}
                                 <span class="info-tag">Unit: ${material.unit}</span>
                                 <span class="info-tag">${material.subcategory}</span>
+                                <span class="info-tag">Supplier: ${material.supplierName}</span>
                             </div>
                         </div>
                         <div class="material-quantity">
@@ -904,7 +959,7 @@ class MaterialManagementApp {
         }
     }
 
-    // NEW: Helper function to populate elements safely
+    // Helper function to populate elements safely
     populateElement(elementId, value, defaultValue = '') {
         try {
             const element = document.getElementById(elementId);
@@ -916,7 +971,7 @@ class MaterialManagementApp {
         }
     }
 
-    // NEW: Go back to edit form
+    // Go back to edit form
     goBackToEdit() {
         try {
             console.log('🔄 Going back to edit form');
@@ -935,7 +990,7 @@ class MaterialManagementApp {
         }
     }
 
-    // NEW: Handle confirmed submission to supplier
+    // Handle confirmed submission to supplier
     async handleConfirmedSubmission() {
         if (!this.pendingSubmissionData) {
             this.showError('No submission data found. Please go back and fill the form again.');
@@ -1096,7 +1151,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox Mode + Confirmation)');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox + Confirmation + Supplier_ID Filter)');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
