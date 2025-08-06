@@ -1,4 +1,4 @@
-<!-- Enhanced index.html with Material Search and Quantity Control -->
+<!-- Enhanced index.html with Material Search, Quantity Control and Confirmation Page -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,14 +194,125 @@
                     <!-- Submit Button -->
                     <div class="form-actions">
                         <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
-                            <span class="btn-text">Submit Request</span>
+                            <span class="btn-text">Review Order</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner-small"></span>
+                                Processing...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- NEW: Confirmation Page -->
+            <div class="form-container" id="confirmationPage" style="display: none;">
+                <div class="form-header">
+                    <h2 id="confirmationTitle">Review Your Order</h2>
+                    <p id="confirmationSubtitle">Please review all details before sending to supplier</p>
+                </div>
+
+                <div class="confirmation-content">
+                    <!-- Order Summary Section -->
+                    <div class="confirmation-section">
+                        <h3 class="section-title">📋 Order Summary</h3>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <label>Request Type:</label>
+                                <span id="confirmRequestType" class="summary-value"></span>
+                            </div>
+                            <div class="summary-item">
+                                <label>Category:</label>
+                                <span id="confirmCategory" class="summary-value"></span>
+                            </div>
+                            <div class="summary-item">
+                                <label>Priority Level:</label>
+                                <span id="confirmUrgency" class="summary-value"></span>
+                            </div>
+                            <div class="summary-item">
+                                <label>ServiceM8 Job #:</label>
+                                <span id="confirmProjectRef" class="summary-value"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Information Section -->
+                    <div class="confirmation-section">
+                        <h3 class="section-title">🏢 Supplier Information</h3>
+                        <div class="supplier-card">
+                            <div class="supplier-header">
+                                <h4 id="confirmSupplierName"></h4>
+                                <span class="supplier-badge">Selected Supplier</span>
+                            </div>
+                            <div class="supplier-contact">
+                                <div class="contact-item">
+                                    <span class="contact-icon">📧</span>
+                                    <span id="confirmSupplierEmail"></span>
+                                </div>
+                                <div class="contact-item">
+                                    <span class="contact-icon">📞</span>
+                                    <span id="confirmSupplierPhone"></span>
+                                </div>
+                            </div>
+                            <div class="email-notice">
+                                <span class="notice-icon">ℹ️</span>
+                                <span>This request will be sent directly to the supplier's email</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Materials List Section -->
+                    <div class="confirmation-section">
+                        <h3 class="section-title">📦 Materials List</h3>
+                        <div class="materials-summary-card">
+                            <div id="confirmMaterialsSummary" class="confirm-summary"></div>
+                        </div>
+                        <div id="confirmMaterialsList" class="confirm-materials-list">
+                            <!-- Materials will be populated here -->
+                        </div>
+                        <div class="add-more-section">
+                            <button type="button" id="addMoreMaterialsBtn" class="btn btn-secondary">
+                                <span>➕ Add More Materials</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Requestor Information Section -->
+                    <div class="confirmation-section">
+                        <h3 class="section-title">👤 Requestor Information</h3>
+                        <div class="requestor-grid">
+                            <div class="requestor-item">
+                                <label>Name:</label>
+                                <span id="confirmRequestorName" class="summary-value"></span>
+                            </div>
+                            <div class="requestor-item">
+                                <label>Email:</label>
+                                <span id="confirmRequestorEmail" class="summary-value"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Instructions Section -->
+                    <div class="confirmation-section" id="notesSection" style="display: none;">
+                        <h3 class="section-title">📝 Special Instructions</h3>
+                        <div class="notes-card">
+                            <p id="confirmNotes"></p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="confirmation-actions">
+                        <button type="button" id="backToEditBtn" class="btn btn-secondary">
+                            <span>← Back to Edit</span>
+                        </button>
+                        <button type="button" id="confirmSubmitBtn" class="btn btn-primary">
+                            <span class="btn-text" id="confirmSubmitText">Confirm & Send to Supplier</span>
                             <span class="btn-loading" style="display: none;">
                                 <span class="spinner-small"></span>
                                 Submitting...
                             </span>
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </main>
