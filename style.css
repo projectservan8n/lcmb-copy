@@ -1,4 +1,4 @@
-/* style.css */
+/* style.css - Complete Enhanced LCMB Material Management System */
 :root {
   /* LCMB Brand Colors */
   --primary-blue: #2a5298;
@@ -601,6 +601,7 @@ body {
     gap: 0.5rem;
   }
 }
+
 /* Enhanced CSS for Material Search and Quantity Control */
 
 .form-help-text {
@@ -1071,6 +1072,7 @@ body {
     border-left: 2px solid #000;
   }
 }
+
 /* Complete Material Selection CSS - Grid Layout + Enhanced Features */
 
 /* ===============================================
@@ -1629,30 +1631,425 @@ body {
 }
 
 /* ===============================================
+   NEW: CONFIRMATION PAGE STYLES
+   =============================================== */
+
+/* Confirmation Content */
+.confirmation-content {
+  max-width: 100%;
+}
+
+.confirmation-section {
+  margin-bottom: 2rem;
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.confirmation-section:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.section-title {
+  color: var(--primary-blue);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Summary Grid */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-item label {
+  font-weight: 500;
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 1.1rem;
+}
+
+/* Supplier Card */
+.supplier-card {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #f0f8ff 100%);
+  border: 1px solid var(--primary-blue);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: relative;
+}
+
+.supplier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.supplier-header h4 {
+  color: var(--primary-blue-dark);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.supplier-badge {
+  background: var(--primary-blue);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.supplier-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  color: var(--gray-700);
+}
+
+.contact-icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+.email-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(42, 82, 152, 0.1);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-blue);
+  font-size: 0.9rem;
+  color: var(--primary-blue-dark);
+  font-weight: 500;
+}
+
+.notice-icon {
+  font-size: 1.1rem;
+}
+
+/* Materials Summary Card */
+.materials-summary-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid var(--success-green);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.confirm-summary {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  text-align: center;
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--success-green);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Confirmation Materials List */
+.confirm-materials-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+.confirm-material-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--gray-100);
+  transition: var(--transition);
+}
+
+.confirm-material-item:last-child {
+  border-bottom: none;
+}
+
+.confirm-material-item:hover {
+  background: var(--gray-50);
+}
+
+.material-details {
+  flex: 1;
+}
+
+.confirm-material-item .material-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.material-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.info-tag {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--gray-200);
+}
+
+.material-quantity {
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
+.quantity-badge {
+  background: var(--primary-blue);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Add More Materials Section */
+.add-more-section {
+  margin-top: 1rem;
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* Requestor Grid */
+.requestor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.requestor-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+}
+
+.requestor-item label {
+  font-weight: 500;
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.requestor-item .summary-value {
+  font-size: 1rem;
+}
+
+/* Notes Card */
+.notes-card {
+  background: #fef3c7;
+  border: 1px solid var(--warning-orange);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  border-left: 4px solid var(--warning-orange);
+}
+
+.notes-card p {
+  color: var(--gray-800);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Confirmation Actions */
+.confirmation-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--gray-200);
+}
+
+.confirmation-actions .btn {
+  min-width: 180px;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+}
+
+/* Responsive Design for Confirmation Page */
+@media (max-width: 768px) {
+  .confirmation-section {
+    padding: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .supplier-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .supplier-header h4 {
+    font-size: 1.2rem;
+  }
+  
+  .confirm-summary {
+    gap: 2rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  .confirm-material-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .material-quantity {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+  
+  .confirmation-actions {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+  
+  .confirmation-actions .btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .requestor-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .contact-item {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .confirm-summary {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .material-info {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .info-tag {
+    align-self: flex-start;
+  }
+}
+
+/* ===============================================
    SCROLLBARS & ACCESSIBILITY
    =============================================== */
 
 /* Scrollbar for Grid */
 .materials-list::-webkit-scrollbar,
-.selected-materials::-webkit-scrollbar {
+.selected-materials::-webkit-scrollbar,
+.confirm-materials-list::-webkit-scrollbar {
   width: 12px;
 }
 
 .materials-list::-webkit-scrollbar-track,
-.selected-materials::-webkit-scrollbar-track {
+.selected-materials::-webkit-scrollbar-track,
+.confirm-materials-list::-webkit-scrollbar-track {
   background: var(--gray-100);
   border-radius: var(--radius-sm);
 }
 
 .materials-list::-webkit-scrollbar-thumb,
-.selected-materials::-webkit-scrollbar-thumb {
+.selected-materials::-webkit-scrollbar-thumb,
+.confirm-materials-list::-webkit-scrollbar-thumb {
   background: var(--gray-400);
   border-radius: var(--radius-sm);
   border: 2px solid var(--gray-100);
 }
 
 .materials-list::-webkit-scrollbar-thumb:hover,
-.selected-materials::-webkit-scrollbar-thumb:hover {
+.selected-materials::-webkit-scrollbar-thumb:hover,
+.confirm-materials-list::-webkit-scrollbar-thumb:hover {
   background: var(--gray-500);
 }
 
@@ -1691,19 +2088,28 @@ body {
   }
   
   .material-controls,
-  .materials-selection-container {
+  .materials-selection-container,
+  .confirmation-actions {
     display: none !important;
   }
   
-  .selected-materials {
+  .selected-materials,
+  .confirm-materials-list {
     border: 1px solid #000;
     box-shadow: none;
     page-break-inside: avoid;
   }
   
-  .selected-material-item {
+  .selected-material-item,
+  .confirm-material-item {
     break-inside: avoid;
     border-left: 2px solid #000;
     background: transparent !important;
+  }
+  
+  .confirmation-section {
+    border: 1px solid #000;
+    break-inside: avoid;
+    margin-bottom: 1rem;
   }
 }
