@@ -1738,7 +1738,7 @@ class MaterialManagementApp {
         }
     }
 
-   async handleConfirmedSubmission() {
+  async handleConfirmedSubmission() {
     if (!this.pendingSubmissionData) {
         this.showError('No submission data found. Please go back and fill the form again.');
         return;
@@ -1755,24 +1755,29 @@ class MaterialManagementApp {
         if (btnLoading) btnLoading.style.display = 'flex';
 
         const data = this.pendingSubmissionData;
-        console.log('📤 Submitting confirmed request to supplier:', data);
+        console.log('📤 Submitting confirmed request:', data);
+        console.log('🔍 Current method:', this.currentMethod);
         
-        // Check if we have an additional PDF file (for "both" method)
-        let pdfUploadResult = null;
+        // FIXED: Route based on method type
+        let response;
+        let result;
+        
         if (this.currentMethod === 'both' && this.additionalPdfFile) {
-            console.log('📄 Uploading additional PDF file first...');
+            // BOTH METHOD: Send everything through PDF Upload API
+            console.log('📄 BOTH method detected - sending materials + PDF through PDF Upload API');
             
             try {
-                // Create FormData for PDF upload
+                // Create FormData for PDF upload with materials
                 const pdfFormData = new FormData();
                 
                 // Add PDF file as binary
                 pdfFormData.append('pdfFile', this.additionalPdfFile, this.additionalPdfFile.name);
                 
-                // Add metadata for PDF upload
+                // Add all form data including materials
                 pdfFormData.append('requestType', data.requestType);
                 pdfFormData.append('supplierName', data.supplier);
                 pdfFormData.append('supplierEmail', data.supplierEmail || '');
+                pdfFormData.append('supplierId', data.supplierId || '');
                 pdfFormData.append('requestorName', data.requestorName);
                 pdfFormData.append('requestorEmail', data.requestorEmail);
                 pdfFormData.append('urgency', data.urgency || 'Normal');
@@ -1781,73 +1786,76 @@ class MaterialManagementApp {
                 pdfFormData.append('category', data.category);
                 pdfFormData.append('filename', this.additionalPdfFile.name);
                 
-                // Add materials as JSON string for the PDF upload
+                // CRITICAL: Add materials as JSON string for BOTH method
                 pdfFormData.append('materials', JSON.stringify(data.materials || []));
                 
-                console.log('📤 Uploading PDF to Drive via /api/pdf/upload...');
+                console.log('📤 Sending BOTH method data to PDF Upload API:', {
+                    requestType: data.requestType,
+                    supplier: data.supplier,
+                    materialsCount: data.materials?.length || 0,
+                    pdfFile: this.additionalPdfFile.name,
+                    method: 'BOTH_WORLDS'
+                });
                 
-                // Upload PDF first
-                const pdfResponse = await fetch('/api/pdf/upload', {
+                // Send to PDF Upload API (this will handle everything)
+                response = await fetch('/api/pdf/upload', {
                     method: 'POST',
                     body: pdfFormData
                 });
                 
-                if (!pdfResponse.ok) {
-                    throw new Error(`PDF upload failed: ${pdfResponse.statusText}`);
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
                 }
                 
-                pdfUploadResult = await pdfResponse.json();
-                console.log('✅ PDF uploaded successfully:', pdfUploadResult);
+                result = await response.json();
+                console.log('✅ BOTH method submission successful:', result);
                 
-                // Add PDF info to the order/quote data
-                data.pdfFileName = pdfUploadResult.pdfFileName || this.additionalPdfFile.name;
-                data.pdfDriveLink = pdfUploadResult.driveLink || '';
-                data.pdfFileId = pdfUploadResult.pdfFileId || '';
-                data.requestMethod = 'BOTH_WORLDS'; // Mark as combined request
+                // Show success with PDF info
+                this.showBothMethodSuccess(
+                    data.requestType === 'order' ? 'order' : 'quote',
+                    result.orderId || result.quoteId || `${data.requestType.toUpperCase()}-${Date.now()}`,
+                    data.supplier,
+                    result
+                );
                 
-            } catch (pdfError) {
-                console.error('❌ PDF upload failed:', pdfError);
-                throw new Error(`PDF upload failed: ${pdfError.message}`);
+            } catch (error) {
+                console.error('❌ BOTH method submission failed:', error);
+                throw error;
             }
-        }
-        
-        // Now submit the order/quote with PDF info included
-        const requestType = data.requestType;
-        const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
-        
-        console.log('📦 Submitting final request with data:', {
-            requestType: requestType,
-            supplier: data.supplier,
-            materials: data.materials?.length || 0,
-            hasPdf: !!data.pdfDriveLink,
-            pdfFileName: data.pdfFileName,
-            method: this.currentMethod
-        });
-        
-        // Submit form with PDF info if available
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-        console.log('✅ Confirmed submission result:', result);
-
-        if (result.success !== false) {
-            const type = requestType === 'order' ? 'order' : 'quote';
-            const id = result.orderId || result.quoteId || result.id || `${type.toUpperCase()}-${Date.now()}`;
             
-            // Show success with PDF info if applicable
-            if (this.currentMethod === 'both' && pdfUploadResult) {
-                this.showBothMethodSuccess(type, id, data.supplier, pdfUploadResult);
-            } else {
-                this.showSuccess(type, id, data.supplier);
+        } else if (this.currentMethod === 'system') {
+            // SYSTEM ONLY: Use regular order/quote endpoints
+            console.log('🖥️ System method - using regular order/quote endpoints');
+            
+            const requestType = data.requestType;
+            const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
+            
+            response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.statusText}`);
             }
+            
+            result = await response.json();
+            console.log('✅ System submission result:', result);
+            
+            if (result.success !== false) {
+                const type = requestType === 'order' ? 'order' : 'quote';
+                const id = result.orderId || result.quoteId || result.id || `${type.toUpperCase()}-${Date.now()}`;
+                this.showSuccess(type, id, data.supplier);
+            } else {
+                throw new Error(result.error || 'Submission failed');
+            }
+            
         } else {
-            throw new Error(result.error || 'Submission failed');
+            // This shouldn't happen as PDF-only goes through different flow
+            throw new Error('Invalid submission method');
         }
 
     } catch (error) {
