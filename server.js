@@ -223,11 +223,22 @@ app.post('/api/order/submit', async (req, res) => {
       supplier: req.body.supplier,
       materials: req.body.materials?.length || 0,
       requestorName: req.body.requestorName,
-      hasAdditionalPdf: !!req.body.additionalPdfData
+      hasPdf: !!req.body.pdfDriveLink,
+      pdfFileName: req.body.pdfFileName,
+      requestMethod: req.body.requestMethod
     });
     
-    const result = await callWebhook(WEBHOOKS.ORDER_SUBMIT, 'POST', req.body);
-    console.log(`✅ [${new Date().toISOString()}] Order submission successful`);
+    // If this is a BOTH_WORLDS request, include PDF info in the webhook data
+    const orderData = { ...req.body };
+    if (req.body.requestMethod === 'BOTH_WORLDS' && req.body.pdfDriveLink) {
+      orderData.PDF_File_Name = req.body.pdfFileName;
+      orderData.PDF_Drive_Link = req.body.pdfDriveLink;
+      orderData.PDF_File_ID = req.body.pdfFileId;
+      orderData.Request_Method = 'BOTH_WORLDS';
+    }
+    
+    const result = await callWebhook(WEBHOOKS.ORDER_SUBMIT, 'POST', orderData);
+    console.log(`✅ [${new Date().toISOString()}] Order submission successful ${req.body.requestMethod === 'BOTH_WORLDS' ? '(with PDF)' : ''}`);
     res.json(result);
   } catch (error) {
     console.error(`❌ [${new Date().toISOString()}] API Error (order/submit):`, error.message);
@@ -239,7 +250,7 @@ app.post('/api/order/submit', async (req, res) => {
   }
 });
 
-// Quote Submit API (existing)
+// Quote Submit API (enhanced with PDF support)
 app.post('/api/quote/submit', async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Submitting quote via webhook...`);
@@ -248,11 +259,22 @@ app.post('/api/quote/submit', async (req, res) => {
       supplier: req.body.supplier,
       materials: req.body.materials?.length || 0,
       requestorName: req.body.requestorName,
-      hasAdditionalPdf: !!req.body.additionalPdfData
+      hasPdf: !!req.body.pdfDriveLink,
+      pdfFileName: req.body.pdfFileName,
+      requestMethod: req.body.requestMethod
     });
     
-    const result = await callWebhook(WEBHOOKS.QUOTE_SUBMIT, 'POST', req.body);
-    console.log(`✅ [${new Date().toISOString()}] Quote submission successful`);
+    // If this is a BOTH_WORLDS request, include PDF info in the webhook data
+    const quoteData = { ...req.body };
+    if (req.body.requestMethod === 'BOTH_WORLDS' && req.body.pdfDriveLink) {
+      quoteData.PDF_File_Name = req.body.pdfFileName;
+      quoteData.PDF_Drive_Link = req.body.pdfDriveLink;
+      quoteData.PDF_File_ID = req.body.pdfFileId;
+      quoteData.Request_Method = 'BOTH_WORLDS';
+    }
+    
+    const result = await callWebhook(WEBHOOKS.QUOTE_SUBMIT, 'POST', quoteData);
+    console.log(`✅ [${new Date().toISOString()}] Quote submission successful ${req.body.requestMethod === 'BOTH_WORLDS' ? '(with PDF)' : ''}`);
     res.json(result);
   } catch (error) {
     console.error(`❌ [${new Date().toISOString()}] API Error (quote/submit):`, error.message);
@@ -263,7 +285,6 @@ app.post('/api/quote/submit', async (req, res) => {
     });
   }
 });
-
 // NEW: Binary PDF Upload API - FIXED VERSION with correct property name
 app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
   try {
