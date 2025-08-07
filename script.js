@@ -67,6 +67,12 @@ class MaterialManagementApp {
     }
 
     setupPdfFormListeners() {
+        // PDF supplier dropdown change
+        const pdfSupplier = document.getElementById('pdfSupplier');
+        if (pdfSupplier) {
+            pdfSupplier.addEventListener('change', () => this.handlePdfSupplierChange());
+        }
+
         // PDF file upload
         const pdfFile = document.getElementById('pdfFile');
         const pdfUploadArea = document.getElementById('pdfUploadArea');
@@ -285,6 +291,17 @@ class MaterialManagementApp {
     showPdfMethod() {
         console.log('📄 Showing PDF method');
         
+        // Load form data if not already loaded (for supplier dropdown and categories)
+        if (!this.formData) {
+            this.loadFormData().then(() => {
+                this.populatePdfSuppliers();
+                this.populatePdfCategories();
+            });
+        } else {
+            this.populatePdfSuppliers();
+            this.populatePdfCategories();
+        }
+        
         // Hide method selection, show PDF form
         this.hideAllSections();
         const pdfForm = document.getElementById('pdfForm');
@@ -293,6 +310,114 @@ class MaterialManagementApp {
         }
         
         this.validatePdfForm();
+    }
+
+    populatePdfSuppliers() {
+        try {
+            const pdfSupplierSelect = document.getElementById('pdfSupplier');
+            
+            if (!pdfSupplierSelect || !this.formData?.data?.suppliers) {
+                console.warn('⚠️ PDF supplier dropdown not found or no supplier data available');
+                return;
+            }
+
+            // Clear existing options except the first one
+            pdfSupplierSelect.innerHTML = '<option value="">Select a supplier...</option>';
+            
+            // Add all suppliers to dropdown
+            this.formData.data.suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.name;
+                option.dataset.email = supplier.email || '';
+                option.dataset.phone = supplier.phone || '';
+                option.dataset.id = supplier.id || '';
+                option.textContent = supplier.name;
+                pdfSupplierSelect.appendChild(option);
+            });
+
+            console.log(`✅ Populated PDF supplier dropdown with ${this.formData.data.suppliers.length} suppliers`);
+
+        } catch (error) {
+            console.error('❌ Error populating PDF suppliers:', error);
+        }
+    }
+
+    populatePdfCategories() {
+        try {
+            const pdfCategoriesContainer = document.getElementById('pdfCategoriesContainer');
+            
+            if (!pdfCategoriesContainer || !this.formData?.data?.categories) {
+                console.warn('⚠️ PDF categories container not found or no category data available');
+                return;
+            }
+
+            // Clear loading message
+            pdfCategoriesContainer.innerHTML = '';
+            
+            // Add category checkboxes
+            this.formData.data.categories.forEach(category => {
+                const checkboxWrapper = document.createElement('div');
+                checkboxWrapper.className = 'checkbox-option';
+                
+                checkboxWrapper.innerHTML = `
+                    <input type="checkbox" id="pdfCategory_${category.id}" name="pdfCategories" value="${category.name}" class="checkbox-input">
+                    <label for="pdfCategory_${category.id}" class="checkbox-label">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text">${category.name}</span>
+                    </label>
+                `;
+                
+                pdfCategoriesContainer.appendChild(checkboxWrapper);
+            });
+
+            // Add event listeners for validation
+            const categoryCheckboxes = pdfCategoriesContainer.querySelectorAll('input[name="pdfCategories"]');
+            categoryCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => this.validatePdfForm());
+            });
+
+            console.log(`✅ Populated PDF categories with ${this.formData.data.categories.length} options`);
+
+        } catch (error) {
+            console.error('❌ Error populating PDF categories:', error);
+        }
+    }
+
+    handlePdfSupplierChange() {
+        try {
+            const pdfSupplierSelect = document.getElementById('pdfSupplier');
+            const pdfSupplierInfo = document.getElementById('pdfSupplierInfo');
+            const pdfSupplierEmail = document.getElementById('pdfSupplierEmail');
+            const pdfSupplierPhone = document.getElementById('pdfSupplierPhone');
+            
+            if (!pdfSupplierSelect) return;
+            
+            const selectedSupplier = pdfSupplierSelect.value;
+            console.log('🏢 PDF Supplier changed to:', selectedSupplier);
+            
+            if (!selectedSupplier) {
+                if (pdfSupplierInfo) pdfSupplierInfo.style.display = 'none';
+                this.validatePdfForm();
+                return;
+            }
+
+            // Show supplier info
+            const selectedOption = pdfSupplierSelect.selectedOptions[0];
+            if (selectedOption && pdfSupplierInfo && pdfSupplierEmail && pdfSupplierPhone) {
+                pdfSupplierEmail.textContent = `📧 ${selectedOption.dataset.email || 'N/A'}`;
+                pdfSupplierPhone.textContent = `📞 ${selectedOption.dataset.phone || 'N/A'}`;
+                pdfSupplierInfo.style.display = 'block';
+            }
+
+            this.validatePdfForm();
+        } catch (error) {
+            console.error('❌ Error handling PDF supplier change:', error);
+        }
+    }
+
+    getSelectedPdfCategories() {
+        const categoryCheckboxes = document.querySelectorAll('input[name="pdfCategories"]:checked');
+        return Array.from(categoryCheckboxes).map(cb => cb.value);
     }
 
     async showBothMethod() {
@@ -488,10 +613,16 @@ class MaterialManagementApp {
         
         if (!form || !submitBtn) return;
 
-        const requiredFields = ['pdfSupplierName', 'pdfSupplierEmail', 'pdfRequestorName', 'pdfRequestorEmail'];
         let isValid = true;
 
-        // Check required fields
+        // Check supplier selection (dropdown only now)
+        const pdfSupplier = document.getElementById('pdfSupplier');
+        if (!pdfSupplier?.value.trim()) {
+            isValid = false;
+        }
+
+        // Check other required fields
+        const requiredFields = ['pdfRequestorName', 'pdfRequestorEmail'];
         for (const fieldName of requiredFields) {
             const field = form.querySelector(`[name="${fieldName}"]`);
             if (!field || !field.value.trim()) {
@@ -500,17 +631,8 @@ class MaterialManagementApp {
             }
         }
 
-        // Check email format
-        const supplierEmail = form.querySelector('[name="pdfSupplierEmail"]');
+        // Check requestor email format
         const requestorEmail = form.querySelector('[name="pdfRequestorEmail"]');
-        
-        if (supplierEmail && supplierEmail.value) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(supplierEmail.value)) {
-                isValid = false;
-            }
-        }
-        
         if (requestorEmail && requestorEmail.value) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(requestorEmail.value)) {
@@ -551,14 +673,153 @@ class MaterialManagementApp {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
+            // Get supplier info from dropdown
+            const pdfSupplierSelect = document.getElementById('pdfSupplier');
+            const selectedOption = pdfSupplierSelect?.selectedOptions[0];
+            
+            const supplierName = data.pdfSupplier || '';
+            const supplierEmail = selectedOption?.dataset.email || '';
+            
+            if (!supplierName || !supplierEmail) {
+                throw new Error('Please select a supplier from the dropdown');
+            }
+            
+            // Get selected categories
+            const selectedCategories = this.getSelectedPdfCategories();
+            const categoryString = selectedCategories.length > 0 ? selectedCategories.join(', ') : 'PDF Upload';
+            
             // Convert PDF to base64
             const pdfData = await this.convertFileToBase64(this.pdfFile);
             
             // Prepare payload for API
             const payload = {
                 requestType: data.pdfRequestType,
-                supplierName: data.pdfSupplierName,
-                supplierEmail: data.pdfSupplierEmail,
+                supplierName: supplierName,
+                supplierEmail: supplierEmail,
+                requestorName: data.pdfRequestorName,
+                requestorEmail: data.pdfRequestorEmail,
+                urgency: data.pdfUrgency || 'Normal',
+                projectRef: data.pdfProjectRef || '',
+                notes: data.pdfNotes || '',
+                category: categoryString,
+                categories: selectedCategories, // Array of categories
+                filename: this.pdfFile.name,
+                pdfData: pdfData
+            };
+
+            console.log('📦 PDF submission payload:', {
+                requestType: payload.requestType,
+                supplierName: payload.supplierName,
+                filename: payload.filename,
+                pdfSize: this.formatFileSize(this.pdfFile.size),
+                categories: payload.categories
+            });
+
+            // Submit to PDF upload endpoint
+            const response = await fetch('/api/pdf/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            console.log('✅ PDF submission result:', result);
+
+            if (result.success !== false) {
+                this.showPdfSuccess(result, payload.requestType);
+            } else {
+                throw new Error(result.error || 'PDF submission failed');
+            }
+
+        } catch (error) {
+            console.error('❌ PDF submission error:', error);
+            this.showError(`PDF submission failed: ${error.message}`);
+        } finally {
+            // Re-enable form
+            const submitBtn = document.getElementById('pdfSubmitBtn');
+            const btnText = submitBtn?.querySelector('.btn-text');
+            const btnLoading = submitBtn?.querySelector('.btn-loading');
+            
+            if (submitBtn) submitBtn.disabled = false;
+            if (btnText) btnText.style.display = 'inline';
+            if (btnLoading) btnLoading.style.display = 'none';
+        }
+    }ormat
+        const requestorEmail = form.querySelector('[name="pdfRequestorEmail"]');
+        if (requestorEmail && requestorEmail.value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(requestorEmail.value)) {
+                isValid = false;
+            }
+        }
+
+        // Check PDF file
+        if (!this.pdfFile) {
+            isValid = false;
+        }
+
+        submitBtn.disabled = !isValid;
+    }
+
+    async handlePdfFormSubmit(e) {
+        e.preventDefault();
+        
+        if (!this.pdfFile) {
+            this.showError('Please select a PDF file.');
+            return;
+        }
+        
+        try {
+            const form = e.target;
+            const submitBtn = document.getElementById('pdfSubmitBtn');
+            const btnText = submitBtn?.querySelector('.btn-text');
+            const btnLoading = submitBtn?.querySelector('.btn-loading');
+            
+            // Disable form
+            if (submitBtn) submitBtn.disabled = true;
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoading) btnLoading.style.display = 'flex';
+
+            console.log('📤 Submitting PDF form...');
+
+            // Prepare form data
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Get supplier info (either from dropdown or manual entry)
+            let supplierName = '';
+            let supplierEmail = '';
+            
+            const manualSupplierSection = document.getElementById('manualSupplierSection');
+            const isManualEntry = manualSupplierSection && manualSupplierSection.style.display !== 'none';
+            
+            if (isManualEntry) {
+                // Use manual entry
+                supplierName = data.pdfSupplierNameManual || '';
+                supplierEmail = data.pdfSupplierEmailManual || '';
+            } else {
+                // Use dropdown selection
+                const pdfSupplierSelect = document.getElementById('pdfSupplier');
+                const selectedOption = pdfSupplierSelect?.selectedOptions[0];
+                
+                supplierName = data.pdfSupplier || '';
+                supplierEmail = selectedOption?.dataset.email || '';
+            }
+            
+            if (!supplierName || !supplierEmail) {
+                throw new Error('Supplier information is required');
+            }
+            
+            // Convert PDF to base64
+            const pdfData = await this.convertFileToBase64(this.pdfFile);
+            
+            // Prepare payload for API
+            const payload = {
+                requestType: data.pdfRequestType,
+                supplierName: supplierName,
+                supplierEmail: supplierEmail,
                 requestorName: data.pdfRequestorName,
                 requestorEmail: data.pdfRequestorEmail,
                 urgency: data.pdfUrgency || 'Normal',
@@ -573,7 +834,8 @@ class MaterialManagementApp {
                 requestType: payload.requestType,
                 supplierName: payload.supplierName,
                 filename: payload.filename,
-                pdfSize: this.formatFileSize(this.pdfFile.size)
+                pdfSize: this.formatFileSize(this.pdfFile.size),
+                isManualEntry: isManualEntry
             });
 
             // Submit to PDF upload endpoint
