@@ -1,4 +1,4 @@
-// Enhanced script.js with Method Selection, PDF Upload, and Complete Material Management
+// Enhanced script.js with Method Selection, PDF Upload, Complete Material Management + ORDER HISTORY
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
@@ -9,10 +9,22 @@ class MaterialManagementApp {
         this.currentMethod = null; // 'system', 'pdf', 'both'
         this.pdfFile = null;
         this.additionalPdfFile = null;
+        
+        // ORDER HISTORY PROPERTIES
+        this.orderHistory = [];
+        this.currentHistoryView = 'recent'; // 'recent', 'all', 'orders', 'quotes'
+        this.historyFilters = {
+            status: '',
+            supplier: '',
+            urgency: '',
+            search: '',
+            dateFrom: '',
+            dateTo: ''
+        };
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App (Method Selection + PDF Upload)');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App (Method Selection + PDF Upload + Order History)');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -46,6 +58,9 @@ class MaterialManagementApp {
             // Confirmation page event listeners
             this.setupConfirmationListeners();
             
+            // ORDER HISTORY event listeners
+            this.setupHistoryListeners();
+            
             console.log('✅ Enhanced event listeners setup complete');
         } catch (error) {
             console.error('❌ Error setting up event listeners:', error);
@@ -63,6 +78,21 @@ class MaterialManagementApp {
         
         if (backToMethodsFromMain) {
             backToMethodsFromMain.addEventListener('click', () => this.showMethodSelection());
+        }
+    }
+
+    // ORDER HISTORY LISTENERS
+    setupHistoryListeners() {
+        // Navigation to order history
+        const showHistoryBtn = document.getElementById('showHistoryBtn');
+        const historyNavBtn = document.getElementById('historyNavBtn');
+        
+        if (showHistoryBtn) {
+            showHistoryBtn.addEventListener('click', () => this.showOrderHistory());
+        }
+        
+        if (historyNavBtn) {
+            historyNavBtn.addEventListener('click', () => this.showOrderHistory());
         }
     }
 
@@ -293,6 +323,7 @@ class MaterialManagementApp {
             'pdfForm', 
             'mainForm',
             'confirmationPage',
+            'orderHistorySection',
             'loading',
             'errorAlert',
             'successAlert'
@@ -541,6 +572,747 @@ class MaterialManagementApp {
     
     this.validateForm();
 }
+
+    // ===============================================
+    // ORDER HISTORY FUNCTIONALITY 
+    // ===============================================
+
+    async loadOrderHistory() {
+        try {
+            this.showLoading(true);
+            console.log('📋 Loading order history...');
+            
+            const response = await fetch('/api/history/load');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to load order history');
+            }
+            
+            this.orderHistory = data.orders || [];
+            this.renderOrderHistory(data);
+            
+            console.log(`✅ Loaded ${this.orderHistory.length} order history records`);
+            
+        } catch (error) {
+            console.error('❌ Failed to load order history:', error);
+            this.showError(`Failed to load order history: ${error.message}`);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    showOrderHistory() {
+        console.log('📋 Showing order history');
+        
+        // Hide all other sections
+        this.hideAllSections();
+        
+        // Show order history section
+        const historySection = document.getElementById('orderHistorySection');
+        if (historySection) {
+            historySection.style.display = 'block';
+        }
+        
+        // Load history data if not already loaded
+        if (this.orderHistory.length === 0) {
+            this.loadOrderHistory();
+        } else {
+            this.renderOrderHistory({ orders: this.orderHistory, summary: this.generateHistorySummary() });
+        }
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    renderOrderHistory(data) {
+        try {
+            // Render stats
+            this.renderHistoryStats(data.summary);
+            
+            // Render filters
+            this.renderHistoryFilters();
+            
+            // Render orders
+            const historyContainer = document.getElementById('historyContainer');
+            if (!historyContainer) {
+                console.warn('⚠️ History container not found');
+                return;
+            }
+            
+            if (this.orderHistory.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="no-history">
+                        <div class="no-history-icon">📋</div>
+                        <h3>No Order History</h3>
+                        <p>No orders or quotes have been submitted yet.</p>
+                        <button type="button" class="btn-primary" onclick="window.app.showMethodSelection()">
+                            Create Your First Order
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            historyContainer.innerHTML = `
+                <div class="history-list">
+                    ${this.orderHistory.map(order => this.createOrderHistoryCard(order)).join('')}
+                </div>
+            `;
+            
+            // Setup dynamic event listeners for order cards
+            this.setupHistoryEventListeners();
+            
+        } catch (error) {
+            console.error('❌ Error rendering order history:', error);
+        }
+    }
+
+    renderHistoryStats(summary) {
+        const historyStats = document.getElementById('historyStats');
+        if (!historyStats || !summary) return;
+        
+        historyStats.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">${summary.totalOrders || 0}</div>
+                    <div class="stat-label">Total Records</div>
+                </div>
+                <div class="stat-card orders">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-value">${summary.orderCount || 0}</div>
+                    <div class="stat-label">Orders</div>
+                </div>
+                <div class="stat-card quotes">
+                    <div class="stat-icon">💬</div>
+                    <div class="stat-value">${summary.quoteCount || 0}</div>
+                    <div class="stat-label">Quotes</div>
+                </div>
+                <div class="stat-card suppliers">
+                    <div class="stat-icon">🏢</div>
+                    <div class="stat-value">${summary.uniqueSuppliers || 0}</div>
+                    <div class="stat-label">Suppliers</div>
+                </div>
+                <div class="stat-card urgent">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-value">${summary.urgentCount || 0}</div>
+                    <div class="stat-label">Urgent</div>
+                </div>
+                <div class="stat-card pdf">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-value">${summary.withPdfCount || 0}</div>
+                    <div class="stat-label">With PDF</div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderHistoryFilters() {
+        const historyFilters = document.getElementById('historyFilters');
+        if (!historyFilters) return;
+        
+        const statuses = [...new Set(this.orderHistory.map(o => o.status))].filter(s => s);
+        const suppliers = [...new Set(this.orderHistory.map(o => o.supplierName))].filter(s => s);
+        const urgencies = [...new Set(this.orderHistory.map(o => o.urgency))].filter(u => u);
+        
+        historyFilters.innerHTML = `
+            <div class="filters-header">
+                <h4>Filter Orders</h4>
+                <button type="button" class="btn-link" onclick="window.app.clearHistoryFilters()">Clear All</button>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filter-status" class="filter-select">
+                        <option value="">All Statuses</option>
+                        ${statuses.map(status => `<option value="${status}">${status}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Supplier</label>
+                    <select id="filter-supplier" class="filter-select">
+                        <option value="">All Suppliers</option>
+                        ${suppliers.map(supplier => `<option value="${supplier}">${supplier}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Priority</label>
+                    <select id="filter-urgency" class="filter-select">
+                        <option value="">All Priorities</option>
+                        ${urgencies.map(urgency => `<option value="${urgency}">${urgency}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="filter-search" class="filter-input" placeholder="Search orders, materials, notes...">
+                </div>
+            </div>
+            <div class="filters-actions">
+                <button type="button" class="btn-secondary" onclick="window.app.refreshOrderHistory()">
+                    <span class="btn-icon">🔄</span>
+                    Refresh
+                </button>
+                <button type="button" class="btn-secondary" onclick="window.app.exportOrderHistory()">
+                    <span class="btn-icon">📥</span>
+                    Export
+                </button>
+            </div>
+        `;
+    }
+
+    setupHistoryEventListeners() {
+        // Filter change events
+        const filterElements = ['filter-status', 'filter-supplier', 'filter-urgency', 'filter-search'];
+        filterElements.forEach(filterId => {
+            const element = document.getElementById(filterId);
+            if (element) {
+                element.addEventListener('change', () => this.applyHistoryFilters());
+                element.addEventListener('input', () => this.applyHistoryFilters());
+            }
+        });
+    }
+
+    applyHistoryFilters() {
+        const statusFilter = document.getElementById('filter-status')?.value || '';
+        const supplierFilter = document.getElementById('filter-supplier')?.value || '';
+        const urgencyFilter = document.getElementById('filter-urgency')?.value || '';
+        const searchFilter = document.getElementById('filter-search')?.value.toLowerCase() || '';
+        
+        const filteredOrders = this.orderHistory.filter(order => {
+            const matchesStatus = !statusFilter || order.status === statusFilter;
+            const matchesSupplier = !supplierFilter || order.supplierName === supplierFilter;
+            const matchesUrgency = !urgencyFilter || order.urgency === urgencyFilter;
+            const matchesSearch = !searchFilter || 
+                order.orderId.toLowerCase().includes(searchFilter) ||
+                order.requestorName.toLowerCase().includes(searchFilter) ||
+                order.notes.toLowerCase().includes(searchFilter) ||
+                order.category.toLowerCase().includes(searchFilter) ||
+                (order.materialsList && order.materialsList.some(m => 
+                    m.name.toLowerCase().includes(searchFilter) ||
+                    (m.code && m.code.toLowerCase().includes(searchFilter))
+                ));
+            
+            return matchesStatus && matchesSupplier && matchesUrgency && matchesSearch;
+        });
+        
+        this.renderFilteredHistory(filteredOrders);
+    }
+
+    renderFilteredHistory(orders) {
+        const historyContainer = document.getElementById('historyContainer');
+        if (!historyContainer) return;
+        
+        if (orders.length === 0) {
+            historyContainer.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <h3>No matching orders found</h3>
+                    <p>Try adjusting your filters or search terms.</p>
+                    <button type="button" class="btn-secondary" onclick="window.app.clearHistoryFilters()">
+                        Clear Filters
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        historyContainer.innerHTML = `
+            <div class="results-summary">
+                <span class="results-count">Showing ${orders.length} of ${this.orderHistory.length} orders</span>
+            </div>
+            <div class="history-list">
+                ${orders.map(order => this.createOrderHistoryCard(order)).join('')}
+            </div>
+        `;
+        
+        this.setupHistoryEventListeners();
+    }
+
+    createOrderHistoryCard(order) {
+        const statusClass = order.status === 'ORDER' ? 'status-order' : 'status-quote';
+        const urgencyClass = order.urgency === 'Urgent' ? 'urgency-urgent' : 
+                            order.urgency === 'High' ? 'urgency-high' : 'urgency-normal';
+        
+        // Format date nicely
+        const orderDate = new Date(order.date + ' ' + order.time);
+        const formattedDate = orderDate.toLocaleDateString() + ' at ' + orderDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        return `
+            <div class="order-card" data-order-id="${order.orderId}">
+                <div class="order-header">
+                    <div class="order-id-section">
+                        <span class="order-number">#${order.orderId}</span>
+                        <div class="order-badges">
+                            <span class="order-status ${statusClass}">${order.status}</span>
+                            <span class="order-urgency ${urgencyClass}">${order.urgency}</span>
+                            ${order.hasPdf ? '<span class="pdf-badge">📄 PDF</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="order-date">
+                        <span class="date-label">Submitted</span>
+                        <span class="date-value">${formattedDate}</span>
+                    </div>
+                </div>
+                
+                <div class="order-body">
+                    <div class="order-details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">👤 Requestor</span>
+                            <span class="detail-value">${order.requestorName}</span>
+                            <span class="detail-sub">${order.requestorEmail}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">🏢 Supplier</span>
+                            <span class="detail-value">${order.supplierName}</span>
+                            <span class="detail-sub">${order.supplierEmail || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📂 Category</span>
+                            <span class="detail-value">${order.category}</span>
+                        </div>
+                        ${order.projectRef ? `
+                            <div class="detail-item">
+                                <span class="detail-label">🎯 Project</span>
+                                <span class="detail-value">${order.projectRef}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="order-materials-summary">
+                        <div class="materials-stats">
+                            <span class="stat">
+                                <span class="stat-number">${order.totalItems || 0}</span>
+                                <span class="stat-label">Items</span>
+                            </span>
+                            <span class="stat">
+                                <span class="stat-number">${order.totalQuantity || 0}</span>
+                                <span class="stat-label">Quantity</span>
+                            </span>
+                            ${order.hasPdf ? '<span class="stat pdf-stat"><span class="stat-icon">📄</span><span class="stat-label">PDF Specs</span></span>' : ''}
+                        </div>
+                        
+                        ${order.materialsList && order.materialsList.length > 0 ? `
+                            <div class="materials-preview collapsed" id="materials-${order.orderId}">
+                                <div class="materials-list">
+                                    ${order.materialsList.slice(0, 3).map(material => `
+                                        <div class="material-preview-item">
+                                            <span class="material-name">${material.name}</span>
+                                            ${material.code ? `<span class="material-code">(${material.code})</span>` : ''}
+                                            <span class="material-quantity">${material.quantity} ${material.unit}</span>
+                                        </div>
+                                    `).join('')}
+                                    ${order.materialsList.length > 3 ? `
+                                        <div class="material-preview-item more-items">
+                                            <span class="more-text">+ ${order.materialsList.length - 3} more items</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <button type="button" class="toggle-materials-btn" onclick="window.app.toggleOrderMaterials('${order.orderId}')">
+                                <span class="btn-text">Show All Materials</span>
+                                <span class="btn-icon">▼</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                    
+                    ${order.notes ? `
+                        <div class="order-notes">
+                            <span class="notes-label">📝 Notes:</span>
+                            <span class="notes-content">${order.notes}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="order-actions">
+                    ${order.hasPdf && order.pdfLink && order.pdfLink !== 'N/A' ? `
+                        <a href="${order.pdfLink}" target="_blank" class="btn-action btn-pdf">
+                            <span class="btn-icon">📄</span>
+                            View PDF
+                        </a>
+                    ` : ''}
+                    <button type="button" class="btn-action btn-duplicate" onclick="window.app.duplicateOrder('${order.orderId}')">
+                        <span class="btn-icon">📋</span>
+                        Duplicate
+                    </button>
+                    <button type="button" class="btn-action btn-details" onclick="window.app.showOrderDetails('${order.orderId}')">
+                        <span class="btn-icon">👁️</span>
+                        Details
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    toggleOrderMaterials(orderId) {
+        const materialsDiv = document.getElementById(`materials-${orderId}`);
+        const toggleBtn = document.querySelector(`[onclick="window.app.toggleOrderMaterials('${orderId}')"]`);
+        
+        if (materialsDiv && toggleBtn) {
+            const isExpanded = !materialsDiv.classList.contains('collapsed');
+            const btnText = toggleBtn.querySelector('.btn-text');
+            const btnIcon = toggleBtn.querySelector('.btn-icon');
+            
+            if (isExpanded) {
+                materialsDiv.classList.add('collapsed');
+                if (btnText) btnText.textContent = 'Show All Materials';
+                if (btnIcon) btnIcon.textContent = '▼';
+            } else {
+                materialsDiv.classList.remove('collapsed');
+                if (btnText) btnText.textContent = 'Hide Materials';
+                if (btnIcon) btnIcon.textContent = '▲';
+            }
+        }
+    }
+
+    duplicateOrder(orderId) {
+        const order = this.orderHistory.find(o => o.orderId === orderId);
+        if (!order) {
+            this.showError('Order not found');
+            return;
+        }
+        
+        console.log('📋 Duplicating order:', orderId);
+        
+        // Determine method based on order data
+        let method = 'system';
+        if (order.hasPdf && order.totalItems > 0) {
+            method = 'both';
+        } else if (order.hasPdf) {
+            method = 'pdf';
+        }
+        
+        // Switch to appropriate method
+        this.selectMethod(method);
+        
+        // Pre-fill form with order data
+        setTimeout(() => {
+            this.prefillFromOrder(order);
+            this.showMessage('Order duplicated! Please review and modify as needed.', 'info');
+        }, 500);
+    }
+
+    prefillFromOrder(order) {
+        try {
+            // Basic requestor info
+            const requestorName = document.getElementById('requestorName') || document.getElementById('pdfRequestorName');
+            const requestorEmail = document.getElementById('requestorEmail') || document.getElementById('pdfRequestorEmail');
+            const urgency = document.getElementById('urgency') || document.getElementById('pdfUrgency');
+            const projectRef = document.getElementById('projectRef') || document.getElementById('pdfProjectRef');
+            const notes = document.getElementById('notes') || document.getElementById('pdfNotes');
+            
+            if (requestorName) requestorName.value = order.requestorName || '';
+            if (requestorEmail) requestorEmail.value = order.requestorEmail || '';
+            if (urgency) urgency.value = order.urgency || 'Normal';
+            if (projectRef) projectRef.value = order.projectRef || '';
+            if (notes) notes.value = order.notes || '';
+            
+            // Set request type
+            const requestType = order.status === 'ORDER' ? 'order' : 'quote';
+            const requestTypeInputs = document.querySelectorAll('input[name="requestType"], input[name="pdfRequestType"]');
+            requestTypeInputs.forEach(input => {
+                if (input.value === requestType) {
+                    input.checked = true;
+                }
+            });
+            
+            // For system or both methods
+            if (this.currentMethod === 'system' || this.currentMethod === 'both') {
+                setTimeout(() => {
+                    // Category and supplier
+                    const categorySelect = document.getElementById('category');
+                    const supplierSelect = document.getElementById('supplier');
+                    
+                    if (categorySelect && order.category) {
+                        categorySelect.value = order.category;
+                        this.handleCategoryChange();
+                        
+                        setTimeout(() => {
+                            if (supplierSelect && order.supplierName) {
+                                supplierSelect.value = order.supplierName;
+                                this.handleSupplierChange();
+                                
+                                // Pre-select materials
+                                if (order.materialsList && order.materialsList.length > 0) {
+                                    setTimeout(() => {
+                                        order.materialsList.forEach(material => {
+                                            this.addMaterialById(material.id, material.quantity);
+                                        });
+                                    }, 200);
+                                }
+                            }
+                        }, 100);
+                    }
+                }, 100);
+            }
+            
+            // For PDF method
+            if (this.currentMethod === 'pdf') {
+                const pdfSupplier = document.getElementById('pdfSupplier');
+                if (pdfSupplier && order.supplierName) {
+                    pdfSupplier.value = order.supplierName;
+                    this.handlePdfSupplierChange();
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ Error prefilling from order:', error);
+        }
+    }
+
+    showOrderDetails(orderId) {
+        const order = this.orderHistory.find(o => o.orderId === orderId);
+        if (!order) {
+            this.showError('Order not found');
+            return;
+        }
+        
+        // Create and show order details modal
+        const modal = this.createOrderDetailsModal(order);
+        document.body.appendChild(modal);
+        
+        // Show modal with animation
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+
+    createOrderDetailsModal(order) {
+        const modal = document.createElement('div');
+        modal.className = 'order-details-modal';
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                this.closeOrderDetailsModal(modal);
+            }
+        };
+        
+        const formattedDate = new Date(order.date + ' ' + order.time).toLocaleString();
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Order Details - #${order.orderId}</h3>
+                    <button type="button" class="modal-close" onclick="window.app.closeOrderDetailsModal(this.closest('.order-details-modal'))">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="details-grid">
+                        <div class="detail-section">
+                            <h4>📋 Order Information</h4>
+                            <div class="detail-row">
+                                <span class="label">Order ID:</span>
+                                <span class="value">#${order.orderId}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Type:</span>
+                                <span class="value badge ${order.status === 'ORDER' ? 'badge-order' : 'badge-quote'}">${order.status}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Priority:</span>
+                                <span class="value badge badge-${order.urgency.toLowerCase()}">${order.urgency}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Submitted:</span>
+                                <span class="value">${formattedDate}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Category:</span>
+                                <span class="value">${order.category}</span>
+                            </div>
+                            ${order.projectRef ? `
+                                <div class="detail-row">
+                                    <span class="label">Project Reference:</span>
+                                    <span class="value">${order.projectRef}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4>👤 Requestor</h4>
+                            <div class="detail-row">
+                                <span class="label">Name:</span>
+                                <span class="value">${order.requestorName}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Email:</span>
+                                <span class="value">${order.requestorEmail}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4>🏢 Supplier</h4>
+                            <div class="detail-row">
+                                <span class="label">Company:</span>
+                                <span class="value">${order.supplierName}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Email:</span>
+                                <span class="value">${order.supplierEmail || 'N/A'}</span>
+                            </div>
+                            ${order.supplierPhone ? `
+                                <div class="detail-row">
+                                    <span class="label">Phone:</span>
+                                    <span class="value">${order.supplierPhone}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    ${order.materialsList && order.materialsList.length > 0 ? `
+                        <div class="detail-section materials-section">
+                            <h4>📦 Materials (${order.totalItems} items, ${order.totalQuantity} total quantity)</h4>
+                            <div class="materials-detail-list">
+                                ${order.materialsList.map(material => `
+                                    <div class="material-detail-item">
+                                        <div class="material-info">
+                                            <span class="material-name">${material.name}</span>
+                                            ${material.code ? `<span class="material-code">Code: ${material.code}</span>` : ''}
+                                            <span class="material-category">${material.subcategory || 'N/A'}</span>
+                                        </div>
+                                        <div class="material-quantity">
+                                            <span class="quantity-badge">${material.quantity} ${material.unit}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${order.hasPdf ? `
+                        <div class="detail-section">
+                            <h4>📄 PDF Specifications</h4>
+                            <div class="pdf-info">
+                                <span class="pdf-indicator">PDF specifications included</span>
+                                ${order.pdfLink && order.pdfLink !== 'N/A' ? `
+                                    <a href="${order.pdfLink}" target="_blank" class="btn-pdf">View PDF</a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${order.notes ? `
+                        <div class="detail-section">
+                            <h4>📝 Notes</h4>
+                            <div class="notes-content">${order.notes}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="window.app.closeOrderDetailsModal(this.closest('.order-details-modal'))">Close</button>
+                    <button type="button" class="btn-primary" onclick="window.app.duplicateOrder('${order.orderId}'); window.app.closeOrderDetailsModal(this.closest('.order-details-modal'));">Duplicate Order</button>
+                </div>
+            </div>
+        `;
+        
+        return modal;
+    }
+
+    closeOrderDetailsModal(modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+
+    clearHistoryFilters() {
+        const filterElements = ['filter-status', 'filter-supplier', 'filter-urgency', 'filter-search'];
+        filterElements.forEach(filterId => {
+            const element = document.getElementById(filterId);
+            if (element) {
+                element.value = '';
+            }
+        });
+        
+        this.renderFilteredHistory(this.orderHistory);
+    }
+
+    refreshOrderHistory() {
+        console.log('🔄 Refreshing order history...');
+        this.orderHistory = [];
+        this.loadOrderHistory();
+    }
+
+    exportOrderHistory() {
+        try {
+            const csvContent = this.generateHistoryCSV();
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `LCMB_Order_History_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            console.log('📥 Order history exported to CSV');
+        } catch (error) {
+            console.error('❌ Error exporting order history:', error);
+            this.showError('Failed to export order history');
+        }
+    }
+
+    generateHistoryCSV() {
+        const headers = [
+            'Order ID', 'Date', 'Time', 'Status', 'Category', 'Requestor Name', 'Requestor Email',
+            'Supplier Name', 'Supplier Email', 'Total Items', 'Total Quantity', 'Urgency',
+            'Project Reference', 'Notes', 'Has PDF'
+        ];
+        
+        const csvRows = [headers.join(',')];
+        
+        this.orderHistory.forEach(order => {
+            const row = [
+                `"${order.orderId}"`,
+                `"${order.date}"`,
+                `"${order.time}"`,
+                `"${order.status}"`,
+                `"${order.category}"`,
+                `"${order.requestorName}"`,
+                `"${order.requestorEmail}"`,
+                `"${order.supplierName}"`,
+                `"${order.supplierEmail || ''}"`,
+                order.totalItems || 0,
+                order.totalQuantity || 0,
+                `"${order.urgency}"`,
+                `"${order.projectRef || ''}"`,
+                `"${order.notes || ''}"`,
+                order.hasPdf ? 'Yes' : 'No'
+            ];
+            csvRows.push(row.join(','));
+        });
+        
+        return csvRows.join('\n');
+    }
+
+    generateHistorySummary() {
+        if (this.orderHistory.length === 0) {
+            return {
+                totalOrders: 0,
+                orderCount: 0,
+                quoteCount: 0,
+                uniqueSuppliers: 0,
+                urgentCount: 0,
+                withPdfCount: 0
+            };
+        }
+        
+        return {
+            totalOrders: this.orderHistory.length,
+            orderCount: this.orderHistory.filter(o => o.status === 'ORDER').length,
+            quoteCount: this.orderHistory.filter(o => o.status === 'QUOTE').length,
+            uniqueSuppliers: [...new Set(this.orderHistory.map(o => o.supplierName))].filter(s => s).length,
+            urgentCount: this.orderHistory.filter(o => o.urgency === 'Urgent').length,
+            withPdfCount: this.orderHistory.filter(o => o.hasPdf).length
+        };
+    }
 
     // ===============================================
     // PDF UPLOAD FUNCTIONALITY
@@ -2015,6 +2787,7 @@ class MaterialManagementApp {
             console.error('❌ Error showing success:', error);
         }
     }
+
 showBothMethodSuccess(type, id, supplier, pdfResult) {
     try {
         // Hide all sections, show success
@@ -2100,6 +2873,37 @@ showBothMethodSuccess(type, id, supplier, pdfResult) {
             console.error('❌ Error showing error message:', error);
         }
     }
+
+    showMessage(message, type = 'info') {
+        try {
+            // Create a message alert similar to success/error
+            const messageAlert = document.createElement('div');
+            messageAlert.className = `alert alert-${type}`;
+            messageAlert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'info' ? '#3b82f6' : '#10b981'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                max-width: 400px;
+            `;
+            messageAlert.textContent = message;
+            
+            document.body.appendChild(messageAlert);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                messageAlert.remove();
+            }, 3000);
+            
+        } catch (error) {
+            console.error('❌ Error showing message:', error);
+        }
+    }
 }
 
 // ===============================================
@@ -2123,6 +2927,7 @@ function resetForm() {
             'mainForm',
             'pdfForm', 
             'confirmationPage',
+            'orderHistorySection',
             'successAlert',
             'errorAlert'
         ];
@@ -2176,6 +2981,15 @@ function resetForm() {
     }
 }
 
+// GLOBAL ORDER HISTORY FUNCTIONS
+function showOrderHistory() {
+    if (window.app) {
+        window.app.showOrderHistory();
+    } else {
+        console.error('❌ App not initialized');
+    }
+}
+
 // ===============================================
 // API INTEGRATION FUNCTIONS
 // ===============================================
@@ -2219,8 +3033,8 @@ async function callAPI(endpoint, method = 'GET', data = null) {
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced LCMB Material Management App');
-        console.log('🔧 Features: Method Selection + PDF Upload + System Integration + Confirmation Flow');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced LCMB Material Management App with Order History');
+        console.log('🔧 Features: Method Selection + PDF Upload + System Integration + Confirmation Flow + ORDER HISTORY');
         
         window.app = new MaterialManagementApp();
         window.app.init();
@@ -2241,7 +3055,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        console.log('✅ Enhanced Material Management App initialized successfully');
+        console.log('✅ Enhanced Material Management App with Order History initialized successfully');
         
     } catch (error) {
         console.error('❌ Error initializing app:', error);
@@ -2282,12 +3096,13 @@ if (typeof window !== 'undefined') {
         app: () => window.app,
         resetForm: resetForm,
         selectMethod: selectMethod,
+        showOrderHistory: showOrderHistory,
         callAPI: callAPI,
-        version: '2.0.0-enhanced'
+        version: '2.1.0-enhanced-with-history'
     };
 }
 
-console.log('📜 Enhanced LCMB Material Management Script Loaded Successfully');
-console.log('🔧 Version: 2.0.0 - Method Selection + PDF Upload + Complete Integration');
-console.log('📚 Features: System Orders, PDF Upload, Both Methods, Confirmation Flow, Error Handling');
+console.log('📜 Enhanced LCMB Material Management Script with Order History Loaded Successfully');
+console.log('🔧 Version: 2.1.0 - Method Selection + PDF Upload + Complete Integration + ORDER HISTORY');
+console.log('📚 Features: System Orders, PDF Upload, Both Methods, Confirmation Flow, Order History, Export, Filters');
 console.log('🎯 Ready for user interaction!');
