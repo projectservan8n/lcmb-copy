@@ -1,4 +1,3 @@
-// Enhanced script.js with PDF Upload, Tab Navigation, Order History, and Container Expansion
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
@@ -1440,12 +1439,95 @@ class MaterialManagementApp {
             // Store data for later submission
             this.pendingSubmissionData = data;
             
-            // Show confirmation page
-            this.showConfirmationPage(data);
+            // TEMPORARY: Direct submission without confirmation
+            // TODO: Re-enable confirmation page when HTML is ready
+            console.log('⚠️ Skipping confirmation page - submitting directly');
+            await this.handleDirectSubmission(data);
             
         } catch (error) {
             console.error('❌ Form preparation error:', error);
             this.showError(`Error preparing form: ${error.message}`);
+        }
+    }
+
+    async handleDirectSubmission(data) {
+        try {
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = submitBtn?.querySelector('.btn-text');
+            const btnLoading = submitBtn?.querySelector('.btn-loading');
+            
+            // Disable form
+            if (submitBtn) submitBtn.disabled = true;
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoading) btnLoading.style.display = 'flex';
+
+            console.log('📦 Submitting form data directly:', data);
+            
+            // Determine endpoint
+            const requestType = data.requestType;
+            const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
+            
+            // Submit form
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            console.log('✅ Submission result:', result);
+
+            if (result.success !== false) {
+                const type = requestType === 'order' ? 'order' : 'quote';
+                const id = result.orderId || result.quoteId || result.id || `${type.toUpperCase()}-${Date.now()}`;
+                this.showSuccess(type, id, data.supplier);
+            } else {
+                throw new Error(result.error || 'Submission failed');
+            }
+
+        } catch (error) {
+            console.error('❌ Direct submission error:', error);
+            this.showError(`Submission failed: ${error.message}`);
+        } finally {
+            // Re-enable form
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = submitBtn?.querySelector('.btn-text');
+            const btnLoading = submitBtn?.querySelector('.btn-loading');
+            
+            if (submitBtn) submitBtn.disabled = false;
+            if (btnText) btnText.style.display = 'inline';
+            if (btnLoading) btnLoading.style.display = 'none';
+        }
+    }
+
+    showConfirmationPage(data) {
+        try {
+            console.log('🔍 Showing confirmation page with data:', data);
+            
+            // Hide main form, show confirmation
+            const mainForm = document.getElementById('mainForm');
+            const confirmationPage = document.getElementById('confirmationPage');
+            
+            if (!confirmationPage) {
+                console.error('❌ Confirmation page element not found');
+                this.showError('Confirmation page not found. Please check the HTML structure.');
+                return;
+            }
+            
+            if (mainForm) mainForm.style.display = 'none';
+            confirmationPage.style.display = 'block';
+            
+            // Populate confirmation data
+            this.populateConfirmationData(data);
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+        } catch (error) {
+            console.error('❌ Error showing confirmation page:', error);
+            this.showError('Error displaying confirmation page: ' + error.message);
         }
     }
 
