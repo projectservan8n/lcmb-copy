@@ -1,14 +1,15 @@
-// Enhanced script.js with Checkbox Material Selection
+// Enhanced script.js with Order Confirmation Step
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
         this.selectedMaterials = [];
         this.filteredMaterials = [];
         this.selectedSubcategory = '';
+        this.currentStep = 'form'; // 'form' or 'confirmation'
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode)');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App with Confirmation');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -161,10 +162,10 @@ class MaterialManagementApp {
             if (!selectedType || !submitBtn || !btnText) return;
             
             if (selectedType === 'order') {
-                btnText.textContent = 'Submit Order';
+                btnText.textContent = 'Review Order';
                 submitBtn.style.background = 'linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%)';
             } else {
-                btnText.textContent = 'Request Quote';
+                btnText.textContent = 'Review Quote Request';
                 submitBtn.style.background = 'linear-gradient(135deg, var(--warning-orange) 0%, #f59e0b 100%)';
             }
         } catch (error) {
@@ -402,7 +403,7 @@ class MaterialManagementApp {
                 return;
             }
 
-            // NEW: Grid-based material cards with full clickability
+            // Grid-based material cards with full clickability
             materialsList.innerHTML = displayMaterials.map(material => {
                 const isSelected = this.selectedMaterials.some(m => m.id === material.id);
                 return `
@@ -734,27 +735,241 @@ class MaterialManagementApp {
         e.preventDefault();
         
         try {
-            const form = e.target;
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = submitBtn?.querySelector('.btn-text');
-            const btnLoading = submitBtn?.querySelector('.btn-loading');
-            
-            // Disable form
-            if (submitBtn) submitBtn.disabled = true;
-            if (btnText) btnText.style.display = 'none';
-            if (btnLoading) btnLoading.style.display = 'flex';
+            if (this.currentStep === 'form') {
+                // Show confirmation step instead of submitting
+                this.showConfirmation();
+            } else {
+                // Actually submit the form
+                await this.submitForm();
+            }
+        } catch (error) {
+            console.error('❌ Form submission error:', error);
+            this.showError(`Submission failed: ${error.message}`);
+        }
+    }
 
-            // Prepare form data
+    showConfirmation() {
+        try {
+            console.log('📋 Showing order confirmation');
+            
+            const form = document.getElementById('materialForm');
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            // Add selected materials with quantities
-            data.materials = this.selectedMaterials;
+            // Get supplier details
+            const supplierSelect = document.getElementById('supplier');
+            const selectedSupplierOption = supplierSelect.selectedOptions[0];
+            const supplierEmail = selectedSupplierOption?.dataset.email || '';
+            const supplierPhone = selectedSupplierOption?.dataset.phone || '';
             
-            console.log('📦 Submitting enhanced form data:', data);
+            // Create confirmation view
+            this.renderConfirmation({
+                requestType: data.requestType,
+                category: data.category,
+                supplier: data.supplier,
+                supplierEmail: supplierEmail,
+                supplierPhone: supplierPhone,
+                requestorName: data.requestorName,
+                requestorEmail: data.requestorEmail,
+                urgency: data.urgency,
+                projectRef: data.projectRef,
+                notes: data.notes,
+                materials: this.selectedMaterials
+            });
+            
+            this.currentStep = 'confirmation';
+            
+        } catch (error) {
+            console.error('❌ Error showing confirmation:', error);
+        }
+    }
+
+    renderConfirmation(orderData) {
+        try {
+            const mainForm = document.getElementById('mainForm');
+            if (!mainForm) return;
+
+            // Calculate totals
+            const totalItems = this.selectedMaterials.length;
+            const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
+            
+            // Create confirmation HTML
+            const confirmationHTML = `
+                <div class="form-header">
+                    <h2>📋 ${orderData.requestType === 'order' ? 'Order' : 'Quote'} Confirmation</h2>
+                    <p>Please review all details before submitting your ${orderData.requestType}</p>
+                </div>
+
+                <div class="confirmation-container">
+                    <!-- Order Summary -->
+                    <div class="confirmation-section">
+                        <h3>📦 ${orderData.requestType === 'order' ? 'Order' : 'Quote'} Summary</h3>
+                        <div class="confirmation-grid">
+                            <div class="confirmation-item">
+                                <label>Request Type:</label>
+                                <span class="value ${orderData.requestType}">${orderData.requestType === 'order' ? '📦 Material Order' : '💬 Quote Request'}</span>
+                            </div>
+                            <div class="confirmation-item">
+                                <label>Category:</label>
+                                <span class="value">${orderData.category}</span>
+                            </div>
+                            <div class="confirmation-item">
+                                <label>Priority Level:</label>
+                                <span class="value priority-${orderData.urgency.toLowerCase()}">${orderData.urgency}</span>
+                            </div>
+                            ${orderData.projectRef ? `
+                            <div class="confirmation-item">
+                                <label>ServiceM8 Job #:</label>
+                                <span class="value">${orderData.projectRef}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Supplier Information -->
+                    <div class="confirmation-section">
+                        <h3>🏢 Supplier Information</h3>
+                        <div class="supplier-confirmation">
+                            <div class="supplier-main">
+                                <strong>${orderData.supplier}</strong>
+                            </div>
+                            <div class="supplier-details">
+                                <span>📧 ${orderData.supplierEmail}</span>
+                                ${orderData.supplierPhone ? `<span>📞 ${orderData.supplierPhone}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Materials List -->
+                    <div class="confirmation-section">
+                        <h3>📋 Materials ${orderData.requestType === 'order' ? 'to Order' : 'for Quote'}</h3>
+                        <div class="materials-confirmation-summary">
+                            <strong>${totalItems} unique materials • ${totalQuantity} total items</strong>
+                        </div>
+                        <div class="materials-confirmation-list">
+                            ${this.selectedMaterials.map((material, index) => `
+                                <div class="material-confirmation-item">
+                                    <div class="material-number">${index + 1}.</div>
+                                    <div class="material-details">
+                                        <div class="material-name">${material.name}</div>
+                                        <div class="material-meta">
+                                            ${material.code ? `Code: ${material.code} • ` : ''}
+                                            Category: ${material.subcategory} • 
+                                            Quantity: <strong>${material.quantity} ${material.unit}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Requestor Information -->
+                    <div class="confirmation-section">
+                        <h3>👤 Requestor Information</h3>
+                        <div class="confirmation-grid">
+                            <div class="confirmation-item">
+                                <label>Name:</label>
+                                <span class="value">${orderData.requestorName}</span>
+                            </div>
+                            <div class="confirmation-item">
+                                <label>Email:</label>
+                                <span class="value">${orderData.requestorEmail}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${orderData.notes ? `
+                    <!-- Special Instructions -->
+                    <div class="confirmation-section">
+                        <h3>📝 Special Instructions</h3>
+                        <div class="notes-confirmation">
+                            ${orderData.notes}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Action Buttons -->
+                    <div class="confirmation-actions">
+                        <button type="button" class="btn btn-secondary" id="backToFormBtn">
+                            ← Back to Edit ${orderData.requestType === 'order' ? 'Order' : 'Quote'}
+                        </button>
+                        <button type="button" class="btn btn-primary" id="confirmSubmitBtn">
+                            ${orderData.requestType === 'order' ? '✅ Submit Order' : '✅ Submit Quote Request'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Replace form content with confirmation
+            mainForm.innerHTML = confirmationHTML;
+
+            // Add event listeners for confirmation actions
+            const backBtn = document.getElementById('backToFormBtn');
+            const confirmBtn = document.getElementById('confirmSubmitBtn');
+
+            if (backBtn) {
+                backBtn.addEventListener('click', () => this.backToForm());
+            }
+
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', () => this.submitForm());
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (error) {
+            console.error('❌ Error rendering confirmation:', error);
+        }
+    }
+
+    backToForm() {
+        try {
+            console.log('🔙 Going back to form');
+            
+            // Reload the page to restore the original form
+            location.reload();
+            
+        } catch (error) {
+            console.error('❌ Error going back to form:', error);
+        }
+    }
+
+    async submitForm() {
+        try {
+            console.log('🚀 Actually submitting the form');
+            
+            const confirmBtn = document.getElementById('confirmSubmitBtn');
+            const btnText = confirmBtn?.textContent;
+            
+            // Disable and show loading
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = `
+                    <span class="spinner-small"></span>
+                    Submitting...
+                `;
+            }
+
+            // Get form data from current state
+            const form = document.querySelector('form') || document.createElement('form');
+            const requestType = document.querySelector('input[name="requestType"]:checked')?.value;
+            
+            const data = {
+                requestType: requestType,
+                category: document.getElementById('category')?.value,
+                supplier: document.getElementById('supplier')?.value,
+                requestorName: document.getElementById('requestorName')?.value,
+                requestorEmail: document.getElementById('requestorEmail')?.value,
+                urgency: document.getElementById('urgency')?.value,
+                projectRef: document.getElementById('projectRef')?.value,
+                notes: document.getElementById('notes')?.value,
+                materials: this.selectedMaterials
+            };
+            
+            console.log('📦 Submitting final data:', data);
             
             // Determine endpoint
-            const requestType = data.requestType;
             const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
             
             // Submit form
@@ -780,15 +995,13 @@ class MaterialManagementApp {
         } catch (error) {
             console.error('❌ Form submission error:', error);
             this.showError(`Submission failed: ${error.message}`);
-        } finally {
-            // Re-enable form
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = submitBtn?.querySelector('.btn-text');
-            const btnLoading = submitBtn?.querySelector('.btn-loading');
             
-            if (submitBtn) submitBtn.disabled = false;
-            if (btnText) btnText.style.display = 'inline';
-            if (btnLoading) btnLoading.style.display = 'none';
+            // Re-enable button
+            const confirmBtn = document.getElementById('confirmSubmitBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '✅ Submit Order';
+            }
         }
     }
 
@@ -871,13 +1084,15 @@ function resetForm() {
             window.app.selectedMaterials = [];
             window.app.filteredMaterials = [];
             window.app.selectedSubcategory = '';
+            window.app.currentStep = 'form';
             window.app.renderSelectedMaterials();
             window.app.resetMaterialSelection();
             window.app.validateForm();
         }
         
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Reload page to restore original form
+        location.reload();
+        
     } catch (error) {
         console.error('❌ Error resetting form:', error);
     }
@@ -886,7 +1101,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox Mode)');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App with Confirmation');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
