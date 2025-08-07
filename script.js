@@ -34,152 +34,209 @@ class MaterialManagementApp {
         this.validateForm();
     }
 
-    setupEventListeners() {
-        try {
-            console.log('⚙️ Setting up enhanced event listeners...');
-            
-            // Request type change
-            const requestTypeInputs = document.querySelectorAll('input[name="requestType"]');
-            if (requestTypeInputs && requestTypeInputs.length > 0) {
-                requestTypeInputs.forEach(input => {
-                    if (input) {
-                        input.addEventListener('change', () => this.handleRequestTypeChange());
-                    }
-                });
-            }
-
-            // PDF mode change
-            const pdfModeInputs = document.querySelectorAll('input[name="pdfMode"]');
-            if (pdfModeInputs && pdfModeInputs.length > 0) {
-                pdfModeInputs.forEach(input => {
-                    if (input) {
-                        input.addEventListener('change', () => this.handlePDFModeChange());
-                    }
-                });
-            }
-
-            // Category change
-            const categorySelect = document.getElementById('category');
-            if (categorySelect) {
-                categorySelect.addEventListener('change', () => this.handleCategoryChange());
-            }
-
-            // Supplier change
-            const supplierSelect = document.getElementById('supplier');
-            if (supplierSelect) {
-                supplierSelect.addEventListener('change', () => this.handleSupplierChange());
-            }
-
-            // Subcategory change
-            const subcategorySelect = document.getElementById('subcategory');
-            if (subcategorySelect) {
-                subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
-            }
-
-            // Material search
-            const materialSearch = document.getElementById('materialSearch');
-            if (materialSearch) {
-                materialSearch.addEventListener('input', () => this.handleMaterialSearch());
-            }
-
-            // Form submission
-            const form = document.getElementById('materialForm');
-            if (form) {
-                form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-                
-                // Form validation on input changes
-                const formInputs = form.querySelectorAll('input, select, textarea');
-                if (formInputs && formInputs.length > 0) {
-                    formInputs.forEach(input => {
-                        if (input) {
-                            input.addEventListener('change', () => this.validateForm());
-                            input.addEventListener('input', () => this.validateForm());
-                        }
-                    });
+setupEventListeners() {
+    try {
+        console.log('⚙️ Setting up enhanced event listeners...');
+        
+        // Request type change
+        const requestTypeInputs = document.querySelectorAll('input[name="requestType"]');
+        if (requestTypeInputs && requestTypeInputs.length > 0) {
+            requestTypeInputs.forEach(input => {
+                if (input) {
+                    input.addEventListener('change', () => this.handleRequestTypeChange());
                 }
-            }
-
-            // Confirmation page event listeners
-            const backToEditBtn = document.getElementById('backToEditBtn');
-            if (backToEditBtn) {
-                backToEditBtn.addEventListener('click', () => this.goBackToEdit());
-            }
-
-            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
-            if (confirmSubmitBtn) {
-                confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
-            }
-
-            const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
-            if (addMoreMaterialsBtn) {
-                addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
-            }
-
-            // Order history event listeners
-            const historySearch = document.getElementById('historySearch');
-            if (historySearch) {
-                historySearch.addEventListener('input', () => this.filterOrderHistory());
-            }
-
-            const statusFilter = document.getElementById('statusFilter');
-            if (statusFilter) {
-                statusFilter.addEventListener('change', () => this.filterOrderHistory());
-            }
-
-            const supplierFilter = document.getElementById('supplierFilter');
-            if (supplierFilter) {
-                supplierFilter.addEventListener('change', () => this.filterOrderHistory());
-            }
-
-            const categoryFilter = document.getElementById('categoryFilter');
-            if (categoryFilter) {
-                categoryFilter.addEventListener('change', () => this.filterOrderHistory());
-            }
-
-            const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
-            if (refreshHistoryBtn) {
-                refreshHistoryBtn.addEventListener('click', () => this.loadOrderHistory());
-            }
-            
-            console.log('✅ Enhanced event listeners setup complete');
-        } catch (error) {
-            console.error('❌ Error setting up event listeners:', error);
-        }
-    }
-
-    setupTabNavigation() {
-        try {
-            console.log('🔗 Setting up tab navigation...');
-            
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const targetTab = button.dataset.tab;
-                    
-                    // Update active tab button
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    
-                    // Update active tab content
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    const targetContent = document.getElementById(`${targetTab}-content`);
-                    if (targetContent) {
-                        targetContent.classList.add('active');
-                    }
-                    
-                    // Update current tab and handle tab-specific logic
-                    this.currentTab = targetTab;
-                    this.handleTabChange(targetTab);
-                });
             });
-            
-            console.log('✅ Tab navigation setup complete');
-        } catch (error) {
-            console.error('❌ Error setting up tab navigation:', error);
         }
+
+        // PDF mode change
+        const pdfModeInputs = document.querySelectorAll('input[name="pdfMode"]');
+        if (pdfModeInputs && pdfModeInputs.length > 0) {
+            pdfModeInputs.forEach(input => {
+                if (input) {
+                    input.addEventListener('change', () => this.handlePDFModeChange());
+                }
+            });
+        }
+
+        // Category change
+        const categorySelect = document.getElementById('category');
+        if (categorySelect) {
+            categorySelect.addEventListener('change', () => this.handleCategoryChange());
+        }
+
+        // Supplier change
+        const supplierSelect = document.getElementById('supplier');
+        if (supplierSelect) {
+            supplierSelect.addEventListener('change', () => this.handleSupplierChange());
+        }
+
+        // Subcategory change
+        const subcategorySelect = document.getElementById('subcategory');
+        if (subcategorySelect) {
+            subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
+        }
+
+        // Material search
+        const materialSearch = document.getElementById('materialSearch');
+        if (materialSearch) {
+            materialSearch.addEventListener('input', () => this.handleMaterialSearch());
+        }
+
+        // Form submission
+        const form = document.getElementById('materialForm');
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+            
+            // Form validation on input changes
+            const formInputs = form.querySelectorAll('input, select, textarea');
+            if (formInputs && formInputs.length > 0) {
+                formInputs.forEach(input => {
+                    if (input) {
+                        input.addEventListener('change', () => this.validateForm());
+                        input.addEventListener('input', () => this.validateForm());
+                    }
+                });
+            }
+        }
+
+        // Confirmation page event listeners
+        const backToEditBtn = document.getElementById('backToEditBtn');
+        if (backToEditBtn) {
+            backToEditBtn.addEventListener('click', () => this.goBackToEdit());
+        }
+
+        const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+        if (confirmSubmitBtn) {
+            confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
+        }
+
+        const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
+        if (addMoreMaterialsBtn) {
+            addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
+        }
+
+        // Order history event listeners
+        const historySearch = document.getElementById('historySearch');
+        if (historySearch) {
+            historySearch.addEventListener('input', () => this.filterOrderHistory());
+        }
+
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', () => this.filterOrderHistory());
+        }
+
+        const supplierFilter = document.getElementById('supplierFilter');
+        if (supplierFilter) {
+            supplierFilter.addEventListener('change', () => this.filterOrderHistory());
+        }
+
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', () => this.filterOrderHistory());
+        }
+
+        const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+        if (refreshHistoryBtn) {
+            refreshHistoryBtn.addEventListener('click', () => this.loadOrderHistory());
+        }
+
+        // Event delegation for dynamic buttons (replaces onclick handlers)
+        document.addEventListener('click', (e) => {
+            // Handle toggle materials buttons
+            if (e.target.closest('.toggle-materials')) {
+                const button = e.target.closest('.toggle-materials');
+                const materialsSection = button.closest('.materials-section');
+                const materialsDiv = materialsSection?.querySelector('.materials-list-history');
+                
+                if (materialsDiv) {
+                    const orderId = materialsDiv.id.replace('materials-', '');
+                    this.toggleMaterials(orderId);
+                }
+                return;
+            }
+            
+            // Handle quantity buttons (+ and - buttons)
+            if (e.target.classList.contains('qty-btn')) {
+                const index = parseInt(e.target.dataset.index);
+                const change = parseInt(e.target.dataset.change);
+                if (!isNaN(index) && !isNaN(change)) {
+                    this.updateQuantity(index, change);
+                }
+                return;
+            }
+            
+            // Handle remove material buttons
+            if (e.target.classList.contains('remove-material')) {
+                const index = parseInt(e.target.dataset.index);
+                if (!isNaN(index)) {
+                    this.removeMaterial(index);
+                }
+                return;
+            }
+            
+            // Handle order action buttons (PDF, Duplicate, Contact)
+            if (e.target.closest('[data-action]')) {
+                const button = e.target.closest('[data-action]');
+                const action = button.dataset.action;
+                const orderId = button.dataset.orderId;
+                const email = button.dataset.email;
+                const pdfLink = button.dataset.pdfLink;
+                
+                switch (action) {
+                    case 'viewPDF':
+                        this.viewPDF(pdfLink);
+                        break;
+                    case 'duplicateOrder':
+                        this.duplicateOrder(orderId);
+                        break;
+                    case 'contactSupplier':
+                        this.contactSupplier(email, orderId);
+                        break;
+                }
+                return;
+            }
+        }.bind(this));
+        
+        console.log('✅ Enhanced event listeners setup complete');
+    } catch (error) {
+        console.error('❌ Error setting up event listeners:', error);
     }
+}
+
+setupTabNavigation() {
+    try {
+        console.log('🔗 Setting up tab navigation...');
+        
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+                
+                // Update active tab button
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update active tab content
+                tabContents.forEach(content => content.classList.remove('active'));
+                const targetContent = document.getElementById(`${targetTab}-content`);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+                
+                // Update current tab and handle tab-specific logic
+                this.currentTab = targetTab;
+                this.handleTabChange(targetTab);
+            });
+        });
+        
+        console.log('✅ Tab navigation setup complete');
+    } catch (error) {
+        console.error('❌ Error setting up tab navigation:', error);
+    }
+}
 
     handleTabChange(tabName) {
         try {
@@ -960,53 +1017,53 @@ class MaterialManagementApp {
     }
 
     renderSelectedMaterials() {
-        try {
-            const container = document.getElementById('selectedMaterials');
-            if (!container) return;
-            
-            if (this.selectedMaterials.length === 0) {
-                container.innerHTML = '<div class="no-selection">No materials selected yet...</div>';
-                return;
-            }
+    try {
+        const container = document.getElementById('selectedMaterials');
+        if (!container) return;
+        
+        if (this.selectedMaterials.length === 0) {
+            container.innerHTML = '<div class="no-selection">No materials selected yet...</div>';
+            return;
+        }
 
-            container.innerHTML = this.selectedMaterials.map((material, index) => `
-                <div class="selected-material-item" data-index="${index}">
-                    <div class="material-info">
-                        <div class="material-name">${material.name}</div>
-                        <div class="material-meta">
-                            ${material.code ? `Code: ${material.code} • ` : ''}
-                            Unit: ${material.unit} • 
-                            ${material.subcategory} • 
-                            Supplier: ${material.supplierName}
-                        </div>
-                    </div>
-                    <div class="material-controls">
-                        <div class="quantity-controls">
-                            <button type="button" class="qty-btn minus" onclick="window.app.updateQuantity(${index}, -1)" ${material.quantity <= 1 ? 'disabled' : ''}>−</button>
-                            <span class="quantity-display">${material.quantity} ${material.unit}</span>
-                            <button type="button" class="qty-btn plus" onclick="window.app.updateQuantity(${index}, 1)">+</button>
-                        </div>
-                        <button type="button" class="remove-material" onclick="window.app.removeMaterial(${index})">
-                            Remove
-                        </button>
+        container.innerHTML = this.selectedMaterials.map((material, index) => `
+            <div class="selected-material-item" data-index="${index}">
+                <div class="material-info">
+                    <div class="material-name">${material.name}</div>
+                    <div class="material-meta">
+                        ${material.code ? `Code: ${material.code} • ` : ''}
+                        Unit: ${material.unit} • 
+                        ${material.subcategory} • 
+                        Supplier: ${material.supplierName}
                     </div>
                 </div>
-            `).join('');
+                <div class="material-controls">
+                    <div class="quantity-controls">
+                        <button type="button" class="qty-btn minus" data-index="${index}" data-change="-1" ${material.quantity <= 1 ? 'disabled' : ''}>−</button>
+                        <span class="quantity-display">${material.quantity} ${material.unit}</span>
+                        <button type="button" class="qty-btn plus" data-index="${index}" data-change="1">+</button>
+                    </div>
+                    <button type="button" class="remove-material" data-index="${index}">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        `).join('');
 
-            // Update summary
-            const totalItems = this.selectedMaterials.length;
-            const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
-            
-            const summary = document.getElementById('materialsSummary');
-            if (summary) {
-                summary.innerHTML = `
-                    <strong>${totalItems} unique materials, ${totalQuantity} total items</strong>
-                `;
-            }
-        } catch (error) {
-            console.error('❌ Error rendering selected materials:', error);
+        // Update summary
+        const totalItems = this.selectedMaterials.length;
+        const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
+        
+        const summary = document.getElementById('materialsSummary');
+        if (summary) {
+            summary.innerHTML = `
+                <strong>${totalItems} unique materials, ${totalQuantity} total items</strong>
+            `;
         }
+    } catch (error) {
+        console.error('❌ Error rendering selected materials:', error);
     }
+}
 
     updateQuantity(index, change) {
         try {
@@ -1644,7 +1701,7 @@ renderOrderCard(order) {
                     <div class="materials-section">
                         <div class="materials-header">
                             <h5>Materials (${materials.length} items, ${totalQuantity} total qty)</h5>
-                            <button type="button" class="toggle-materials" onclick="window.app.toggleMaterials('${order.orderId}')">
+                            <button type="button" class="toggle-materials" data-order-id="${order.orderId}">
                                 <span class="toggle-icon">▼</span>
                                 <span class="toggle-text">Show Details</span>
                             </button>
@@ -1675,14 +1732,14 @@ renderOrderCard(order) {
                 
                 <div class="order-actions">
                     ${hasPdf ? `
-                    <button type="button" class="btn btn-secondary" onclick="window.app.viewPDF('${order.pdfLink}')">
+                    <button type="button" class="btn btn-secondary" data-action="viewPDF" data-pdf-link="${order.pdfLink}">
                         📄 View PDF
                     </button>
                     ` : ''}
-                    <button type="button" class="btn btn-secondary" onclick="window.app.duplicateOrder('${order.orderId}')">
+                    <button type="button" class="btn btn-secondary" data-action="duplicateOrder" data-order-id="${order.orderId}">
                         📋 Duplicate Order
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="window.app.contactSupplier('${order.supplierEmail}', '${order.orderId}')">
+                    <button type="button" class="btn btn-secondary" data-action="contactSupplier" data-email="${order.supplierEmail}" data-order-id="${order.orderId}">
                         📧 Contact Supplier
                     </button>
                 </div>
