@@ -1,3 +1,4 @@
+<!-- Enhanced index.html with PDF Upload, Tab Navigation and Order History -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,24 +38,26 @@
         <div class="container">
             <div class="hero-content">
                 <h1 class="hero-title">LCMB Group Material Management System</h1>
-                <p class="hero-subtitle">Streamline your material orders and quote requests with PDF support</p>
+                <p class="hero-subtitle">Streamline your material orders, quotes, and manage your order history</p>
             </div>
         </div>
     </section>
 
-    <!-- NEW: Tab Navigation -->
-    <nav class="tab-navigation">
+    <!-- Tab Navigation -->
+    <section class="tab-navigation">
         <div class="container">
             <div class="tab-container">
-                <button class="tab-btn active" data-tab="submit-request">
-                    📝 Submit Request
+                <button class="tab-button active" data-tab="submit-request">
+                    <span class="tab-icon">📝</span>
+                    <span class="tab-text">Submit Request</span>
                 </button>
-                <button class="tab-btn" data-tab="order-history">
-                    📋 Order History
+                <button class="tab-button" data-tab="order-history">
+                    <span class="tab-icon">📋</span>
+                    <span class="tab-text">Order History</span>
                 </button>
             </div>
         </div>
-    </nav>
+    </section>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -62,7 +65,7 @@
             <!-- Loading State -->
             <div id="loading" class="loading-state" style="display: none;">
                 <div class="spinner"></div>
-                <p>Loading data...</p>
+                <p>Loading form data...</p>
             </div>
 
             <!-- Error Display -->
@@ -76,55 +79,20 @@
                 <div class="success-details">
                     <p><strong>Reference ID:</strong> <span id="referenceId" class="reference-id"></span></p>
                     <p><strong>Supplier:</strong> <span id="successSupplier"></span></p>
-                    <div id="pdfSuccessInfo" class="pdf-success-info" style="display: none;">
-                        <p><strong>PDF Attached:</strong> <span id="pdfFileName"></span></p>
-                        <p><strong>View PDF:</strong> <a id="pdfViewLink" href="#" target="_blank">Open in new tab</a></p>
-                    </div>
                 </div>
                 <button onclick="resetForm()" class="btn btn-secondary">Submit Another Request</button>
             </div>
 
-            <!-- TAB CONTENT: Submit Request -->
-            <div class="tab-content active" id="submit-request-tab">
+            <!-- SUBMIT REQUEST TAB CONTENT -->
+            <div class="tab-content active" id="submit-request-content">
                 <!-- Main Form -->
                 <div class="form-container" id="mainForm">
                     <div class="form-header">
                         <h2>Submit Material Request</h2>
-                        <p>Select your request mode and fill in the details below</p>
+                        <p>Select your request type and fill in the details below</p>
                     </div>
 
                     <form id="materialForm" class="material-form">
-                        <!-- NEW: PDF Mode Selection -->
-                        <div class="form-group">
-                            <label class="form-label">Request Mode *</label>
-                            <div class="mode-selection">
-                                <label class="mode-option">
-                                    <input type="radio" name="pdfMode" value="with-order" checked>
-                                    <span class="mode-custom"></span>
-                                    <div class="mode-content">
-                                        <strong>📦 Materials + PDF</strong>
-                                        <p>Select materials from catalog AND attach a PDF document</p>
-                                    </div>
-                                </label>
-                                <label class="mode-option">
-                                    <input type="radio" name="pdfMode" value="pdf-only">
-                                    <span class="mode-custom"></span>
-                                    <div class="mode-content">
-                                        <strong>📄 PDF Only</strong>
-                                        <p>Attach only a PDF document (skip material selection)</p>
-                                    </div>
-                                </label>
-                                <label class="mode-option">
-                                    <input type="radio" name="pdfMode" value="no-pdf">
-                                    <span class="mode-custom"></span>
-                                    <div class="mode-content">
-                                        <strong>📋 Materials Only</strong>
-                                        <p>Select materials from catalog (no PDF attachment)</p>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
                         <!-- Request Type -->
                         <div class="form-group">
                             <label class="form-label">Request Type *</label>
@@ -148,51 +116,87 @@
                             </div>
                         </div>
 
-                        <!-- NEW: PDF Upload Section -->
-                        <div class="form-group" id="pdfUploadSection">
-                            <label class="form-label">PDF Document <span id="pdfRequiredIndicator">*</span></label>
+                        <!-- PDF Upload Mode -->
+                        <div class="form-group">
+                            <label class="form-label">PDF Attachment *</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="pdfMode" value="no-pdf" checked>
+                                    <span class="radio-custom"></span>
+                                    <div class="radio-content">
+                                        <strong>No PDF</strong>
+                                        <p>Submit materials list only</p>
+                                    </div>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="pdfMode" value="with-order">
+                                    <span class="radio-custom"></span>
+                                    <div class="radio-content">
+                                        <strong>PDF + Materials</strong>
+                                        <p>Attach PDF with materials list</p>
+                                    </div>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="pdfMode" value="pdf-only">
+                                    <span class="radio-custom"></span>
+                                    <div class="radio-content">
+                                        <strong>PDF Only</strong>
+                                        <p>Send PDF without materials list</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- PDF Upload Section -->
+                        <div class="form-group" id="pdfUploadSection" style="display: none;">
+                            <label class="form-label">Upload PDF Document *</label>
                             <div class="pdf-upload-container">
-                                <div id="pdfDropZone" class="pdf-drop-zone">
-                                    <div class="drop-zone-content">
-                                        <div class="drop-zone-icon">📄</div>
+                                <div class="pdf-dropzone" id="pdfDropzone">
+                                    <div class="dropzone-content">
+                                        <div class="dropzone-icon">📄</div>
                                         <h4>Drop your PDF here or click to browse</h4>
                                         <p>Maximum file size: 10MB • PDF files only</p>
-                                        <button type="button" class="btn btn-secondary" id="browsePdfBtn">Browse Files</button>
+                                        <button type="button" class="btn btn-secondary" id="browseButton">
+                                            Browse Files
+                                        </button>
                                     </div>
                                     <input type="file" id="pdfFileInput" accept=".pdf" hidden>
                                 </div>
                                 
-                                <!-- PDF Preview -->
-                                <div id="pdfPreview" class="pdf-preview" style="display: none;">
-                                    <div class="pdf-preview-header">
-                                        <div class="pdf-info">
-                                            <span class="pdf-icon">📄</span>
-                                            <div class="pdf-details">
-                                                <div class="pdf-name" id="pdfFileName"></div>
-                                                <div class="pdf-size" id="pdfFileSize"></div>
-                                            </div>
+                                <!-- PDF File Preview -->
+                                <div class="pdf-preview" id="pdfPreview" style="display: none;">
+                                    <div class="pdf-file-info">
+                                        <div class="file-icon">📄</div>
+                                        <div class="file-details">
+                                            <div class="file-name" id="pdfFileName"></div>
+                                            <div class="file-size" id="pdfFileSize"></div>
                                         </div>
-                                        <button type="button" class="remove-pdf-btn" id="removePdfBtn">✕</button>
+                                        <button type="button" class="remove-pdf" id="removePdfBtn">
+                                            ✕
+                                        </button>
                                     </div>
-                                    <div class="pdf-actions">
-                                        <button type="button" class="btn btn-secondary" id="replacePdfBtn">Replace PDF</button>
+                                    <div class="pdf-upload-progress" id="pdfProgress" style="display: none;">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="progressFill"></div>
+                                        </div>
+                                        <span class="progress-text" id="progressText">Preparing file...</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Category (Dynamic based on PDF mode) -->
+                        <!-- Category -->
                         <div class="form-group" id="categoryGroup">
-                            <label for="category" class="form-label">Category <span id="categoryRequiredIndicator">*</span></label>
-                            <select id="category" name="category" class="form-select">
+                            <label for="category" class="form-label">Category *</label>
+                            <select id="category" name="category" class="form-select" required>
                                 <option value="">Select a category...</option>
                             </select>
                         </div>
 
-                        <!-- Supplier (Dynamic based on PDF mode) -->
+                        <!-- Supplier -->
                         <div class="form-group" id="supplierGroup">
-                            <label for="supplier" class="form-label">Supplier <span id="supplierRequiredIndicator">*</span></label>
-                            <select id="supplier" name="supplier" class="form-select">
+                            <label for="supplier" class="form-label">Supplier *</label>
+                            <select id="supplier" name="supplier" class="form-select" required>
                                 <option value="">First select a category...</option>
                             </select>
                             <div id="supplierInfo" class="supplier-info" style="display: none;">
@@ -211,10 +215,10 @@
                             </select>
                         </div>
 
-                        <!-- Enhanced Materials Selection (Dynamic based on PDF mode) -->
+                        <!-- Enhanced Materials Selection -->
                         <div class="form-group" id="materialsGroup">
-                            <label class="form-label">Materials Required <span id="materialsRequiredIndicator">*</span></label>
-                            <p class="form-help-text">Browse materials and specify the quantities you need for your order.</p>
+                            <label class="form-label">Materials Required *</label>
+                            <p class="form-help-text" id="materialsHelpText">Browse materials and specify the quantities you need for your order.</p>
                             
                             <!-- Materials Search and List Container -->
                             <div id="materialsContainer" class="materials-selection-container" style="display: none;">
@@ -242,6 +246,9 @@
                                     <div class="no-selection">No materials added to your order yet...</div>
                                 </div>
                             </div>
+
+                            <!-- Legacy Add Material Button (Hidden) -->
+                            <button type="button" id="addMaterial" class="btn btn-secondary" disabled style="display: none;">Add Material</button>
                         </div>
 
                         <!-- Requestor Information -->
@@ -281,7 +288,7 @@
                         <!-- Submit Button -->
                         <div class="form-actions">
                             <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
-                                <span class="btn-text">Review Request</span>
+                                <span class="btn-text">Review Order</span>
                                 <span class="btn-loading" style="display: none;">
                                     <span class="spinner-small"></span>
                                     Processing...
@@ -294,24 +301,39 @@
                 <!-- Confirmation Page -->
                 <div class="form-container" id="confirmationPage" style="display: none;">
                     <div class="form-header">
-                        <h2 id="confirmationTitle">Review Your Request</h2>
+                        <h2 id="confirmationTitle">Review Your Order</h2>
                         <p id="confirmationSubtitle">Please review all details before sending to supplier</p>
                     </div>
 
                     <div class="confirmation-content">
-                        <!-- Request Summary Section -->
+                        <!-- PDF Attachment Section -->
+                        <div class="confirmation-section" id="pdfAttachmentSection" style="display: none;">
+                            <h3 class="section-title">📄 PDF Attachment</h3>
+                            <div class="pdf-attachment-card">
+                                <div class="pdf-file-preview">
+                                    <div class="file-icon-large">📄</div>
+                                    <div class="file-info">
+                                        <div class="file-name-large" id="confirmPdfFileName"></div>
+                                        <div class="file-size-large" id="confirmPdfFileSize"></div>
+                                        <div class="attachment-note">This PDF will be attached to the email</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Summary Section -->
                         <div class="confirmation-section">
-                            <h3 class="section-title">📋 Request Summary</h3>
+                            <h3 class="section-title">📋 Order Summary</h3>
                             <div class="summary-grid">
                                 <div class="summary-item">
                                     <label>Request Type:</label>
                                     <span id="confirmRequestType" class="summary-value"></span>
                                 </div>
                                 <div class="summary-item">
-                                    <label>Request Mode:</label>
+                                    <label>PDF Mode:</label>
                                     <span id="confirmPdfMode" class="summary-value"></span>
                                 </div>
-                                <div class="summary-item" id="confirmCategoryItem">
+                                <div class="summary-item">
                                     <label>Category:</label>
                                     <span id="confirmCategory" class="summary-value"></span>
                                 </div>
@@ -326,26 +348,8 @@
                             </div>
                         </div>
 
-                        <!-- PDF Information Section -->
-                        <div class="confirmation-section" id="pdfConfirmSection" style="display: none;">
-                            <h3 class="section-title">📄 PDF Document</h3>
-                            <div class="pdf-confirm-card">
-                                <div class="pdf-confirm-info">
-                                    <span class="pdf-icon-large">📄</span>
-                                    <div class="pdf-confirm-details">
-                                        <div class="pdf-confirm-name" id="confirmPdfName"></div>
-                                        <div class="pdf-confirm-size" id="confirmPdfSize"></div>
-                                    </div>
-                                </div>
-                                <div class="pdf-attachment-notice">
-                                    <span class="notice-icon">📎</span>
-                                    <span>This PDF will be attached to the supplier email</span>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Supplier Information Section -->
-                        <div class="confirmation-section" id="supplierConfirmSection">
+                        <div class="confirmation-section">
                             <h3 class="section-title">🏢 Supplier Information</h3>
                             <div class="supplier-card">
                                 <div class="supplier-header">
@@ -425,46 +429,61 @@
                 </div>
             </div>
 
-            <!-- TAB CONTENT: Order History -->
-            <div class="tab-content" id="order-history-tab" style="display: none;">
+            <!-- ORDER HISTORY TAB CONTENT -->
+            <div class="tab-content" id="order-history-content">
                 <div class="form-container">
                     <div class="form-header">
                         <h2>Order History</h2>
-                        <p>View all your past orders and quote requests</p>
+                        <p>View and manage your past orders and quotes</p>
                     </div>
 
-                    <!-- History Filters -->
-                    <div class="history-filters">
-                        <div class="filter-row">
+                    <!-- Order History Controls -->
+                    <div class="history-controls">
+                        <div class="search-filters">
                             <div class="filter-group">
-                                <label for="historyTypeFilter" class="filter-label">Type:</label>
-                                <select id="historyTypeFilter" class="filter-select">
+                                <label for="historySearch" class="filter-label">Search:</label>
+                                <input type="text" id="historySearch" class="form-input" placeholder="Search orders...">
+                            </div>
+                            <div class="filter-group">
+                                <label for="statusFilter" class="filter-label">Type:</label>
+                                <select id="statusFilter" class="form-select">
                                     <option value="">All Types</option>
                                     <option value="ORDER">Orders</option>
-                                    <option value="QUOTE">Quote Requests</option>
+                                    <option value="QUOTE">Quotes</option>
                                 </select>
                             </div>
                             <div class="filter-group">
-                                <label for="historySupplierFilter" class="filter-label">Supplier:</label>
-                                <select id="historySupplierFilter" class="filter-select">
+                                <label for="supplierFilter" class="filter-label">Supplier:</label>
+                                <select id="supplierFilter" class="form-select">
                                     <option value="">All Suppliers</option>
                                 </select>
                             </div>
                             <div class="filter-group">
-                                <label for="historyCategoryFilter" class="filter-label">Category:</label>
-                                <select id="historyCategoryFilter" class="filter-select">
+                                <label for="categoryFilter" class="filter-label">Category:</label>
+                                <select id="categoryFilter" class="form-select">
                                     <option value="">All Categories</option>
                                 </select>
                             </div>
-                            <button id="refreshHistoryBtn" class="btn btn-secondary">🔄 Refresh</button>
+                        </div>
+                        <div class="history-actions">
+                            <button type="button" id="refreshHistoryBtn" class="btn btn-secondary">
+                                <span>🔄 Refresh</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- History Content -->
-                    <div id="historyContent" class="history-content">
-                        <div class="history-loading">
-                            <div class="spinner"></div>
-                            <p>Loading order history...</p>
+                    <!-- Order History Loading -->
+                    <div id="historyLoading" class="loading-state" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading order history...</p>
+                    </div>
+
+                    <!-- Order History Results -->
+                    <div id="historyResults" class="history-results">
+                        <div class="no-history">
+                            <div class="no-history-icon">📋</div>
+                            <h3>No Orders Found</h3>
+                            <p>Start by submitting your first order or quote request.</p>
                         </div>
                     </div>
                 </div>
