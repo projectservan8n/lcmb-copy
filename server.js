@@ -1,8 +1,10 @@
-// server.js - Enhanced with PDF Upload Support and Complete API Integration
+// server.js - Enhanced with Binary PDF Upload Support
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
+const FormData = require('form-data');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,43 +14,73 @@ const WEBHOOKS = {
   DATA_LOAD: 'https://primary-s0q-production.up.railway.app/webhook/dataload',
   ORDER_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/ordersubmit',
   QUOTE_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/quotesubmit',
-  PDF_UPLOAD: 'https://primary-s0q-production.up.railway.app/webhook/pdfupload'  // NEW: PDF Upload endpoint
+  PDF_UPLOAD: 'https://primary-s0q-production.up.railway.app/webhook/pdfupload'  // Binary PDF Upload endpoint
 };
+
+// Configure multer for PDF file uploads
+const upload = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Only accept PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  },
+  storage: multer.memoryStorage() // Store in memory for forwarding to n8n
+});
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '15mb' })); // Increased limit for PDF uploads
+app.use(express.json({ limit: '15mb' })); // For JSON requests
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(express.static('.'));
 
-// Enhanced Webhook Helper function with PDF upload support
-async function callWebhook(webhookUrl, method = 'GET', data = null) {
+// Enhanced Webhook Helper function with binary PDF support
+async function callWebhook(webhookUrl, method = 'GET', data = null, isFormData = false) {
   try {
-    console.log(`🔗 [${new Date().toISOString()}] Calling webhook: ${method} ${webhookUrl}`);
+    console.log(`🔗 [${new Date().toISOString()}] Calling webhook: ${method} ${webhookUrl} ${isFormData ? '(Binary FormData)' : ''}`);
     
     const config = {
       method,
       url: webhookUrl,
       headers: {
-        'Content-Type': 'application/json',
         'User-Agent': 'LCMB-Material-Management/2.0',
-        'Accept': 'application/json'
       },
-      timeout: 60000, // Increased timeout for PDF uploads (60 seconds)
+      timeout: 120000, // Increased timeout for binary uploads (120 seconds)
       validateStatus: function (status) {
         return status < 500; // Accept any status code less than 500
       }
     };
 
     if (data) {
-      config.data = data;
-      
-      // Log data preview (hide PDF data for brevity)
-      const logData = { ...data };
-      if (logData.pdfData) {
-        logData.pdfData = `[BASE64_DATA_${logData.pdfData.length}_CHARS]`;
+      if (isFormData) {
+        // For binary FormData uploads
+        config.data = data;
+        config.headers = {
+          ...config.headers,
+          ...data.getHeaders() // Let form-data set the correct headers
+        };
+      } else {
+        // For JSON data
+        config.data = data;
+        config.headers['Content-Type'] = 'application/json';
+        config.headers['Accept'] = 'application/json';
       }
-      console.log(`📦 Request data:`, JSON.stringify(logData, null, 2));
+      
+      if (!isFormData) {
+        // Log data preview (hide binary data for brevity)
+        const logData = { ...data };
+        if (logData.pdfData) {
+          logData.pdfData = `[BASE64_DATA_${logData.pdfData.length}_CHARS]`;
+        }
+        console.log(`📦 Request data:`, JSON.stringify(logData, null, 2));
+      } else {
+        console.log(`📦 Binary FormData request with PDF file`);
+      }
     }
 
     const startTime = Date.now();
@@ -56,7 +88,6 @@ async function callWebhook(webhookUrl, method = 'GET', data = null) {
     const duration = Date.now() - startTime;
     
     console.log(`✅ [${new Date().toISOString()}] Webhook response (${duration}ms): ${response.status} ${response.statusText}`);
-    console.log(`📊 Response headers:`, response.headers);
     
     // Log response preview
     const responsePreview = JSON.stringify(response.data).substring(0, 500);
@@ -68,28 +99,11 @@ async function callWebhook(webhookUrl, method = 'GET', data = null) {
     }
     
     // Validate response structure based on endpoint
-    if (webhookUrl.includes('dataload')) {
-      if (!response.data) {
-        throw new Error('Empty response from data load webhook');
-      }
-      
-      console.log(`🔍 Data validation:`, {
-        hasSuccess: 'success' in response.data,
-        hasData: 'data' in response.data,
-        dataKeys: response.data.data ? Object.keys(response.data.data) : 'none'
-      });
-    } else if (webhookUrl.includes('pdfupload')) {
+    if (webhookUrl.includes('pdfupload')) {
       console.log(`📄 PDF upload validation:`, {
         hasSuccess: 'success' in response.data,
         hasOrderId: 'orderId' in response.data || 'quoteId' in response.data,
         hasPdfInfo: 'pdfFileName' in response.data || 'driveLink' in response.data
-      });
-    } else {
-      // Order/Quote submission validation
-      console.log(`📝 Submission validation:`, {
-        hasSuccess: 'success' in response.data,
-        hasId: 'orderId' in response.data || 'quoteId' in response.data,
-        hasSupplier: 'supplier' in response.data
       });
     }
     
@@ -250,64 +264,87 @@ app.post('/api/quote/submit', async (req, res) => {
   }
 });
 
-// NEW: PDF Upload API
-app.post('/api/pdf/upload', async (req, res) => {
+// NEW: Binary PDF Upload API
+app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
   try {
-    console.log(`🔄 [${new Date().toISOString()}] API: Processing PDF upload...`);
+    console.log(`🔄 [${new Date().toISOString()}] API: Processing binary PDF upload...`);
+    
+    // Validate file upload
+    if (!req.file) {
+      throw new Error('No PDF file uploaded');
+    }
+    
+    if (req.file.mimetype !== 'application/pdf') {
+      throw new Error('Only PDF files are allowed');
+    }
     
     // Validate required fields
-    const requiredFields = ['requestType', 'supplierName', 'supplierEmail', 'requestorName', 'requestorEmail', 'pdfData', 'filename'];
+    const requiredFields = ['requestType', 'supplierName', 'supplierEmail', 'requestorName', 'requestorEmail', 'filename'];
     const missingFields = requiredFields.filter(field => !req.body[field]);
     
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
     
-    // Validate PDF data
-    if (!req.body.pdfData || typeof req.body.pdfData !== 'string') {
-      throw new Error('Invalid PDF data provided');
+    // Validate file size (10MB limit)
+    if (req.file.size > 10 * 1024 * 1024) {
+      throw new Error(`PDF file too large: ${(req.file.size / 1024 / 1024).toFixed(2)}MB (max 10MB)`);
     }
     
-    // Validate file size (approximate - base64 is ~33% larger than original)
-    const estimatedFileSize = (req.body.pdfData.length * 0.75) / 1024 / 1024; // Convert to MB
-    if (estimatedFileSize > 10) {
-      throw new Error(`PDF file too large: ${estimatedFileSize.toFixed(2)}MB (max 10MB)`);
-    }
-    
-    console.log('📄 PDF upload data received:', {
+    console.log('📄 Binary PDF upload data received:', {
       requestType: req.body.requestType,
       supplierName: req.body.supplierName,
       requestorName: req.body.requestorName,
       filename: req.body.filename,
-      estimatedSize: `${estimatedFileSize.toFixed(2)}MB`,
+      originalName: req.file.originalname,
+      fileSize: `${(req.file.size / 1024 / 1024).toFixed(2)}MB`,
+      mimeType: req.file.mimetype,
       category: req.body.category || 'PDF Upload',
       urgency: req.body.urgency || 'Normal',
       hasProjectRef: !!req.body.projectRef,
-      hasNotes: !!req.body.notes
+      hasNotes: !!req.body.notes,
+      categories: req.body.categories ? JSON.parse(req.body.categories) : []
     });
     
-    // Prepare data for n8n webhook (matches your workflow structure)
-    const webhookData = {
-      requestType: req.body.requestType,
-      supplierName: req.body.supplierName,
-      supplierEmail: req.body.supplierEmail,
-      requestorName: req.body.requestorName,
-      requestorEmail: req.body.requestorEmail,
-      urgency: req.body.urgency || 'Normal',
-      projectRef: req.body.projectRef || '',
-      notes: req.body.notes || '',
-      category: req.body.category || 'PDF Upload',
-      filename: req.body.filename,
-      pdfData: req.body.pdfData,
-      // Add materials array if this is from "both" method
-      materials: req.body.materials || []
-    };
+    // Create FormData for n8n webhook with binary PDF
+    const formData = new FormData();
+    
+    // Add the PDF file as binary data
+    formData.append('pdfFile', req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+      knownLength: req.file.size
+    });
+    
+    // Add all other form fields
+    formData.append('requestType', req.body.requestType);
+    formData.append('supplierName', req.body.supplierName);
+    formData.append('supplierEmail', req.body.supplierEmail);
+    formData.append('requestorName', req.body.requestorName);
+    formData.append('requestorEmail', req.body.requestorEmail);
+    formData.append('urgency', req.body.urgency || 'Normal');
+    formData.append('projectRef', req.body.projectRef || '');
+    formData.append('notes', req.body.notes || '');
+    formData.append('category', req.body.category || 'PDF Upload');
+    formData.append('filename', req.body.filename);
+    
+    // Add categories if provided
+    if (req.body.categories) {
+      formData.append('categories', req.body.categories);
+    }
+    
+    // Add materials array if this is from "both" method
+    if (req.body.materials) {
+      formData.append('materials', req.body.materials);
+    }
+    
+    console.log('📤 Forwarding binary PDF to n8n webhook...');
     
     const startTime = Date.now();
-    const result = await callWebhook(WEBHOOKS.PDF_UPLOAD, 'POST', webhookData);
+    const result = await callWebhook(WEBHOOKS.PDF_UPLOAD, 'POST', formData, true);
     const uploadTime = Date.now() - startTime;
     
-    console.log(`✅ [${uploadTime}ms] PDF upload successful:`, {
+    console.log(`✅ [${uploadTime}ms] Binary PDF upload successful:`, {
       orderId: result.orderId,
       quoteId: result.quoteId,
       pdfFileName: result.pdfFileName,
@@ -318,11 +355,27 @@ app.post('/api/pdf/upload', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(`❌ [${new Date().toISOString()}] API Error (pdf/upload):`, error.message);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
+    
+    // Handle multer errors specifically
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      res.status(413).json({ 
+        success: false, 
+        error: 'PDF file too large (max 10MB)',
+        timestamp: new Date().toISOString()
+      });
+    } else if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      res.status(400).json({ 
+        success: false, 
+        error: 'Unexpected file upload',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 });
 
