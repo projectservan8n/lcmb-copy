@@ -1,4 +1,4 @@
-// server.js - Enhanced with Debug Logging
+// server.js - Enhanced with PDF Upload and Order History Support
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -11,12 +11,13 @@ const PORT = process.env.PORT || 3000;
 const WEBHOOKS = {
   DATA_LOAD: 'https://primary-s0q-production.up.railway.app/webhook/dataload',
   ORDER_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/ordersubmit',
-  QUOTE_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/quotesubmit'
+  QUOTE_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/quotesubmit',
+  ORDER_HISTORY: 'https://primary-s0q-production.up.railway.app/webhook/orderhistory'
 };
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increased limit for PDF uploads
 app.use(express.static('.'));
 
 // Enhanced Webhook Helper function with detailed logging
@@ -40,7 +41,10 @@ async function callWebhook(webhookUrl, method = 'GET', data = null) {
 
     if (data) {
       config.data = data;
-      console.log(`📦 Request data:`, JSON.stringify(data, null, 2));
+      const dataPreview = JSON.stringify(data, null, 2);
+      console.log(`📦 Request data:`, dataPreview.length > 1000 ? 
+        `${dataPreview.substring(0, 1000)}... (truncated, ${dataPreview.length} chars total)` : 
+        dataPreview);
     }
 
     const response = await axios(config);
@@ -165,6 +169,7 @@ app.get('/api/data/load', async (req, res) => {
   }
 });
 
+// ENHANCED: Order submission with PDF support
 app.post('/api/order/submit', async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Submitting order via webhook...`);
@@ -172,10 +177,22 @@ app.post('/api/order/submit', async (req, res) => {
       category: req.body.category,
       supplier: req.body.supplier,
       materials: req.body.materials?.length || 0,
-      requestorName: req.body.requestorName
+      requestorName: req.body.requestorName,
+      hasPdf: !!req.body.pdfFileData,
+      pdfSendMode: req.body.pdfSendMode || 'none'
     });
     
-    const result = await callWebhook(WEBHOOKS.ORDER_SUBMIT, 'POST', req.body);
+    // Prepare data for n8n workflow
+    const orderData = {
+      ...req.body,
+      // Include PDF metadata if present
+      hasPdf: !!req.body.pdfFileData,
+      pdfFileName: req.body.pdfFile?.name || null,
+      pdfFileSize: req.body.pdfFile?.size || null,
+      pdfSendMode: req.body.pdfSendMode || 'with-order'
+    };
+    
+    const result = await callWebhook(WEBHOOKS.ORDER_SUBMIT, 'POST', orderData);
     console.log(`✅ [${new Date().toISOString()}] Order submission successful`);
     res.json(result);
   } catch (error) {
@@ -188,6 +205,7 @@ app.post('/api/order/submit', async (req, res) => {
   }
 });
 
+// ENHANCED: Quote submission with PDF support
 app.post('/api/quote/submit', async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Submitting quote via webhook...`);
@@ -195,14 +213,51 @@ app.post('/api/quote/submit', async (req, res) => {
       category: req.body.category,
       supplier: req.body.supplier,
       materials: req.body.materials?.length || 0,
-      requestorName: req.body.requestorName
+      requestorName: req.body.requestorName,
+      hasPdf: !!req.body.pdfFileData,
+      pdfSendMode: req.body.pdfSendMode || 'none'
     });
     
-    const result = await callWebhook(WEBHOOKS.QUOTE_SUBMIT, 'POST', req.body);
+    // Prepare data for n8n workflow
+    const quoteData = {
+      ...req.body,
+      // Include PDF metadata if present
+      hasPdf: !!req.body.pdfFileData,
+      pdfFileName: req.body.pdfFile?.name || null,
+      pdfFileSize: req.body.pdfFile?.size || null,
+      pdfSendMode: req.body.pdfSendMode || 'with-order'
+    };
+    
+    const result = await callWebhook(WEBHOOKS.QUOTE_SUBMIT, 'POST', quoteData);
     console.log(`✅ [${new Date().toISOString()}] Quote submission successful`);
     res.json(result);
   } catch (error) {
     console.error(`❌ [${new Date().toISOString()}] API Error (quote/submit):`, error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// NEW: Order History API
+app.get('/api/orders/history', async (req, res) => {
+  try {
+    console.log(`🔄 [${new Date().toISOString()}] API: Loading order history via webhook...`);
+    const startTime = Date.now();
+    
+    // Call the order history webhook (you'll need to create this in n8n)
+    const data = await callWebhook(WEBHOOKS.ORDER_HISTORY);
+    const loadTime = Date.now() - startTime;
+    
+    console.log(`✅ [${loadTime}ms] Order history load successful:`, {
+      ordersCount: data?.orders?.length || 0
+    });
+    
+    res.json(data);
+  } catch (error) {
+    console.error(`❌ [${new Date().toISOString()}] API Error (orders/history):`, error.message);
     res.status(500).json({ 
       success: false, 
       error: error.message,
@@ -221,7 +276,13 @@ app.get('/health', (req, res) => {
     webhooks: {
       dataLoad: WEBHOOKS.DATA_LOAD,
       orderSubmit: WEBHOOKS.ORDER_SUBMIT,
-      quoteSubmit: WEBHOOKS.QUOTE_SUBMIT
+      quoteSubmit: WEBHOOKS.QUOTE_SUBMIT,
+      orderHistory: WEBHOOKS.ORDER_HISTORY
+    },
+    features: {
+      pdfUpload: true,
+      orderHistory: true,
+      maxFileSize: '50MB'
     }
   });
 });
@@ -258,6 +319,24 @@ app.get('/debug/webhooks', async (req, res) => {
       console.log(`❌ Data load test failed: ${error.message}`);
     }
 
+    // Test order history webhook
+    try {
+      console.log('🧪 Testing order history webhook...');
+      const historyStart = Date.now();
+      const historyResult = await callWebhook(WEBHOOKS.ORDER_HISTORY);
+      const historyTime = Date.now() - historyStart;
+      
+      results.orderHistory = { 
+        status: 'success', 
+        loadTime: `${historyTime}ms`,
+        ordersCount: historyResult?.orders?.length || 0
+      };
+      console.log(`✅ Order history test passed (${historyTime}ms)`);
+    } catch (error) {
+      results.orderHistory = { status: 'error', error: error.message };
+      console.log(`❌ Order history test failed: ${error.message}`);
+    }
+
     const totalTime = Date.now() - startTime;
     
     res.json({
@@ -265,9 +344,12 @@ app.get('/debug/webhooks', async (req, res) => {
       totalTestTime: `${totalTime}ms`,
       webhookUrls: WEBHOOKS,
       testResults: results,
-      recommendations: results.dataLoad?.status === 'success' 
-        ? ['✅ Webhooks are working correctly']
-        : ['❌ Check n8n workflow execution', '❌ Verify Google Sheets access', '❌ Check webhook URLs']
+      recommendations: [
+        results.dataLoad?.status === 'success' ? '✅ Data loading works' : '❌ Check data load webhook',
+        results.orderHistory?.status === 'success' ? '✅ Order history works' : '❌ Check order history webhook',
+        '💡 PDF uploads supported up to 50MB',
+        '🔧 Create order history webhook in n8n if missing'
+      ]
     });
   } catch (error) {
     res.status(500).json({
@@ -309,6 +391,33 @@ app.get('/force-load', async (req, res) => {
   }
 });
 
+// NEW: Test order history endpoint
+app.get('/test-history', async (req, res) => {
+  try {
+    console.log(`🔄 [${new Date().toISOString()}] Testing order history load...`);
+    const startTime = Date.now();
+    
+    const data = await callWebhook(WEBHOOKS.ORDER_HISTORY);
+    const loadTime = Date.now() - startTime;
+    
+    res.json({
+      success: true,
+      message: 'Order history loaded successfully',
+      loadTime: `${loadTime}ms`,
+      ordersCount: data?.orders?.length || 0,
+      timestamp: new Date().toISOString(),
+      sampleOrders: data?.orders?.slice(0, 3) || [],
+      rawData: data
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   console.log(`⚠️ [${new Date().toISOString()}] 404 Not Found: ${req.method} ${req.url}`);
@@ -326,15 +435,21 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log('🚀 LCMB Material Management Server Started');
+  console.log('🚀 LCMB Material Management Server Started (Enhanced)');
   console.log(`📍 Server: http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log('🔗 Webhook Endpoints:');
   console.log(`   📊 Data Load: ${WEBHOOKS.DATA_LOAD}`);
   console.log(`   📦 Order Submit: ${WEBHOOKS.ORDER_SUBMIT}`);
   console.log(`   💬 Quote Submit: ${WEBHOOKS.QUOTE_SUBMIT}`);
+  console.log(`   📋 Order History: ${WEBHOOKS.ORDER_HISTORY}`);
+  console.log('✨ New Features:');
+  console.log('   📎 PDF Upload Support (up to 50MB)');
+  console.log('   📊 Order History Tracking');
+  console.log('   🎯 PDF-only sending mode');
   console.log('✅ Ready to receive requests!');
   console.log('💡 Visit / to load page with initial data');
   console.log('🔧 Visit /debug/webhooks to test webhook connectivity');
   console.log('🔄 Visit /force-load to manually test data loading');
+  console.log('📋 Visit /test-history to test order history loading');
 });
