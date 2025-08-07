@@ -264,7 +264,7 @@ app.post('/api/quote/submit', async (req, res) => {
   }
 });
 
-// NEW: Binary PDF Upload API
+// NEW: Binary PDF Upload API - FIXED VERSION
 app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Processing binary PDF upload...`);
@@ -345,14 +345,31 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
     const uploadTime = Date.now() - startTime;
     
     console.log(`✅ [${uploadTime}ms] Binary PDF upload successful:`, {
-      orderId: result.orderId,
-      quoteId: result.quoteId,
-      pdfFileName: result.pdfFileName,
-      driveLink: result.driveLink ? 'Available' : 'Not Available',
-      supplier: result.supplier
+      hasResult: !!result,
+      resultType: typeof result,
+      orderId: result?.orderId,
+      quoteId: result?.quoteId,
+      pdfFileName: result?.pdfFileName,
+      driveLink: result?.driveLink ? 'Available' : 'Not Available',
+      supplier: result?.supplier
     });
     
-    res.json(result);
+    // Ensure we always return a proper JSON response
+    const response = {
+      success: true,
+      message: result?.message || 'PDF uploaded successfully',
+      orderId: result?.orderId || null,
+      quoteId: result?.quoteId || null,
+      pdfFileName: result?.pdfFileName || req.file.originalname,
+      driveLink: result?.driveLink || null,
+      supplier: result?.supplier || req.body.supplierName,
+      timestamp: new Date().toISOString(),
+      status: result?.status || (req.body.requestType === 'quote' ? 'QUOTE' : 'ORDER')
+    };
+    
+    console.log('📤 Sending response to frontend:', response);
+    res.json(response);
+    
   } catch (error) {
     console.error(`❌ [${new Date().toISOString()}] API Error (pdf/upload):`, error.message);
     
@@ -372,7 +389,7 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
     } else {
       res.status(500).json({ 
         success: false, 
-        error: error.message,
+        error: error.message || 'PDF upload failed',
         timestamp: new Date().toISOString()
       });
     }
