@@ -757,6 +757,7 @@ class MaterialManagementApp {
             const data = Object.fromEntries(formData.entries());
             
             // Store current form state for restoration later
+            this.lastRequestType = data.requestType;
             this.lastSelectedCategory = data.category;
             this.lastSelectedSupplier = data.supplier;
             this.lastRequestorName = data.requestorName;
@@ -1151,32 +1152,7 @@ class MaterialManagementApp {
                 }
             }
             
-            // Restore category
-            if (currentFormData.category) {
-                const categorySelect = document.getElementById('category');
-                if (categorySelect) {
-                    categorySelect.value = currentFormData.category;
-                    this.handleCategoryChange();
-                }
-                
-                // Wait a bit for suppliers to populate, then restore supplier
-                setTimeout(() => {
-                    if (currentFormData.supplier) {
-                        const supplierSelect = document.getElementById('supplier');
-                        if (supplierSelect) {
-                            supplierSelect.value = currentFormData.supplier;
-                            this.handleSupplierChange();
-                        }
-                        
-                        // Wait for materials to populate, then restore them
-                        setTimeout(() => {
-                            this.restoreSelectedMaterials();
-                        }, 500);
-                    }
-                }, 500);
-            }
-            
-            // Restore basic form fields
+            // Restore basic form fields first
             const fieldsToRestore = [
                 'requestorName', 'requestorEmail', 'urgency', 'projectRef', 'notes'
             ];
@@ -1190,45 +1166,84 @@ class MaterialManagementApp {
                 }
             });
             
-            console.log('✅ Form data restored successfully');
+            // Now restore category and trigger the cascade
+            if (currentFormData.category) {
+                const categorySelect = document.getElementById('category');
+                if (categorySelect) {
+                    categorySelect.value = currentFormData.category;
+                    // Trigger category change to populate suppliers
+                    this.handleCategoryChange();
+                    
+                    // Wait for suppliers to populate, then restore supplier
+                    setTimeout(() => {
+                        if (currentFormData.supplier) {
+                            const supplierSelect = document.getElementById('supplier');
+                            if (supplierSelect) {
+                                // Check if the supplier option exists
+                                const supplierOption = supplierSelect.querySelector(`option[value="${currentFormData.supplier}"]`);
+                                if (supplierOption) {
+                                    supplierSelect.value = currentFormData.supplier;
+                                    // Trigger supplier change to populate materials
+                                    this.handleSupplierChange();
+                                    
+                                    // Wait for materials to populate, then restore selected materials
+                                    setTimeout(() => {
+                                        this.restoreSelectedMaterials();
+                                        // Re-validate form after everything is restored
+                                        this.validateForm();
+                                    }, 800);
+                                } else {
+                                    console.warn('⚠️ Supplier option not found:', currentFormData.supplier);
+                                }
+                            }
+                        }
+                    }, 600);
+                }
+            }
+            
+            console.log('✅ Form data restoration initiated');
             
         } catch (error) {
             console.error('❌ Error restoring form data:', error);
         }
     }
 
-    getCurrentFormData() {
-        try {
-            // Extract form data from various sources (DOM elements, stored state, etc.)
-            return {
-                requestType: document.querySelector('input[name="requestType"]:checked')?.value || 'order',
-                category: this.lastSelectedCategory || '',
-                supplier: this.lastSelectedSupplier || '',
-                requestorName: this.lastRequestorName || '',
-                requestorEmail: this.lastRequestorEmail || '',
-                urgency: this.lastUrgency || 'Normal',
-                projectRef: this.lastProjectRef || '',
-                notes: this.lastNotes || ''
-            };
-        } catch (error) {
-            console.error('❌ Error getting current form data:', error);
-            return {};
-        }
-    }
-
     restoreSelectedMaterials() {
         try {
-            console.log('📦 Restoring selected materials:', this.selectedMaterials);
+            console.log('📦 Restoring selected materials:', this.selectedMaterials.length, 'materials');
             
-            // Re-render the selected materials
-            this.renderSelectedMaterials();
-            
-            // Re-populate and re-render the materials list to show checkboxes correctly
-            if (this.lastSelectedCategory && this.formData?.data?.materials?.[this.lastSelectedCategory]) {
-                this.populateMaterials(this.lastSelectedCategory, this.selectedSubcategory);
+            if (!this.selectedMaterials || this.selectedMaterials.length === 0) {
+                console.log('ℹ️ No materials to restore');
+                return;
             }
             
-            console.log('✅ Selected materials restored successfully');
+            // First, re-render the selected materials section
+            this.renderSelectedMaterials();
+            
+            // Then, check the corresponding checkboxes in the materials list
+            // Wait a moment for the materials list to be populated
+            setTimeout(() => {
+                this.selectedMaterials.forEach(selectedMaterial => {
+                    const checkbox = document.querySelector(`.material-checkbox[data-material-id="${selectedMaterial.id}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        // Also update the visual state of the card
+                        const card = checkbox.closest('.material-card');
+                        if (card) {
+                            card.classList.add('selected');
+                            const statusBadge = card.querySelector('.material-status');
+                            if (statusBadge) {
+                                statusBadge.innerHTML = '<span class="selected-badge">✓ Selected</span>';
+                            }
+                        }
+                        console.log(`✅ Restored checkbox for: ${selectedMaterial.name}`);
+                    } else {
+                        console.warn(`⚠️ Checkbox not found for material: ${selectedMaterial.name} (${selectedMaterial.id})`);
+                    }
+                });
+                
+                console.log('✅ Selected materials checkboxes restored');
+            }, 300);
             
         } catch (error) {
             console.error('❌ Error restoring selected materials:', error);
