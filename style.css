@@ -1257,7 +1257,7 @@ body {
 }
 
 /* ===============================================
-   EXISTING MATERIALS GRID SYSTEM
+   EXISTING MATERIALS GRID SYSTEM - FIXED
    =============================================== */
 
 .form-help-text {
@@ -1273,6 +1273,9 @@ body {
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .materials-search {
@@ -1286,9 +1289,10 @@ body {
   text-align: center;
 }
 
+/* FIXED MATERIALS LIST - MUCH LARGER CARDS */
 .materials-list {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)) !important;
   gap: 1.5rem !important;
   padding: 1.5rem !important;
   max-height: 600px;
@@ -1296,8 +1300,11 @@ body {
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-md);
   background: var(--gray-50);
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
+/* FIXED MATERIAL CARDS - MUCH LARGER AND READABLE */
 .material-card {
   background: var(--white) !important;
   border: 2px solid var(--gray-200) !important;
@@ -1308,10 +1315,12 @@ body {
   box-shadow: var(--shadow-sm);
   position: relative;
   min-height: 200px !important;
-  min-width: 300px !important;
+  min-width: 350px !important;
+  width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between;
+  box-sizing: border-box !important;
 }
 
 .material-card:hover {
@@ -1414,9 +1423,9 @@ body {
   font-weight: 600;
   color: var(--gray-800);
   margin-bottom: 0.5rem;
-  font-size: 1rem;
-  line-height: 1.3;
-  min-height: 2.6rem;
+  font-size: 1.1rem !important;
+  line-height: 1.4;
+  min-height: 3rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1426,7 +1435,7 @@ body {
 .material-card .material-meta {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   margin-top: auto;
 }
 
@@ -1434,10 +1443,11 @@ body {
 .material-unit,
 .material-category {
   display: inline-block;
-  padding: 0.2rem 0.5rem;
+  padding: 0.3rem 0.6rem;
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
+  margin-bottom: 0.25rem;
 }
 
 .material-code {
@@ -1960,12 +1970,12 @@ body {
 }
 
 /* ===============================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN - FIXED FOR MATERIALS
    =============================================== */
 
 @media (max-width: 1200px) {
   .materials-list {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
   }
 }
 
@@ -1976,20 +1986,21 @@ body {
   }
   
   .materials-list {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.75rem;
-    padding: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
     max-height: 500px;
   }
   
   .material-card {
-    padding: 0.75rem;
-    min-height: 110px;
+    padding: 1rem !important;
+    min-height: 180px !important;
+    min-width: 280px !important;
   }
   
   .material-card .material-name {
-    font-size: 0.9rem;
-    min-height: 2.4rem;
+    font-size: 1rem !important;
+    min-height: 2.5rem;
   }
   
   .material-card-header {
@@ -2159,13 +2170,15 @@ body {
 
 @media (max-width: 480px) {
   .materials-list {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
   }
   
   .material-card {
-    padding: 1rem;
+    padding: 1.2rem !important;
+    min-width: auto !important;
+    width: 100% !important;
   }
   
   .material-card-header {
@@ -2673,12 +2686,6 @@ body {
 }
 
 /* ===============================================
-   DARK MODE SUPPORT (Disabled - Use Light Theme)
-   =============================================== */
-
-/* Dark mode styles removed to maintain consistent LCMB branding */
-
-/* ===============================================
    UTILITIES & HELPER CLASSES
    =============================================== */
 
@@ -2854,28 +2861,37 @@ body {
 .tooltip {
   z-index: 1100;
 }
-/* FORCE FIX FOR MATERIALS GRID - Add at bottom of CSS file */
-.materials-selection-container .materials-list {
+
+/* ===============================================
+   FINAL OVERRIDE FOR MATERIAL CARDS ISSUES
+   =============================================== */
+
+/* ABSOLUTE FINAL FIX - Override everything for materials grid */
+div[id="materialsContainer"] .materials-list {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
-  gap: 20px !important;
-  padding: 20px !important;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)) !important;
+  gap: 1.5rem !important;
+  padding: 1.5rem !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
 
-.materials-selection-container .material-card {
+div[id="materialsContainer"] .material-card {
   min-width: 350px !important;
-  max-width: none !important;
-  width: auto !important;
   min-height: 200px !important;
-  padding: 20px !important;
+  width: 100% !important;
+  padding: 1.5rem !important;
   box-sizing: border-box !important;
-  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-.materials-selection-container {
+/* Override any conflicting flexbox on the container */
+.materials-selection-container,
+#materialsContainer {
+  display: block !important;
   width: 100% !important;
-  max-width: 100% !important;
+  overflow-x: visible !important;
 }
+
 /* End of Enhanced LCMB Material Management System Styles */
