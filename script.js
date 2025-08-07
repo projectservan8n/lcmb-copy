@@ -1,17 +1,19 @@
-// Enhanced script.js with Checkbox Material Selection, Confirmation Page, and Supplier_ID Filtering
+// Enhanced script.js with PDF Upload and Order History - Corrected Version
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
         this.selectedMaterials = [];
         this.filteredMaterials = [];
         this.selectedSubcategory = '';
-        this.pendingSubmissionData = null; // Store form data for confirmation
+        this.pendingSubmissionData = null;
+        this.uploadedFile = null;
+        this.orderHistory = [];
+        this.currentTab = 'submit-request';
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode + Confirmation + Supplier_ID Filter)');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App (PDF Upload + Order History)');
         
-        // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
             console.log('📊 Using initial form data from server');
             this.formData = window.INITIAL_FORM_DATA;
@@ -25,6 +27,8 @@ class MaterialManagementApp {
         }
         
         this.setupEventListeners();
+        this.setupTabNavigation();
+        this.setupFileUpload();
         this.validateForm();
     }
 
@@ -34,74 +38,246 @@ class MaterialManagementApp {
             
             // Request type change
             const requestTypeInputs = document.querySelectorAll('input[name="requestType"]');
-            if (requestTypeInputs && requestTypeInputs.length > 0) {
+            if (requestTypeInputs) {
                 requestTypeInputs.forEach(input => {
-                    if (input) {
-                        input.addEventListener('change', () => this.handleRequestTypeChange());
+                    if (input) input.addEventListener('change', () => this.handleRequestTypeChange());
+                });
+            }
+
+            // Form elements
+            const categorySelect = document.getElementById('category');
+            const supplierSelect = document.getElementById('supplier');
+            const subcategorySelect = document.getElementById('subcategory');
+            const materialSearch = document.getElementById('materialSearch');
+            
+            if (categorySelect) categorySelect.addEventListener('change', () => this.handleCategoryChange());
+            if (supplierSelect) supplierSelect.addEventListener('change', () => this.handleSupplierChange());
+            if (subcategorySelect) subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
+            if (materialSearch) materialSearch.addEventListener('input', () => this.handleMaterialSearch());
+
+            // Form submission
+            const form = document.getElementById('materialForm');
+            if (form) {
+                form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+                const formInputs = form.querySelectorAll('input, select, textarea');
+                formInputs.forEach(input => {
+                    if (input && input.type !== 'file') {
+                        input.addEventListener('change', () => this.validateForm());
+                        input.addEventListener('input', () => this.validateForm());
                     }
                 });
             }
 
-            // Category change
-            const categorySelect = document.getElementById('category');
-            if (categorySelect) {
-                categorySelect.addEventListener('change', () => this.handleCategoryChange());
-            }
-
-            // Supplier change
-            const supplierSelect = document.getElementById('supplier');
-            if (supplierSelect) {
-                supplierSelect.addEventListener('change', () => this.handleSupplierChange());
-            }
-
-            // Subcategory change
-            const subcategorySelect = document.getElementById('subcategory');
-            if (subcategorySelect) {
-                subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
-            }
-
-            // Material search
-            const materialSearch = document.getElementById('materialSearch');
-            if (materialSearch) {
-                materialSearch.addEventListener('input', () => this.handleMaterialSearch());
-            }
-
-            // Form submission (now goes to confirmation page)
-            const form = document.getElementById('materialForm');
-            if (form) {
-                form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-                
-                // Form validation on input changes
-                const formInputs = form.querySelectorAll('input, select, textarea');
-                if (formInputs && formInputs.length > 0) {
-                    formInputs.forEach(input => {
-                        if (input) {
-                            input.addEventListener('change', () => this.validateForm());
-                            input.addEventListener('input', () => this.validateForm());
-                        }
-                    });
-                }
-            }
-
-            // Confirmation page event listeners
+            // Confirmation page
             const backToEditBtn = document.getElementById('backToEditBtn');
-            if (backToEditBtn) {
-                backToEditBtn.addEventListener('click', () => this.goBackToEdit());
-            }
-
             const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
-            if (confirmSubmitBtn) {
-                confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
+            const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
+            
+            if (backToEditBtn) backToEditBtn.addEventListener('click', () => this.goBackToEdit());
+            if (confirmSubmitBtn) confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
+            if (addMoreMaterialsBtn) addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
+
+            // PDF send mode
+            const pdfSendModeInputs = document.querySelectorAll('input[name="pdfSendMode"]');
+            if (pdfSendModeInputs) {
+                pdfSendModeInputs.forEach(input => {
+                    input.addEventListener('change', () => this.handlePdfSendModeChange());
+                });
             }
 
-            const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
-            if (addMoreMaterialsBtn) {
-                addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
-            }
+            // History tab
+            const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+            const historyType = document.getElementById('historyType');
+            const historySupplier = document.getElementById('historySupplier');
+            const historyCategory = document.getElementById('historyCategory');
+            
+            if (refreshHistoryBtn) refreshHistoryBtn.addEventListener('click', () => this.loadOrderHistory());
+            if (historyType) historyType.addEventListener('change', () => this.filterOrderHistory());
+            if (historySupplier) historySupplier.addEventListener('change', () => this.filterOrderHistory());
+            if (historyCategory) historyCategory.addEventListener('change', () => this.filterOrderHistory());
             
             console.log('✅ Enhanced event listeners setup complete');
         } catch (error) {
             console.error('❌ Error setting up event listeners:', error);
+        }
+    }
+
+    setupTabNavigation() {
+        try {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+                    
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    const targetContent = document.getElementById(targetTab);
+                    if (targetContent) targetContent.classList.add('active');
+                    
+                    this.currentTab = targetTab;
+                    
+                    if (targetTab === 'order-history' && this.orderHistory.length === 0) {
+                        this.loadOrderHistory();
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('❌ Error setting up tab navigation:', error);
+        }
+    }
+
+    setupFileUpload() {
+        try {
+            const fileInput = document.getElementById('pdfFile');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const removeFileBtn = document.getElementById('removeFileBtn');
+            const dragOverlay = fileUploadArea?.querySelector('.drag-overlay');
+
+            if (!fileInput || !fileUploadArea) return;
+
+            fileInput.addEventListener('change', (e) => this.handleFileSelect(e.target.files[0]));
+            fileUploadArea.addEventListener('click', () => {
+                if (!this.uploadedFile) fileInput.click();
+            });
+
+            // Drag and drop
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('drag-over');
+                if (dragOverlay) dragOverlay.style.display = 'flex';
+            });
+
+            fileUploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                if (!fileUploadArea.contains(e.relatedTarget)) {
+                    fileUploadArea.classList.remove('drag-over');
+                    if (dragOverlay) dragOverlay.style.display = 'none';
+                }
+            });
+
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('drag-over');
+                if (dragOverlay) dragOverlay.style.display = 'none';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type === 'application/pdf') {
+                    this.handleFileSelect(files[0]);
+                } else {
+                    this.showError('Please select a valid PDF file.');
+                }
+            });
+
+            if (removeFileBtn) {
+                removeFileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.removeFile();
+                });
+            }
+
+            console.log('✅ File upload setup complete');
+        } catch (error) {
+            console.error('❌ Error setting up file upload:', error);
+        }
+    }
+
+    handleFileSelect(file) {
+        try {
+            if (!file) return;
+
+            if (file.type !== 'application/pdf') {
+                this.showError('Please select a PDF file.');
+                return;
+            }
+
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                this.showError('File size must be less than 10MB.');
+                return;
+            }
+
+            this.uploadedFile = file;
+            this.showFilePreview(file);
+            this.validateForm();
+
+            console.log('📎 File selected:', {
+                name: file.name,
+                size: this.formatFileSize(file.size),
+                type: file.type
+            });
+
+        } catch (error) {
+            console.error('❌ Error handling file select:', error);
+        }
+    }
+
+    showFilePreview(file) {
+        try {
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const filePreview = document.getElementById('filePreview');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+
+            if (fileUploadArea) fileUploadArea.style.display = 'none';
+            if (filePreview) filePreview.style.display = 'block';
+            if (fileName) fileName.textContent = file.name;
+            if (fileSize) fileSize.textContent = this.formatFileSize(file.size);
+
+        } catch (error) {
+            console.error('❌ Error showing file preview:', error);
+        }
+    }
+
+    removeFile() {
+        try {
+            this.uploadedFile = null;
+            
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const filePreview = document.getElementById('filePreview');
+            const fileInput = document.getElementById('pdfFile');
+
+            if (fileUploadArea) fileUploadArea.style.display = 'block';
+            if (filePreview) filePreview.style.display = 'none';
+            if (fileInput) fileInput.value = '';
+
+            this.validateForm();
+            console.log('📎 File removed');
+        } catch (error) {
+            console.error('❌ Error removing file:', error);
+        }
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    handlePdfSendModeChange() {
+        try {
+            const pdfSendMode = document.querySelector('input[name="pdfSendMode"]:checked')?.value;
+            const materialsSection = document.getElementById('materialsSection');
+            
+            if (pdfSendMode === 'pdf-only') {
+                if (materialsSection) {
+                    materialsSection.style.opacity = '0.5';
+                    materialsSection.style.pointerEvents = 'none';
+                }
+            } else {
+                if (materialsSection) {
+                    materialsSection.style.opacity = '1';
+                    materialsSection.style.pointerEvents = 'auto';
+                }
+            }
+            this.validateForm();
+        } catch (error) {
+            console.error('❌ Error handling PDF send mode change:', error);
         }
     }
 
@@ -111,7 +287,6 @@ class MaterialManagementApp {
             console.log('🔄 Loading form data from API...');
             
             const response = await fetch('/api/data/load');
-            
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -143,8 +318,7 @@ class MaterialManagementApp {
             console.log('📋 Populating enhanced form with data:', {
                 suppliers: data.data.suppliers?.length || 0,
                 categories: data.data.categories?.length || 0,
-                materials: Object.keys(data.data.materials || {}).length,
-                materialsByCategoryAndSupplier: data.data.materialsByCategoryAndSupplier ? 'Available' : 'Not Available'
+                materials: Object.keys(data.data.materials || {}).length
             });
 
             // Populate categories
@@ -155,18 +329,47 @@ class MaterialManagementApp {
                     const option = document.createElement('option');
                     option.value = category.name;
                     option.textContent = category.name;
-                    if (category.description) {
-                        option.dataset.description = category.description;
-                    }
+                    if (category.description) option.dataset.description = category.description;
                     categorySelect.appendChild(option);
                 });
                 console.log(`✅ Populated ${data.data.categories.length} categories`);
             }
 
+            // Populate history filters
+            this.populateHistoryFilters(data.data);
             this.showLoading(false);
         } catch (error) {
             console.error('❌ Error populating form:', error);
             this.showError('Error setting up form: ' + error.message);
+        }
+    }
+
+    populateHistoryFilters(data) {
+        try {
+            const historySupplier = document.getElementById('historySupplier');
+            const historyCategory = document.getElementById('historyCategory');
+            
+            if (historySupplier && data.suppliers) {
+                historySupplier.innerHTML = '<option value="">All Suppliers</option>';
+                data.suppliers.forEach(supplier => {
+                    const option = document.createElement('option');
+                    option.value = supplier.name;
+                    option.textContent = supplier.name;
+                    historySupplier.appendChild(option);
+                });
+            }
+
+            if (historyCategory && data.categories) {
+                historyCategory.innerHTML = '<option value="">All Categories</option>';
+                data.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.name;
+                    option.textContent = category.name;
+                    historyCategory.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error populating history filters:', error);
         }
     }
 
@@ -200,10 +403,7 @@ class MaterialManagementApp {
             const selectedCategory = categorySelect.value;
             console.log('📂 Category changed to:', selectedCategory);
             
-            // Reset dependent fields
-            if (supplierSelect) {
-                supplierSelect.innerHTML = '<option value="">Select a supplier...</option>';
-            }
+            if (supplierSelect) supplierSelect.innerHTML = '<option value="">Select a supplier...</option>';
             this.resetMaterialSelection();
             this.hideSupplierInfo();
 
@@ -212,11 +412,9 @@ class MaterialManagementApp {
                 return;
             }
 
-            // Populate suppliers for selected category
             const suppliers = this.formData.data.suppliersByCategory?.[selectedCategory] || [];
             
             if (suppliers.length === 0 && this.formData.data.suppliers) {
-                // Fallback: show suppliers that match the category
                 const allSuppliers = this.formData.data.suppliers;
                 allSuppliers.forEach(supplier => {
                     if (supplier.specialties?.some(specialty => 
@@ -246,7 +444,7 @@ class MaterialManagementApp {
         option.value = supplier.name;
         option.dataset.email = supplier.email || '';
         option.dataset.phone = supplier.phone || '';
-        option.dataset.id = supplier.id || '';  // ✅ CRITICAL: Include supplier ID for filtering
+        option.dataset.id = supplier.id || '';
         option.textContent = supplier.name;
         supplierSelect.appendChild(option);
     }
@@ -262,7 +460,6 @@ class MaterialManagementApp {
             const selectedCategory = categorySelect?.value;
             console.log('🏢 Supplier changed to:', selectedSupplier);
             
-            // Reset material selection
             this.resetMaterialSelection();
 
             if (!selectedSupplier) {
@@ -271,14 +468,12 @@ class MaterialManagementApp {
                 return;
             }
 
-            // Show supplier info
             const selectedOption = supplierSelect.selectedOptions[0];
             if (selectedOption) {
                 this.showSupplierInfo(selectedOption);
                 console.log('🔍 Selected Supplier ID:', selectedOption.dataset.id);
             }
 
-            // Populate subcategories and materials for selected category and supplier
             if (selectedCategory) {
                 this.populateSubcategories(selectedCategory);
                 this.populateMaterials(selectedCategory, '');
@@ -297,13 +492,11 @@ class MaterialManagementApp {
             
             if (!subcategorySelect || !supplierSelect.value) return;
 
-            // Get selected supplier ID
             const selectedOption = supplierSelect.selectedOptions[0];
             const selectedSupplierId = selectedOption?.dataset.id;
 
             if (!selectedSupplierId) return;
 
-            // Get materials for this category and supplier to extract subcategories
             let materials = [];
             if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
                 materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
@@ -321,13 +514,10 @@ class MaterialManagementApp {
                 subcategorySelect.appendChild(option);
             });
 
-            // Show subcategory dropdown
             const subcategoryGroup = document.getElementById('subcategoryGroup');
-            if (subcategoryGroup) {
-                subcategoryGroup.style.display = 'block';
-            }
+            if (subcategoryGroup) subcategoryGroup.style.display = 'block';
 
-            console.log(`📁 Found ${subcategories.length} subcategories for ${category} supplier ${selectedSupplierId}`);
+            console.log(`📁 Found ${subcategories.length} subcategories`);
             
         } catch (error) {
             console.error('❌ Error populating subcategories:', error);
@@ -347,7 +537,6 @@ class MaterialManagementApp {
             this.selectedSubcategory = selectedSubcategory;
             console.log('📁 Subcategory changed to:', selectedSubcategory || 'All');
             
-            // Repopulate materials based on subcategory
             this.populateMaterials(selectedCategory, selectedSubcategory);
             
         } catch (error) {
@@ -355,7 +544,6 @@ class MaterialManagementApp {
         }
     }
 
-    // 🔥 ENHANCED: Materials population with proper Supplier_ID filtering
     populateMaterials(category, subcategory = '') {
         try {
             const materialSearch = document.getElementById('materialSearch');
@@ -367,7 +555,6 @@ class MaterialManagementApp {
                 return;
             }
 
-            // Get selected supplier ID from the option's dataset
             const selectedOption = supplierSelect.selectedOptions[0];
             if (!selectedOption) {
                 console.log('⚠️ No supplier option selected');
@@ -380,17 +567,14 @@ class MaterialManagementApp {
                 return;
             }
 
-            console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}, Subcategory: ${subcategory || 'All'}`);
+            console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}`);
 
-            // Get materials for this specific category and supplier ID
             let materials = [];
             
-            // Check if we have the new grouped structure (preferred)
             if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
                 materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
                 console.log('✅ Using materialsByCategoryAndSupplier structure');
             } else if (this.formData?.data?.materials?.[category]) {
-                // Fallback: filter from the flat structure
                 materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
                 console.log('⚠️ Using fallback materials filtering');
             } else {
@@ -398,7 +582,6 @@ class MaterialManagementApp {
                 materials = [];
             }
             
-            // Filter by subcategory if selected
             if (subcategory) {
                 const beforeFilter = materials.length;
                 materials = materials.filter(m => m.subcategory === subcategory);
@@ -407,9 +590,6 @@ class MaterialManagementApp {
 
             this.filteredMaterials = materials;
             
-            console.log(`📦 Final result: ${materials.length} materials for supplier ${selectedSupplierId}`);
-            
-            // Enable search and show materials container
             if (materialSearch) {
                 materialSearch.disabled = false;
                 materialSearch.placeholder = `Search from ${materials.length} materials...`;
@@ -419,7 +599,6 @@ class MaterialManagementApp {
                 materialsContainer.style.display = 'block';
             }
 
-            // Render materials with checkbox approach
             this.renderMaterialsList();
             
         } catch (error) {
@@ -449,7 +628,6 @@ class MaterialManagementApp {
 
             let materialsToShow = this.filteredMaterials;
 
-            // Apply search filter
             if (searchTerm) {
                 materialsToShow = this.filteredMaterials.filter(material => 
                     material.name.toLowerCase().includes(searchTerm) ||
@@ -458,7 +636,6 @@ class MaterialManagementApp {
                 );
             }
 
-            // Limit results for performance
             const maxResults = 100;
             const displayMaterials = materialsToShow.slice(0, maxResults);
 
@@ -472,7 +649,6 @@ class MaterialManagementApp {
                 return;
             }
 
-            // Grid-based material cards with full clickability
             materialsList.innerHTML = displayMaterials.map(material => {
                 const isSelected = this.selectedMaterials.some(m => m.id === material.id);
                 return `
@@ -501,20 +677,16 @@ class MaterialManagementApp {
                 `;
             }).join('');
 
-            // Add event listeners to entire cards for clickability
+            // Add event listeners to material cards
             materialsList.querySelectorAll('.material-card').forEach(card => {
                 const materialId = card.dataset.materialId;
                 const checkbox = card.querySelector('.material-checkbox');
                 
-                // Make entire card clickable
                 card.addEventListener('click', (e) => {
-                    // Don't trigger if clicking directly on checkbox (prevent double toggle)
                     if (e.target.type === 'checkbox') return;
                     
-                    // Toggle checkbox
                     checkbox.checked = !checkbox.checked;
                     
-                    // Trigger change event
                     if (checkbox.checked) {
                         this.addMaterialById(materialId, 1);
                         card.classList.add('selected');
@@ -523,7 +695,6 @@ class MaterialManagementApp {
                         card.classList.remove('selected');
                     }
                     
-                    // Update status badge
                     const statusBadge = card.querySelector('.material-status');
                     if (checkbox.checked) {
                         statusBadge.innerHTML = '<span class="selected-badge">✓ Selected</span>';
@@ -532,7 +703,6 @@ class MaterialManagementApp {
                     }
                 });
 
-                // Also handle direct checkbox clicks
                 checkbox.addEventListener('change', (e) => {
                     const isChecked = e.target.checked;
                     
@@ -548,7 +718,6 @@ class MaterialManagementApp {
                 });
             });
 
-            // Show result count
             const resultInfo = document.getElementById('materialsResultInfo');
             if (resultInfo) {
                 resultInfo.textContent = `Showing ${displayMaterials.length}${materialsToShow.length > maxResults ? ` of ${materialsToShow.length}` : ''} materials`;
@@ -567,14 +736,9 @@ class MaterialManagementApp {
                 return;
             }
 
-            // Check if material already selected
             const existingIndex = this.selectedMaterials.findIndex(m => m.id === materialId);
-            if (existingIndex !== -1) {
-                // Material already exists, don't add again (checkbox prevents this)
-                return;
-            }
+            if (existingIndex !== -1) return;
 
-            // Add new material with default quantity
             const newMaterial = {
                 id: material.id,
                 name: material.name,
@@ -587,7 +751,7 @@ class MaterialManagementApp {
             };
 
             this.selectedMaterials.push(newMaterial);
-            console.log(`✅ Added material: ${material.name} (${quantity} ${material.unit}) from supplier ${material.supplierId}`);
+            console.log(`✅ Added material: ${material.name}`);
 
             this.renderSelectedMaterials();
             this.validateForm();
@@ -645,15 +809,12 @@ class MaterialManagementApp {
                 </div>
             `).join('');
 
-            // Update summary
             const totalItems = this.selectedMaterials.length;
             const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
             
             const summary = document.getElementById('materialsSummary');
             if (summary) {
-                summary.innerHTML = `
-                    <strong>${totalItems} unique materials, ${totalQuantity} total items</strong>
-                `;
+                summary.innerHTML = `<strong>${totalItems} unique materials, ${totalQuantity} total items</strong>`;
             }
         } catch (error) {
             console.error('❌ Error rendering selected materials:', error);
@@ -664,7 +825,7 @@ class MaterialManagementApp {
         try {
             if (index >= 0 && index < this.selectedMaterials.length) {
                 const newQuantity = this.selectedMaterials[index].quantity + change;
-                if (newQuantity >= 1) {  // Don't allow quantity to go below 1
+                if (newQuantity >= 1) {
                     this.selectedMaterials[index].quantity = newQuantity;
                     console.log(`🔄 Updated quantity for ${this.selectedMaterials[index].name}: ${newQuantity}`);
                     this.renderSelectedMaterials();
@@ -682,11 +843,9 @@ class MaterialManagementApp {
                 const removed = this.selectedMaterials.splice(index, 1)[0];
                 console.log('➖ Removed material:', removed.name);
                 
-                // Uncheck the corresponding checkbox in the materials list
                 const checkbox = document.querySelector(`.material-checkbox[data-material-id="${removed.id}"]`);
                 if (checkbox) {
                     checkbox.checked = false;
-                    // Also update the card appearance
                     const card = checkbox.closest('.material-card');
                     if (card) {
                         card.classList.remove('selected');
@@ -708,32 +867,22 @@ class MaterialManagementApp {
             const materialSearch = document.getElementById('materialSearch');
             const materialsContainer = document.getElementById('materialsContainer');
             
-            // Hide and reset subcategory
             const subcategoryGroup = document.getElementById('subcategoryGroup');
-            if (subcategoryGroup) {
-                subcategoryGroup.style.display = 'none';
-            }
-            if (subcategorySelect) {
-                subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
-            }
+            if (subcategoryGroup) subcategoryGroup.style.display = 'none';
+            if (subcategorySelect) subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
             
-            // Reset material search and container
             if (materialSearch) {
                 materialSearch.value = '';
                 materialSearch.disabled = true;
                 materialSearch.placeholder = 'Select category and supplier first...';
             }
             
-            if (materialsContainer) {
-                materialsContainer.style.display = 'none';
-            }
+            if (materialsContainer) materialsContainer.style.display = 'none';
 
-            // Clear filtered materials and selected materials
             this.filteredMaterials = [];
             this.selectedMaterials = [];
             this.selectedSubcategory = '';
             
-            // Update display
             this.renderSelectedMaterials();
             
         } catch (error) {
@@ -760,9 +909,7 @@ class MaterialManagementApp {
     hideSupplierInfo() {
         try {
             const supplierInfo = document.getElementById('supplierInfo');
-            if (supplierInfo) {
-                supplierInfo.style.display = 'none';
-            }
+            if (supplierInfo) supplierInfo.style.display = 'none';
         } catch (error) {
             console.error('❌ Error hiding supplier info:', error);
         }
@@ -778,7 +925,6 @@ class MaterialManagementApp {
             const requiredFields = ['category', 'supplier', 'requestorName', 'requestorEmail'];
             let isValid = true;
 
-            // Check required fields
             for (const fieldName of requiredFields) {
                 const field = form.querySelector(`[name="${fieldName}"]`);
                 if (!field || !field.value.trim()) {
@@ -787,18 +933,20 @@ class MaterialManagementApp {
                 }
             }
 
-            // Check materials
-            if (this.selectedMaterials.length === 0) {
-                isValid = false;
+            const pdfSendMode = document.querySelector('input[name="pdfSendMode"]:checked')?.value;
+            const hasPdf = this.uploadedFile !== null;
+            const hasMaterials = this.selectedMaterials.length > 0;
+
+            if (pdfSendMode === 'pdf-only') {
+                if (!hasPdf) isValid = false;
+            } else {
+                if (!hasMaterials) isValid = false;
             }
 
-            // Check email format
             const emailField = form.querySelector('[name="requestorEmail"]');
             if (emailField && emailField.value) {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(emailField.value)) {
-                    isValid = false;
-                }
+                if (!emailRegex.test(emailField.value)) isValid = false;
             }
 
             submitBtn.disabled = !isValid;
@@ -807,21 +955,25 @@ class MaterialManagementApp {
         }
     }
 
-    // Form submission now goes to confirmation page instead of directly submitting
     async handleFormSubmit(e) {
         e.preventDefault();
         
         try {
             const form = e.target;
-            
-            // Prepare form data for confirmation
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            // Add selected materials with quantities
             data.materials = this.selectedMaterials;
             
-            // Get supplier details
+            if (this.uploadedFile) {
+                data.pdfFile = {
+                    name: this.uploadedFile.name,
+                    size: this.uploadedFile.size,
+                    type: this.uploadedFile.type
+                };
+                data.pdfSendMode = document.querySelector('input[name="pdfSendMode"]:checked')?.value || 'with-order';
+            }
+            
             const supplierSelect = document.getElementById('supplier');
             const selectedOption = supplierSelect.selectedOptions[0];
             if (selectedOption) {
@@ -831,11 +983,7 @@ class MaterialManagementApp {
             }
             
             console.log('📋 Form data prepared for confirmation:', data);
-            
-            // Store data for later submission
             this.pendingSubmissionData = data;
-            
-            // Show confirmation page
             this.showConfirmationPage(data);
             
         } catch (error) {
@@ -844,19 +992,16 @@ class MaterialManagementApp {
         }
     }
 
-    // Show confirmation page with all details
     showConfirmationPage(data) {
         try {
             console.log('📋 Displaying confirmation page');
             
-            // Hide main form and show confirmation page
             const mainForm = document.getElementById('mainForm');
             const confirmationPage = document.getElementById('confirmationPage');
             
             if (mainForm) mainForm.style.display = 'none';
             if (confirmationPage) confirmationPage.style.display = 'block';
             
-            // Update titles based on request type
             const requestType = data.requestType;
             const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationSubtitle = document.getElementById('confirmationSubtitle');
@@ -872,27 +1017,29 @@ class MaterialManagementApp {
                 if (confirmSubmitText) confirmSubmitText.textContent = 'Confirm & Send Quote Request';
             }
             
-            // Populate order summary
             this.populateElement('confirmRequestType', requestType === 'order' ? 'Material Order' : 'Quote Request');
             this.populateElement('confirmCategory', data.category);
             this.populateElement('confirmUrgency', data.urgency, 'Normal');
             this.populateElement('confirmProjectRef', data.projectRef, 'Not specified');
             
-            // Populate supplier information
             this.populateElement('confirmSupplierName', data.supplier);
             this.populateElement('confirmSupplierEmail', data.supplierEmail, 'Not available');
             this.populateElement('confirmSupplierPhone', data.supplierPhone, 'Not available');
             
-            // Populate requestor information
             this.populateElement('confirmRequestorName', data.requestorName);
             this.populateElement('confirmRequestorEmail', data.requestorEmail);
             
-            // Populate materials
-            this.populateConfirmationMaterials(data.materials);
+            const materialsSection = document.getElementById('materialsSection');
+            if (data.pdfSendMode === 'pdf-only') {
+                if (materialsSection) materialsSection.style.display = 'none';
+            } else {
+                if (materialsSection) materialsSection.style.display = 'block';
+                this.populateConfirmationMaterials(data.materials);
+            }
             
-            // Handle special instructions
+            this.populateConfirmationPdf(data);
+            
             const notesSection = document.getElementById('notesSection');
-            const confirmNotes = document.getElementById('confirmNotes');
             if (data.notes && data.notes.trim()) {
                 if (notesSection) notesSection.style.display = 'block';
                 this.populateElement('confirmNotes', data.notes);
@@ -900,7 +1047,6 @@ class MaterialManagementApp {
                 if (notesSection) notesSection.style.display = 'none';
             }
             
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
         } catch (error) {
@@ -909,7 +1055,6 @@ class MaterialManagementApp {
         }
     }
 
-    // Populate confirmation materials list
     populateConfirmationMaterials(materials) {
         try {
             const materialsSummary = document.getElementById('confirmMaterialsSummary');
@@ -917,7 +1062,6 @@ class MaterialManagementApp {
             
             if (!materials || materials.length === 0) return;
             
-            // Summary
             const totalItems = materials.length;
             const totalQuantity = materials.reduce((sum, m) => sum + m.quantity, 0);
             
@@ -934,9 +1078,8 @@ class MaterialManagementApp {
                 `;
             }
             
-            // Materials list
             if (materialsList) {
-                materialsList.innerHTML = materials.map((material, index) => `
+                materialsList.innerHTML = materials.map((material) => `
                     <div class="confirm-material-item">
                         <div class="material-details">
                             <div class="material-name">${material.name}</div>
@@ -959,19 +1102,37 @@ class MaterialManagementApp {
         }
     }
 
-    // Helper function to populate elements safely
+    populateConfirmationPdf(data) {
+        try {
+            const pdfSection = document.getElementById('pdfSection');
+            
+            if (!data.pdfFile) {
+                if (pdfSection) pdfSection.style.display = 'none';
+                return;
+            }
+            
+            if (pdfSection) pdfSection.style.display = 'block';
+            
+            this.populateElement('confirmPdfName', data.pdfFile.name);
+            this.populateElement('confirmPdfSize', this.formatFileSize(data.pdfFile.size));
+            
+            const pdfMode = data.pdfSendMode === 'pdf-only' ? 'Send PDF Only' : 'Send with Order';
+            this.populateElement('confirmPdfMode', pdfMode);
+            
+        } catch (error) {
+            console.error('❌ Error populating confirmation PDF:', error);
+        }
+    }
+
     populateElement(elementId, value, defaultValue = '') {
         try {
             const element = document.getElementById(elementId);
-            if (element) {
-                element.textContent = value || defaultValue;
-            }
+            if (element) element.textContent = value || defaultValue;
         } catch (error) {
             console.error(`❌ Error populating element ${elementId}:`, error);
         }
     }
 
-    // Go back to edit form
     goBackToEdit() {
         try {
             console.log('🔄 Going back to edit form');
@@ -982,7 +1143,6 @@ class MaterialManagementApp {
             if (mainForm) mainForm.style.display = 'block';
             if (confirmationPage) confirmationPage.style.display = 'none';
             
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
         } catch (error) {
@@ -990,7 +1150,6 @@ class MaterialManagementApp {
         }
     }
 
-    // Handle confirmed submission to supplier
     async handleConfirmedSubmission() {
         if (!this.pendingSubmissionData) {
             this.showError('No submission data found. Please go back and fill the form again.');
@@ -1002,7 +1161,6 @@ class MaterialManagementApp {
             const btnText = confirmSubmitBtn?.querySelector('.btn-text');
             const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
             
-            // Disable form
             if (confirmSubmitBtn) confirmSubmitBtn.disabled = true;
             if (btnText) btnText.style.display = 'none';
             if (btnLoading) btnLoading.style.display = 'flex';
@@ -1010,16 +1168,17 @@ class MaterialManagementApp {
             const data = this.pendingSubmissionData;
             console.log('📤 Submitting confirmed request to supplier:', data);
             
-            // Determine endpoint
+            if (this.uploadedFile) {
+                const base64 = await this.fileToBase64(this.uploadedFile);
+                data.pdfFileData = base64;
+            }
+            
             const requestType = data.requestType;
             const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
             
-            // Submit form
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
 
@@ -1038,7 +1197,6 @@ class MaterialManagementApp {
             console.error('❌ Confirmed submission error:', error);
             this.showError(`Submission failed: ${error.message}`);
         } finally {
-            // Re-enable form
             const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
             const btnText = confirmSubmitBtn?.querySelector('.btn-text');
             const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
@@ -1049,9 +1207,270 @@ class MaterialManagementApp {
         }
     }
 
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    // ORDER HISTORY FUNCTIONALITY
+    async loadOrderHistory() {
+        try {
+            const historyLoading = document.getElementById('historyLoading');
+            const historyContent = document.getElementById('historyContent');
+            
+            if (historyLoading) historyLoading.style.display = 'block';
+            if (historyContent) historyContent.style.display = 'none';
+            
+            console.log('🔄 Loading order history...');
+            
+            const response = await fetch('/api/orders/history');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('📊 Order history loaded:', data);
+            
+            if (data.success !== false) {
+                this.orderHistory = data.orders || [];
+                this.renderOrderHistory(this.orderHistory);
+            } else {
+                throw new Error(data.error || 'Failed to load order history');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading order history:', error);
+            this.showOrderHistoryError('Unable to load order history: ' + error.message);
+        } finally {
+            const historyLoading = document.getElementById('historyLoading');
+            if (historyLoading) historyLoading.style.display = 'none';
+        }
+    }
+
+    filterOrderHistory() {
+        try {
+            const typeFilter = document.getElementById('historyType')?.value || '';
+            const supplierFilter = document.getElementById('historySupplier')?.value || '';
+            const categoryFilter = document.getElementById('historyCategory')?.value || '';
+            
+            let filteredHistory = this.orderHistory;
+            
+            if (typeFilter) {
+                filteredHistory = filteredHistory.filter(order => order.Status === typeFilter);
+            }
+            
+            if (supplierFilter) {
+                filteredHistory = filteredHistory.filter(order => order.Supplier_Name === supplierFilter);
+            }
+            
+            if (categoryFilter) {
+                filteredHistory = filteredHistory.filter(order => order.Category === categoryFilter);
+            }
+            
+            console.log(`🔍 Filtered history: ${filteredHistory.length} of ${this.orderHistory.length} orders`);
+            this.renderOrderHistory(filteredHistory);
+            
+        } catch (error) {
+            console.error('❌ Error filtering order history:', error);
+        }
+    }
+
+    renderOrderHistory(orders) {
+        try {
+            const historyContent = document.getElementById('historyContent');
+            if (!historyContent) return;
+            
+            historyContent.style.display = 'block';
+            
+            if (!orders || orders.length === 0) {
+                historyContent.innerHTML = `
+                    <div class="no-history">
+                        <div class="no-history-icon">📋</div>
+                        <h3>No Orders Found</h3>
+                        <p>No orders match your current filters.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sortedOrders = orders.sort((a, b) => {
+                const dateA = new Date(`${a.Date} ${a.Time}`);
+                const dateB = new Date(`${b.Date} ${b.Time}`);
+                return dateB - dateA;
+            });
+            
+            historyContent.innerHTML = `
+                <div class="history-summary">
+                    <h3>Order History (${orders.length} orders)</h3>
+                </div>
+                <div class="history-list">
+                    ${sortedOrders.map(order => this.renderOrderCard(order)).join('')}
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('❌ Error rendering order history:', error);
+        }
+    }
+
+    renderOrderCard(order) {
+        try {
+            let materials = [];
+            try {
+                materials = order.Materials_List ? JSON.parse(order.Materials_List) : [];
+            } catch (parseError) {
+                console.warn('❌ Error parsing materials list for order:', order.Order_ID, parseError);
+                materials = [];
+            }
+            
+            const isOrder = order.Status === 'ORDER';
+            const statusIcon = isOrder ? '📦' : '💬';
+            const statusColor = isOrder ? 'var(--primary-blue)' : 'var(--warning-orange)';
+            
+            const escapeHtml = (text) => {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
+            
+            return `
+                <div class="history-card">
+                    <div class="history-card-header">
+                        <div class="order-info">
+                            <div class="order-id">
+                                <span class="status-icon" style="color: ${statusColor}">${statusIcon}</span>
+                                <span class="order-number">${escapeHtml(order.Order_ID || 'N/A')}</span>
+                            </div>
+                            <div class="order-meta">
+                                <span class="order-date">${escapeHtml(order.Date || '')} ${escapeHtml(order.Time || '')}</span>
+                                <span class="order-type" style="color: ${statusColor}">${escapeHtml(order.Status || '')}</span>
+                            </div>
+                        </div>
+                        <div class="urgency-badge urgency-${(order.Urgency || 'normal').toLowerCase()}">
+                            ${escapeHtml(order.Urgency || 'Normal')}
+                        </div>
+                    </div>
+                    
+                    <div class="history-card-body">
+                        <div class="order-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Category:</span>
+                                <span class="detail-value">${escapeHtml(order.Category || 'N/A')}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Supplier:</span>
+                                <span class="detail-value">${escapeHtml(order.Supplier_Name || 'N/A')}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Requestor:</span>
+                                <span class="detail-value">${escapeHtml(order.Requestor_Name || 'N/A')}</span>
+                            </div>
+                            ${order.Project_Ref ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Job #:</span>
+                                <span class="detail-value">${escapeHtml(order.Project_Ref)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="materials-summary">
+                            <span class="materials-count">${parseInt(order.Total_Items) || 0} items</span>
+                            <span class="materials-quantity">${parseInt(order.Total_Quantity) || 0} total qty</span>
+                        </div>
+                        
+                        ${materials.length > 0 ? `
+                        <div class="materials-preview">
+                            <button type="button" class="toggle-materials" onclick="window.app.toggleMaterials('${escapeHtml(order.Order_ID)}')">
+                                <span>View Materials</span>
+                                <span class="toggle-icon">▼</span>
+                            </button>
+                            <div class="materials-detail" id="materials-${escapeHtml(order.Order_ID)}" style="display: none;">
+                                ${materials.map((material) => {
+                                    const materialName = typeof material === 'object' ? material.name : material;
+                                    const materialQuantity = typeof material === 'object' ? material.quantity : 1;
+                                    const materialUnit = typeof material === 'object' ? material.unit : 'pcs';
+                                    
+                                    return `
+                                        <div class="material-item-history">
+                                            <span class="material-name">${escapeHtml(materialName || 'Unknown Material')}</span>
+                                            <span class="material-quantity">${parseInt(materialQuantity) || 1} ${escapeHtml(materialUnit || 'pcs')}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${order.Notes ? `
+                        <div class="order-notes">
+                            <strong>Notes:</strong> ${escapeHtml(order.Notes)}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('❌ Error rendering order card:', error);
+            return `<div class="history-card error">Error loading order: ${order.Order_ID || 'Unknown'}</div>`;
+        }
+    }
+
+    toggleMaterials(orderId) {
+        try {
+            const materialsDetail = document.getElementById(`materials-${orderId}`);
+            const toggleBtn = materialsDetail?.previousElementSibling;
+            const toggleIcon = toggleBtn?.querySelector('.toggle-icon');
+            
+            if (materialsDetail) {
+                const isHidden = materialsDetail.style.display === 'none';
+                materialsDetail.style.display = isHidden ? 'block' : 'none';
+                
+                if (toggleIcon) {
+                    toggleIcon.textContent = isHidden ? '▲' : '▼';
+                }
+                
+                if (toggleBtn) {
+                    const toggleText = toggleBtn.querySelector('span:first-child');
+                    if (toggleText) {
+                        toggleText.textContent = isHidden ? 'Hide Materials' : 'View Materials';
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error toggling materials:', error);
+        }
+    }
+
+    showOrderHistoryError(message) {
+        try {
+            const historyContent = document.getElementById('historyContent');
+            if (historyContent) {
+                historyContent.style.display = 'block';
+                historyContent.innerHTML = `
+                    <div class="history-error">
+                        <div class="error-icon">⚠️</div>
+                        <h3>Error Loading History</h3>
+                        <p>${message}</p>
+                        <button onclick="window.app.loadOrderHistory()" class="btn btn-secondary btn-small">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('❌ Error showing order history error:', error);
+        }
+    }
+
     showSuccess(type, id, supplier) {
         try {
-            // Hide both form and confirmation page, show success
             const mainForm = document.getElementById('mainForm');
             const confirmationPage = document.getElementById('confirmationPage');
             const successAlert = document.getElementById('successAlert');
@@ -1066,10 +1485,9 @@ class MaterialManagementApp {
             if (referenceId) referenceId.textContent = id;
             if (successSupplier) successSupplier.textContent = supplier;
 
-            // Clear pending data
             this.pendingSubmissionData = null;
+            this.orderHistory = [];
 
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
             console.error('❌ Error showing success:', error);
@@ -1099,12 +1517,10 @@ class MaterialManagementApp {
                 errorMessage.textContent = message;
                 errorAlert.style.display = 'block';
                 
-                // Auto-hide after 5 seconds
                 setTimeout(() => {
                     if (errorAlert) errorAlert.style.display = 'none';
                 }, 5000);
                 
-                // Scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } catch (error) {
@@ -1113,7 +1529,7 @@ class MaterialManagementApp {
     }
 }
 
-// Global function for resetting form
+// Global functions
 function resetForm() {
     try {
         const mainForm = document.getElementById('mainForm');
@@ -1126,22 +1542,21 @@ function resetForm() {
         if (successAlert) successAlert.style.display = 'none';
         if (errorAlert) errorAlert.style.display = 'none';
         
-        // Reset form
         const form = document.getElementById('materialForm');
         if (form) form.reset();
         
-        // Reset app state
         if (window.app) {
             window.app.selectedMaterials = [];
             window.app.filteredMaterials = [];
             window.app.selectedSubcategory = '';
             window.app.pendingSubmissionData = null;
+            window.app.uploadedFile = null;
+            window.app.removeFile();
             window.app.renderSelectedMaterials();
             window.app.resetMaterialSelection();
             window.app.validateForm();
         }
         
-        // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
         console.error('❌ Error resetting form:', error);
@@ -1151,7 +1566,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox + Confirmation + Supplier_ID Filter)');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App (PDF Upload + Order History)');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
