@@ -1447,11 +1447,6 @@ body {
   gap: 0.5rem;
 }
 
-.selected-materials-section h4::before {
-  content: '🛒';
-  font-size: 1.1rem;
-}
-
 .materials-summary {
   background: linear-gradient(135deg, var(--accent-blue) 0%, #f0f8ff 100%);
   padding: 1rem;
