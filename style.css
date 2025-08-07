@@ -1287,10 +1287,10 @@ body {
 }
 
 .materials-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.2rem;
-  padding: 1.2rem;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+  gap: 1.5rem !important;
+  padding: 1.5rem !important;
   max-height: 600px;
   overflow-y: auto;
   border: 1px solid var(--gray-200);
@@ -1299,17 +1299,18 @@ body {
 }
 
 .material-card {
-  background: var(--white);
-  border: 2px solid var(--gray-200);
+  background: var(--white) !important;
+  border: 2px solid var(--gray-200) !important;
   border-radius: var(--radius-lg);
-  padding: 1.2rem;
+  padding: 1.5rem !important;
   cursor: pointer;
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
   position: relative;
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
+  min-height: 200px !important;
+  min-width: 300px !important;
+  display: flex !important;
+  flex-direction: column !important;
   justify-content: space-between;
 }
 
