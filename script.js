@@ -1,15 +1,15 @@
-// Enhanced script.js with Order Confirmation Step
+// Enhanced script.js with Checkbox Material Selection, Confirmation Page, and Supplier_ID Filtering
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
         this.selectedMaterials = [];
         this.filteredMaterials = [];
         this.selectedSubcategory = '';
-        this.currentStep = 'form'; // 'form' or 'confirmation'
+        this.pendingSubmissionData = null; // Store form data for confirmation
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App with Confirmation');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode + Confirmation + Supplier_ID Filter)');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -66,7 +66,7 @@ class MaterialManagementApp {
                 materialSearch.addEventListener('input', () => this.handleMaterialSearch());
             }
 
-            // Form submission
+            // Form submission (now goes to confirmation page)
             const form = document.getElementById('materialForm');
             if (form) {
                 form.addEventListener('submit', (e) => this.handleFormSubmit(e));
@@ -81,6 +81,22 @@ class MaterialManagementApp {
                         }
                     });
                 }
+            }
+
+            // Confirmation page event listeners
+            const backToEditBtn = document.getElementById('backToEditBtn');
+            if (backToEditBtn) {
+                backToEditBtn.addEventListener('click', () => this.goBackToEdit());
+            }
+
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            if (confirmSubmitBtn) {
+                confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
+            }
+
+            const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
+            if (addMoreMaterialsBtn) {
+                addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
             }
             
             console.log('✅ Enhanced event listeners setup complete');
@@ -127,7 +143,8 @@ class MaterialManagementApp {
             console.log('📋 Populating enhanced form with data:', {
                 suppliers: data.data.suppliers?.length || 0,
                 categories: data.data.categories?.length || 0,
-                materials: Object.keys(data.data.materials || {}).length
+                materials: Object.keys(data.data.materials || {}).length,
+                materialsByCategoryAndSupplier: data.data.materialsByCategoryAndSupplier ? 'Available' : 'Not Available'
             });
 
             // Populate categories
@@ -229,7 +246,7 @@ class MaterialManagementApp {
         option.value = supplier.name;
         option.dataset.email = supplier.email || '';
         option.dataset.phone = supplier.phone || '';
-        option.dataset.id = supplier.id || '';
+        option.dataset.id = supplier.id || '';  // ✅ CRITICAL: Include supplier ID for filtering
         option.textContent = supplier.name;
         supplierSelect.appendChild(option);
     }
@@ -258,16 +275,13 @@ class MaterialManagementApp {
             const selectedOption = supplierSelect.selectedOptions[0];
             if (selectedOption) {
                 this.showSupplierInfo(selectedOption);
+                console.log('🔍 Selected Supplier ID:', selectedOption.dataset.id);
             }
 
-            // Get supplier ID for filtering materials
-            const supplierId = selectedOption?.dataset.id;
-            console.log('📋 Supplier ID for filtering:', supplierId);
-
             // Populate subcategories and materials for selected category and supplier
-            if (selectedCategory && this.formData?.data?.materials?.[selectedCategory] && supplierId) {
-                this.populateSubcategoriesForSupplier(selectedCategory, supplierId);
-                this.populateMaterialsForSupplier(selectedCategory, supplierId, '');
+            if (selectedCategory) {
+                this.populateSubcategories(selectedCategory);
+                this.populateMaterials(selectedCategory, '');
             }
 
             this.validateForm();
@@ -276,82 +290,27 @@ class MaterialManagementApp {
         }
     }
 
-    populateSubcategoriesForSupplier(category, supplierId) {
-        try {
-            const subcategorySelect = document.getElementById('subcategory');
-            if (!subcategorySelect) return;
-
-            // Filter materials by supplier ID first
-            const materials = this.formData.data.materials[category] || [];
-            const supplierMaterials = materials.filter(m => m.supplierId === supplierId);
-            
-            // Get unique subcategories for this supplier
-            const subcategories = [...new Set(supplierMaterials.map(m => m.subcategory).filter(sub => sub))];
-            
-            subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
-            subcategories.forEach(subcategory => {
-                const option = document.createElement('option');
-                option.value = subcategory;
-                option.textContent = subcategory;
-                subcategorySelect.appendChild(option);
-            });
-
-            // Show subcategory dropdown if there are subcategories
-            const subcategoryGroup = document.getElementById('subcategoryGroup');
-            if (subcategoryGroup) {
-                subcategoryGroup.style.display = subcategories.length > 0 ? 'block' : 'none';
-            }
-
-            console.log(`✅ Found ${subcategories.length} subcategories for supplier ${supplierId} in ${category}`);
-            
-        } catch (error) {
-            console.error('❌ Error populating subcategories for supplier:', error);
-        }
-    }
-
-    populateMaterialsForSupplier(category, supplierId, subcategory = '') {
-        try {
-            const materialSearch = document.getElementById('materialSearch');
-            const materialsContainer = document.getElementById('materialsContainer');
-            
-            if (!category || !supplierId || !this.formData?.data?.materials?.[category]) return;
-
-            // Filter materials by supplier ID first
-            let materials = this.formData.data.materials[category].filter(m => m.supplierId === supplierId);
-            
-            // Then filter by subcategory if selected
-            if (subcategory) {
-                materials = materials.filter(m => m.subcategory === subcategory);
-            }
-
-            this.filteredMaterials = materials;
-            
-            // Enable search and show materials container
-            if (materialSearch) {
-                materialSearch.disabled = false;
-                materialSearch.placeholder = `Search from ${materials.length} materials for this supplier...`;
-            }
-            
-            if (materialsContainer) {
-                materialsContainer.style.display = 'block';
-            }
-
-            // Render materials with checkbox approach
-            this.renderMaterialsList();
-            
-            console.log(`📦 Populated ${materials.length} materials for supplier ${supplierId} in ${category}${subcategory ? ` > ${subcategory}` : ''}`);
-            
-        } catch (error) {
-            console.error('❌ Error populating materials for supplier:', error);
-        }
-    }
-
     populateSubcategories(category) {
         try {
             const subcategorySelect = document.getElementById('subcategory');
-            if (!subcategorySelect) return;
+            const supplierSelect = document.getElementById('supplier');
+            
+            if (!subcategorySelect || !supplierSelect.value) return;
 
-            const materials = this.formData.data.materials[category] || [];
+            // Get selected supplier ID
+            const selectedOption = supplierSelect.selectedOptions[0];
+            const selectedSupplierId = selectedOption?.dataset.id;
+
+            if (!selectedSupplierId) return;
+
+            // Get materials for this category and supplier to extract subcategories
+            let materials = [];
+            if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
+                materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
+            } else if (this.formData?.data?.materials?.[category]) {
+                materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
+            }
+
             const subcategories = [...new Set(materials.map(m => m.subcategory).filter(sub => sub))];
             
             subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
@@ -368,8 +327,7 @@ class MaterialManagementApp {
                 subcategoryGroup.style.display = 'block';
             }
 
-            // Enable material search and populate all materials initially
-            this.populateMaterials(category, '');
+            console.log(`📁 Found ${subcategories.length} subcategories for ${category} supplier ${selectedSupplierId}`);
             
         } catch (error) {
             console.error('❌ Error populating subcategories:', error);
@@ -380,43 +338,76 @@ class MaterialManagementApp {
         try {
             const subcategorySelect = document.getElementById('subcategory');
             const categorySelect = document.getElementById('category');
-            const supplierSelect = document.getElementById('supplier');
             
-            if (!subcategorySelect || !categorySelect || !supplierSelect) return;
+            if (!subcategorySelect || !categorySelect) return;
             
             const selectedSubcategory = subcategorySelect.value;
             const selectedCategory = categorySelect.value;
-            const selectedSupplierOption = supplierSelect.selectedOptions[0];
-            const supplierId = selectedSupplierOption?.dataset.id;
             
             this.selectedSubcategory = selectedSubcategory;
             console.log('📁 Subcategory changed to:', selectedSubcategory || 'All');
             
-            // Repopulate materials based on supplier and subcategory
-            if (selectedCategory && supplierId) {
-                this.populateMaterialsForSupplier(selectedCategory, supplierId, selectedSubcategory);
-            }
+            // Repopulate materials based on subcategory
+            this.populateMaterials(selectedCategory, selectedSubcategory);
             
         } catch (error) {
             console.error('❌ Error handling subcategory change:', error);
         }
     }
 
+    // 🔥 ENHANCED: Materials population with proper Supplier_ID filtering
     populateMaterials(category, subcategory = '') {
         try {
             const materialSearch = document.getElementById('materialSearch');
             const materialsContainer = document.getElementById('materialsContainer');
+            const supplierSelect = document.getElementById('supplier');
             
-            if (!category || !this.formData?.data?.materials?.[category]) return;
+            if (!category || !supplierSelect.value) {
+                console.log('⚠️ Missing category or supplier');
+                return;
+            }
 
-            let materials = this.formData.data.materials[category];
+            // Get selected supplier ID from the option's dataset
+            const selectedOption = supplierSelect.selectedOptions[0];
+            if (!selectedOption) {
+                console.log('⚠️ No supplier option selected');
+                return;
+            }
+            
+            const selectedSupplierId = selectedOption.dataset.id;
+            if (!selectedSupplierId) {
+                console.log('⚠️ No supplier ID found in dataset');
+                return;
+            }
+
+            console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}, Subcategory: ${subcategory || 'All'}`);
+
+            // Get materials for this specific category and supplier ID
+            let materials = [];
+            
+            // Check if we have the new grouped structure (preferred)
+            if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
+                materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
+                console.log('✅ Using materialsByCategoryAndSupplier structure');
+            } else if (this.formData?.data?.materials?.[category]) {
+                // Fallback: filter from the flat structure
+                materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
+                console.log('⚠️ Using fallback materials filtering');
+            } else {
+                console.log('❌ No materials found for category:', category);
+                materials = [];
+            }
             
             // Filter by subcategory if selected
             if (subcategory) {
+                const beforeFilter = materials.length;
                 materials = materials.filter(m => m.subcategory === subcategory);
+                console.log(`📁 Filtered by subcategory: ${beforeFilter} → ${materials.length} materials`);
             }
 
             this.filteredMaterials = materials;
+            
+            console.log(`📦 Final result: ${materials.length} materials for supplier ${selectedSupplierId}`);
             
             // Enable search and show materials container
             if (materialSearch) {
@@ -430,8 +421,6 @@ class MaterialManagementApp {
 
             // Render materials with checkbox approach
             this.renderMaterialsList();
-            
-            console.log(`📦 Populated ${materials.length} materials for ${category}${subcategory ? ` > ${subcategory}` : ''}`);
             
         } catch (error) {
             console.error('❌ Error populating materials:', error);
@@ -464,8 +453,8 @@ class MaterialManagementApp {
             if (searchTerm) {
                 materialsToShow = this.filteredMaterials.filter(material => 
                     material.name.toLowerCase().includes(searchTerm) ||
-                    material.code.toLowerCase().includes(searchTerm) ||
-                    material.subcategory.toLowerCase().includes(searchTerm)
+                    (material.code && material.code.toLowerCase().includes(searchTerm)) ||
+                    (material.subcategory && material.subcategory.toLowerCase().includes(searchTerm))
                 );
             }
 
@@ -598,7 +587,7 @@ class MaterialManagementApp {
             };
 
             this.selectedMaterials.push(newMaterial);
-            console.log(`✅ Added material: ${material.name} (${quantity} ${material.unit})`);
+            console.log(`✅ Added material: ${material.name} (${quantity} ${material.unit}) from supplier ${material.supplierId}`);
 
             this.renderSelectedMaterials();
             this.validateForm();
@@ -639,7 +628,8 @@ class MaterialManagementApp {
                         <div class="material-meta">
                             ${material.code ? `Code: ${material.code} • ` : ''}
                             Unit: ${material.unit} • 
-                            ${material.subcategory}
+                            ${material.subcategory} • 
+                            Supplier: ${material.supplierName}
                         </div>
                     </div>
                     <div class="material-controls">
@@ -696,6 +686,12 @@ class MaterialManagementApp {
                 const checkbox = document.querySelector(`.material-checkbox[data-material-id="${removed.id}"]`);
                 if (checkbox) {
                     checkbox.checked = false;
+                    // Also update the card appearance
+                    const card = checkbox.closest('.material-card');
+                    if (card) {
+                        card.classList.remove('selected');
+                        card.querySelector('.material-status').innerHTML = '<span class="select-badge">Click to Select</span>';
+                    }
                 }
                 
                 this.renderSelectedMaterials();
@@ -811,560 +807,211 @@ class MaterialManagementApp {
         }
     }
 
+    // Form submission now goes to confirmation page instead of directly submitting
     async handleFormSubmit(e) {
         e.preventDefault();
         
         try {
-            if (this.currentStep === 'form') {
-                // Show confirmation step instead of submitting
-                this.showConfirmation();
-            } else {
-                // Actually submit the form
-                await this.submitForm();
-            }
-        } catch (error) {
-            console.error('❌ Form submission error:', error);
-            this.showError(`Submission failed: ${error.message}`);
-        }
-    }
-
-    showConfirmation() {
-        try {
-            console.log('📋 Showing order confirmation');
+            const form = e.target;
             
-            const form = document.getElementById('materialForm');
+            // Prepare form data for confirmation
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            // Store current form state for restoration later
-            this.lastRequestType = data.requestType;
-            this.lastSelectedCategory = data.category;
-            this.lastSelectedSupplier = data.supplier;
-            this.lastRequestorName = data.requestorName;
-            this.lastRequestorEmail = data.requestorEmail;
-            this.lastUrgency = data.urgency;
-            this.lastProjectRef = data.projectRef;
-            this.lastNotes = data.notes;
+            // Add selected materials with quantities
+            data.materials = this.selectedMaterials;
             
             // Get supplier details
             const supplierSelect = document.getElementById('supplier');
-            const selectedSupplierOption = supplierSelect.selectedOptions[0];
-            const supplierEmail = selectedSupplierOption?.dataset.email || '';
-            const supplierPhone = selectedSupplierOption?.dataset.phone || '';
+            const selectedOption = supplierSelect.selectedOptions[0];
+            if (selectedOption) {
+                data.supplierEmail = selectedOption.dataset.email || '';
+                data.supplierPhone = selectedOption.dataset.phone || '';
+                data.supplierId = selectedOption.dataset.id || '';
+            }
             
-            // Create confirmation view
-            this.renderConfirmation({
-                requestType: data.requestType,
-                category: data.category,
-                supplier: data.supplier,
-                supplierEmail: supplierEmail,
-                supplierPhone: supplierPhone,
-                requestorName: data.requestorName,
-                requestorEmail: data.requestorEmail,
-                urgency: data.urgency,
-                projectRef: data.projectRef,
-                notes: data.notes,
-                materials: this.selectedMaterials
-            });
+            console.log('📋 Form data prepared for confirmation:', data);
             
-            this.currentStep = 'confirmation';
+            // Store data for later submission
+            this.pendingSubmissionData = data;
+            
+            // Show confirmation page
+            this.showConfirmationPage(data);
             
         } catch (error) {
-            console.error('❌ Error showing confirmation:', error);
+            console.error('❌ Form preparation error:', error);
+            this.showError(`Error preparing form: ${error.message}`);
         }
     }
 
-    renderConfirmation(orderData) {
+    // Show confirmation page with all details
+    showConfirmationPage(data) {
         try {
+            console.log('📋 Displaying confirmation page');
+            
+            // Hide main form and show confirmation page
             const mainForm = document.getElementById('mainForm');
-            if (!mainForm) return;
-
-            // Calculate totals
-            const totalItems = this.selectedMaterials.length;
-            const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
+            const confirmationPage = document.getElementById('confirmationPage');
             
-            // Create confirmation HTML
-            const confirmationHTML = `
-                <div class="form-header">
-                    <h2>📋 ${orderData.requestType === 'order' ? 'Order' : 'Quote'} Confirmation</h2>
-                    <p>Please review all details before submitting your ${orderData.requestType}</p>
-                </div>
-
-                <div class="confirmation-container">
-                    <!-- Order Summary -->
-                    <div class="confirmation-section">
-                        <h3>📦 ${orderData.requestType === 'order' ? 'Order' : 'Quote'} Summary</h3>
-                        <div class="confirmation-grid">
-                            <div class="confirmation-item">
-                                <label>Request Type:</label>
-                                <span class="value ${orderData.requestType}">${orderData.requestType === 'order' ? '📦 Material Order' : '💬 Quote Request'}</span>
-                            </div>
-                            <div class="confirmation-item">
-                                <label>Category:</label>
-                                <span class="value">${orderData.category}</span>
-                            </div>
-                            <div class="confirmation-item">
-                                <label>Priority Level:</label>
-                                <span class="value priority-${orderData.urgency.toLowerCase()}">${orderData.urgency}</span>
-                            </div>
-                            ${orderData.projectRef ? `
-                            <div class="confirmation-item">
-                                <label>ServiceM8 Job #:</label>
-                                <span class="value">${orderData.projectRef}</span>
-                            </div>
-                            ` : ''}
-                        </div>
-                    </div>
-
-                    <!-- Supplier Information -->
-                    <div class="confirmation-section">
-                        <h3>🏢 Supplier Information</h3>
-                        <div class="supplier-confirmation">
-                            <div class="supplier-main">
-                                <strong>${orderData.supplier}</strong>
-                            </div>
-                            <div class="supplier-details">
-                                <span>📧 ${orderData.supplierEmail}</span>
-                                ${orderData.supplierPhone ? `<span>📞 ${orderData.supplierPhone}</span>` : ''}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Materials List -->
-                    <div class="confirmation-section">
-                        <h3>📋 Materials ${orderData.requestType === 'order' ? 'to Order' : 'for Quote'}</h3>
-                        <div class="materials-confirmation-summary">
-                            <strong>${totalItems} unique materials • ${totalQuantity} total items</strong>
-                        </div>
-                        <div class="materials-confirmation-list">
-                            ${this.selectedMaterials.map((material, index) => `
-                                <div class="material-confirmation-item">
-                                    <div class="material-number">${index + 1}.</div>
-                                    <div class="material-details">
-                                        <div class="material-name">${material.name}</div>
-                                        <div class="material-meta">
-                                            ${material.code ? `Code: ${material.code} • ` : ''}
-                                            Category: ${material.subcategory} • 
-                                            Quantity: <strong>${material.quantity} ${material.unit}</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    <!-- Requestor Information -->
-                    <div class="confirmation-section">
-                        <h3>👤 Requestor Information</h3>
-                        <div class="confirmation-grid">
-                            <div class="confirmation-item">
-                                <label>Name:</label>
-                                <span class="value">${orderData.requestorName}</span>
-                            </div>
-                            <div class="confirmation-item">
-                                <label>Email:</label>
-                                <span class="value">${orderData.requestorEmail}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${orderData.notes ? `
-                    <!-- Special Instructions -->
-                    <div class="confirmation-section">
-                        <h3>📝 Special Instructions</h3>
-                        <div class="notes-confirmation">
-                            ${orderData.notes}
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <!-- Action Buttons -->
-                    <div class="confirmation-actions">
-                        <button type="button" class="btn btn-secondary" id="backToFormBtn">
-                            ← Back to Edit ${orderData.requestType === 'order' ? 'Order' : 'Quote'}
-                        </button>
-                        <button type="button" class="btn btn-primary" id="confirmSubmitBtn">
-                            ${orderData.requestType === 'order' ? '✅ Submit Order' : '✅ Submit Quote Request'}
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            // Replace form content with confirmation
-            mainForm.innerHTML = confirmationHTML;
-
-            // Add event listeners for confirmation actions
-            const backBtn = document.getElementById('backToFormBtn');
-            const confirmBtn = document.getElementById('confirmSubmitBtn');
-
-            if (backBtn) {
-                backBtn.addEventListener('click', () => this.backToForm());
+            if (mainForm) mainForm.style.display = 'none';
+            if (confirmationPage) confirmationPage.style.display = 'block';
+            
+            // Update titles based on request type
+            const requestType = data.requestType;
+            const confirmationTitle = document.getElementById('confirmationTitle');
+            const confirmationSubtitle = document.getElementById('confirmationSubtitle');
+            const confirmSubmitText = document.getElementById('confirmSubmitText');
+            
+            if (requestType === 'order') {
+                if (confirmationTitle) confirmationTitle.textContent = 'Review Your Order';
+                if (confirmationSubtitle) confirmationSubtitle.textContent = 'Please review all details before sending to supplier';
+                if (confirmSubmitText) confirmSubmitText.textContent = 'Confirm & Send Order';
+            } else {
+                if (confirmationTitle) confirmationTitle.textContent = 'Review Your Quote Request';
+                if (confirmationSubtitle) confirmationSubtitle.textContent = 'Please review all details before sending to supplier';
+                if (confirmSubmitText) confirmSubmitText.textContent = 'Confirm & Send Quote Request';
             }
-
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', () => this.submitForm());
+            
+            // Populate order summary
+            this.populateElement('confirmRequestType', requestType === 'order' ? 'Material Order' : 'Quote Request');
+            this.populateElement('confirmCategory', data.category);
+            this.populateElement('confirmUrgency', data.urgency, 'Normal');
+            this.populateElement('confirmProjectRef', data.projectRef, 'Not specified');
+            
+            // Populate supplier information
+            this.populateElement('confirmSupplierName', data.supplier);
+            this.populateElement('confirmSupplierEmail', data.supplierEmail, 'Not available');
+            this.populateElement('confirmSupplierPhone', data.supplierPhone, 'Not available');
+            
+            // Populate requestor information
+            this.populateElement('confirmRequestorName', data.requestorName);
+            this.populateElement('confirmRequestorEmail', data.requestorEmail);
+            
+            // Populate materials
+            this.populateConfirmationMaterials(data.materials);
+            
+            // Handle special instructions
+            const notesSection = document.getElementById('notesSection');
+            const confirmNotes = document.getElementById('confirmNotes');
+            if (data.notes && data.notes.trim()) {
+                if (notesSection) notesSection.style.display = 'block';
+                this.populateElement('confirmNotes', data.notes);
+            } else {
+                if (notesSection) notesSection.style.display = 'none';
             }
-
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        } catch (error) {
-            console.error('❌ Error rendering confirmation:', error);
-        }
-    }
-
-    backToForm() {
-        try {
-            console.log('🔙 Going back to form while preserving data');
-            
-            // Store the current state
-            this.currentStep = 'form';
-            
-            // Restore the original form HTML structure
-            this.restoreOriginalForm();
-            
-            // Re-populate all form fields with current data
-            this.restoreFormData();
-            
-            // Re-setup event listeners
-            this.setupEventListeners();
-            
-            // Re-validate the form
-            this.validateForm();
             
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
         } catch (error) {
-            console.error('❌ Error going back to form:', error);
-            // Fallback to reload if something goes wrong
-            location.reload();
+            console.error('❌ Error showing confirmation page:', error);
+            this.showError('Error displaying confirmation page: ' + error.message);
         }
     }
 
-    restoreOriginalForm() {
+    // Populate confirmation materials list
+    populateConfirmationMaterials(materials) {
         try {
-            const mainForm = document.getElementById('mainForm');
-            if (!mainForm) return;
-
-            // Restore the original form HTML
-            const originalFormHTML = `
-                <div class="form-header">
-                    <h2>Submit Material Request</h2>
-                    <p>Select your request type and fill in the details below</p>
-                </div>
-
-                <form id="materialForm" class="material-form">
-                    <!-- Request Type -->
-                    <div class="form-group">
-                        <label class="form-label">Request Type *</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="requestType" value="order" checked>
-                                <span class="radio-custom"></span>
-                                <div class="radio-content">
-                                    <strong>Material Order</strong>
-                                    <p>Place an order for immediate delivery</p>
-                                </div>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="requestType" value="quote">
-                                <span class="radio-custom"></span>
-                                <div class="radio-content">
-                                    <strong>Quote Request</strong>
-                                    <p>Request pricing information</p>
-                                </div>
-                            </label>
-                        </div>
+            const materialsSummary = document.getElementById('confirmMaterialsSummary');
+            const materialsList = document.getElementById('confirmMaterialsList');
+            
+            if (!materials || materials.length === 0) return;
+            
+            // Summary
+            const totalItems = materials.length;
+            const totalQuantity = materials.reduce((sum, m) => sum + m.quantity, 0);
+            
+            if (materialsSummary) {
+                materialsSummary.innerHTML = `
+                    <div class="summary-stat">
+                        <span class="stat-number">${totalItems}</span>
+                        <span class="stat-label">Unique Materials</span>
                     </div>
-
-                    <!-- Category -->
-                    <div class="form-group">
-                        <label for="category" class="form-label">Category *</label>
-                        <select id="category" name="category" class="form-select" required>
-                            <option value="">Select a category...</option>
-                        </select>
+                    <div class="summary-stat">
+                        <span class="stat-number">${totalQuantity}</span>
+                        <span class="stat-label">Total Items</span>
                     </div>
-
-                    <!-- Supplier -->
-                    <div class="form-group">
-                        <label for="supplier" class="form-label">Supplier *</label>
-                        <select id="supplier" name="supplier" class="form-select" required>
-                            <option value="">First select a category...</option>
-                        </select>
-                        <div id="supplierInfo" class="supplier-info" style="display: none;">
-                            <div class="supplier-details">
-                                <span id="supplierEmail"></span>
-                                <span id="supplierPhone"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Subcategory (Hidden initially) -->
-                    <div class="form-group" id="subcategoryGroup" style="display: none;">
-                        <label for="subcategory" class="form-label">Subcategory</label>
-                        <select id="subcategory" name="subcategory" class="form-select">
-                            <option value="">All subcategories</option>
-                        </select>
-                    </div>
-
-                    <!-- Enhanced Materials Selection -->
-                    <div class="form-group">
-                        <label class="form-label">Materials Required *</label>
-                        <p class="form-help-text">Browse materials and specify the quantities you need for your order.</p>
-                        
-                        <!-- Materials Search and List Container -->
-                        <div id="materialsContainer" class="materials-selection-container" style="display: none;">
-                            <!-- Search Bar -->
-                            <div class="materials-search">
-                                <input type="text" 
-                                       id="materialSearch" 
-                                       class="form-input" 
-                                       placeholder="Select category and supplier first..."
-                                       disabled>
-                                <div id="materialsResultInfo" class="search-result-info"></div>
-                            </div>
-
-                            <!-- Materials List -->
-                            <div id="materialsList" class="materials-list">
-                                <!-- Materials will be populated here -->
-                            </div>
-                        </div>
-
-                        <!-- Selected Materials -->
-                        <div class="selected-materials-section">
-                            <h4>Your Order</h4>
-                            <div id="materialsSummary" class="materials-summary"></div>
-                            <div id="selectedMaterials" class="selected-materials">
-                                <div class="no-selection">No materials added to your order yet...</div>
-                            </div>
-                        </div>
-
-                        <!-- Legacy Add Material Button (Hidden) -->
-                        <button type="button" id="addMaterial" class="btn btn-secondary" disabled style="display: none;">Add Material</button>
-                    </div>
-
-                    <!-- Requestor Information -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="requestorName" class="form-label">Your Name *</label>
-                            <input type="text" id="requestorName" name="requestorName" class="form-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="requestorEmail" class="form-label">Your Email *</label>
-                            <input type="email" id="requestorEmail" name="requestorEmail" class="form-input" required>
-                        </div>
-                    </div>
-
-                    <!-- Additional Details -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="urgency" class="form-label">Priority Level</label>
-                            <select id="urgency" name="urgency" class="form-select">
-                                <option value="Normal">Normal</option>
-                                <option value="High">High</option>
-                                <option value="Urgent">Urgent</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="projectRef" class="form-label">ServiceM8 Job #</label>
-                            <input type="text" id="projectRef" name="projectRef" class="form-input" placeholder="Optional">
-                        </div>
-                    </div>
-
-                    <!-- Notes -->
-                    <div class="form-group">
-                        <label for="notes" class="form-label">Special Instructions</label>
-                        <textarea id="notes" name="notes" class="form-textarea" rows="3" placeholder="Any special requirements or instructions..."></textarea>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="form-actions">
-                        <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
-                            <span class="btn-text">Submit Request</span>
-                            <span class="btn-loading" style="display: none;">
-                                <span class="spinner-small"></span>
-                                Submitting...
-                            </span>
-                        </button>
-                    </div>
-                </form>
-            `;
-
-            mainForm.innerHTML = originalFormHTML;
-            console.log('✅ Original form structure restored');
-            
-        } catch (error) {
-            console.error('❌ Error restoring original form:', error);
-        }
-    }
-
-    restoreFormData() {
-        try {
-            console.log('🔄 Restoring form data from saved state');
-            
-            // Get the current form data that was in the confirmation
-            const currentFormData = this.getCurrentFormData();
-            
-            // Restore categories first
-            if (this.formData?.data?.categories) {
-                const categorySelect = document.getElementById('category');
-                if (categorySelect) {
-                    categorySelect.innerHTML = '<option value="">Select a category...</option>';
-                    this.formData.data.categories.forEach(category => {
-                        const option = document.createElement('option');
-                        option.value = category.name;
-                        option.textContent = category.name;
-                        if (category.description) {
-                            option.dataset.description = category.description;
-                        }
-                        categorySelect.appendChild(option);
-                    });
-                }
-            }
-            
-            // Restore request type
-            if (currentFormData.requestType) {
-                const requestTypeRadio = document.querySelector(`input[name="requestType"][value="${currentFormData.requestType}"]`);
-                if (requestTypeRadio) {
-                    requestTypeRadio.checked = true;
-                    this.handleRequestTypeChange();
-                }
-            }
-            
-            // Restore basic form fields first
-            const fieldsToRestore = [
-                'requestorName', 'requestorEmail', 'urgency', 'projectRef', 'notes'
-            ];
-            
-            fieldsToRestore.forEach(fieldName => {
-                if (currentFormData[fieldName]) {
-                    const field = document.getElementById(fieldName);
-                    if (field) {
-                        field.value = currentFormData[fieldName];
-                    }
-                }
-            });
-            
-            // Now restore category and trigger the cascade
-            if (currentFormData.category) {
-                const categorySelect = document.getElementById('category');
-                if (categorySelect) {
-                    categorySelect.value = currentFormData.category;
-                    // Trigger category change to populate suppliers
-                    this.handleCategoryChange();
-                    
-                    // Wait for suppliers to populate, then restore supplier
-                    setTimeout(() => {
-                        if (currentFormData.supplier) {
-                            const supplierSelect = document.getElementById('supplier');
-                            if (supplierSelect) {
-                                // Check if the supplier option exists
-                                const supplierOption = supplierSelect.querySelector(`option[value="${currentFormData.supplier}"]`);
-                                if (supplierOption) {
-                                    supplierSelect.value = currentFormData.supplier;
-                    // Trigger supplier change to populate materials
-                                    this.handleSupplierChange();
-                                    
-                                    // Wait for materials to populate, then restore selected materials
-                                    setTimeout(() => {
-                                        this.restoreSelectedMaterials();
-                                        // Re-validate form after everything is restored
-                                        this.validateForm();
-                                    }, 1000); // Increased timeout for supplier filtering
-                                } else {
-                                    console.warn('⚠️ Supplier option not found:', currentFormData.supplier);
-                                }
-                            }
-                        }
-                    }, 600);
-                }
-            }
-            
-            console.log('✅ Form data restoration initiated');
-            
-        } catch (error) {
-            console.error('❌ Error restoring form data:', error);
-        }
-    }
-
-    restoreSelectedMaterials() {
-        try {
-            console.log('📦 Restoring selected materials:', this.selectedMaterials.length, 'materials');
-            
-            if (!this.selectedMaterials || this.selectedMaterials.length === 0) {
-                console.log('ℹ️ No materials to restore');
-                return;
-            }
-            
-            // First, re-render the selected materials section
-            this.renderSelectedMaterials();
-            
-            // Then, check the corresponding checkboxes in the materials list
-            // Wait a moment for the materials list to be populated
-            setTimeout(() => {
-                this.selectedMaterials.forEach(selectedMaterial => {
-                    const checkbox = document.querySelector(`.material-checkbox[data-material-id="${selectedMaterial.id}"]`);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                        // Also update the visual state of the card
-                        const card = checkbox.closest('.material-card');
-                        if (card) {
-                            card.classList.add('selected');
-                            const statusBadge = card.querySelector('.material-status');
-                            if (statusBadge) {
-                                statusBadge.innerHTML = '<span class="selected-badge">✓ Selected</span>';
-                            }
-                        }
-                        console.log(`✅ Restored checkbox for: ${selectedMaterial.name}`);
-                    } else {
-                        console.warn(`⚠️ Checkbox not found for material: ${selectedMaterial.name} (${selectedMaterial.id})`);
-                    }
-                });
-                
-                console.log('✅ Selected materials checkboxes restored');
-            }, 300);
-            
-        } catch (error) {
-            console.error('❌ Error restoring selected materials:', error);
-        }
-    }
-
-    async submitForm() {
-        try {
-            console.log('🚀 Actually submitting the form');
-            
-            const confirmBtn = document.getElementById('confirmSubmitBtn');
-            const btnText = confirmBtn?.textContent;
-            
-            // Disable and show loading
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.innerHTML = `
-                    <span class="spinner-small"></span>
-                    Submitting...
                 `;
             }
+            
+            // Materials list
+            if (materialsList) {
+                materialsList.innerHTML = materials.map((material, index) => `
+                    <div class="confirm-material-item">
+                        <div class="material-details">
+                            <div class="material-name">${material.name}</div>
+                            <div class="material-info">
+                                ${material.code ? `<span class="info-tag">Code: ${material.code}</span>` : ''}
+                                <span class="info-tag">Unit: ${material.unit}</span>
+                                <span class="info-tag">${material.subcategory}</span>
+                                <span class="info-tag">Supplier: ${material.supplierName}</span>
+                            </div>
+                        </div>
+                        <div class="material-quantity">
+                            <span class="quantity-badge">${material.quantity} ${material.unit}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error populating confirmation materials:', error);
+        }
+    }
 
-            // Get form data from current state
-            const form = document.querySelector('form') || document.createElement('form');
-            const requestType = document.querySelector('input[name="requestType"]:checked')?.value;
+    // Helper function to populate elements safely
+    populateElement(elementId, value, defaultValue = '') {
+        try {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = value || defaultValue;
+            }
+        } catch (error) {
+            console.error(`❌ Error populating element ${elementId}:`, error);
+        }
+    }
+
+    // Go back to edit form
+    goBackToEdit() {
+        try {
+            console.log('🔄 Going back to edit form');
             
-            const data = {
-                requestType: requestType,
-                category: document.getElementById('category')?.value,
-                supplier: document.getElementById('supplier')?.value,
-                requestorName: document.getElementById('requestorName')?.value,
-                requestorEmail: document.getElementById('requestorEmail')?.value,
-                urgency: document.getElementById('urgency')?.value,
-                projectRef: document.getElementById('projectRef')?.value,
-                notes: document.getElementById('notes')?.value,
-                materials: this.selectedMaterials
-            };
+            const mainForm = document.getElementById('mainForm');
+            const confirmationPage = document.getElementById('confirmationPage');
             
-            console.log('📦 Submitting final data:', data);
+            if (mainForm) mainForm.style.display = 'block';
+            if (confirmationPage) confirmationPage.style.display = 'none';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+        } catch (error) {
+            console.error('❌ Error going back to edit:', error);
+        }
+    }
+
+    // Handle confirmed submission to supplier
+    async handleConfirmedSubmission() {
+        if (!this.pendingSubmissionData) {
+            this.showError('No submission data found. Please go back and fill the form again.');
+            return;
+        }
+        
+        try {
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            const btnText = confirmSubmitBtn?.querySelector('.btn-text');
+            const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
+            
+            // Disable form
+            if (confirmSubmitBtn) confirmSubmitBtn.disabled = true;
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoading) btnLoading.style.display = 'flex';
+
+            const data = this.pendingSubmissionData;
+            console.log('📤 Submitting confirmed request to supplier:', data);
             
             // Determine endpoint
+            const requestType = data.requestType;
             const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
             
             // Submit form
@@ -1377,7 +1024,7 @@ class MaterialManagementApp {
             });
 
             const result = await response.json();
-            console.log('✅ Submission result:', result);
+            console.log('✅ Confirmed submission result:', result);
 
             if (result.success !== false) {
                 const type = requestType === 'order' ? 'order' : 'quote';
@@ -1388,32 +1035,39 @@ class MaterialManagementApp {
             }
 
         } catch (error) {
-            console.error('❌ Form submission error:', error);
+            console.error('❌ Confirmed submission error:', error);
             this.showError(`Submission failed: ${error.message}`);
+        } finally {
+            // Re-enable form
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            const btnText = confirmSubmitBtn?.querySelector('.btn-text');
+            const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
             
-            // Re-enable button
-            const confirmBtn = document.getElementById('confirmSubmitBtn');
-            if (confirmBtn) {
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '✅ Submit Order';
-            }
+            if (confirmSubmitBtn) confirmSubmitBtn.disabled = false;
+            if (btnText) btnText.style.display = 'inline';
+            if (btnLoading) btnLoading.style.display = 'none';
         }
     }
 
     showSuccess(type, id, supplier) {
         try {
-            // Hide form and show success
+            // Hide both form and confirmation page, show success
             const mainForm = document.getElementById('mainForm');
+            const confirmationPage = document.getElementById('confirmationPage');
             const successAlert = document.getElementById('successAlert');
             const successMessage = document.getElementById('successMessage');
             const referenceId = document.getElementById('referenceId');
             const successSupplier = document.getElementById('successSupplier');
 
             if (mainForm) mainForm.style.display = 'none';
+            if (confirmationPage) confirmationPage.style.display = 'none';
             if (successAlert) successAlert.style.display = 'block';
-            if (successMessage) successMessage.textContent = `Your ${type} request has been submitted successfully!`;
+            if (successMessage) successMessage.textContent = `Your ${type} request has been submitted successfully and sent to the supplier!`;
             if (referenceId) referenceId.textContent = id;
             if (successSupplier) successSupplier.textContent = supplier;
+
+            // Clear pending data
+            this.pendingSubmissionData = null;
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1463,10 +1117,12 @@ class MaterialManagementApp {
 function resetForm() {
     try {
         const mainForm = document.getElementById('mainForm');
+        const confirmationPage = document.getElementById('confirmationPage');
         const successAlert = document.getElementById('successAlert');
         const errorAlert = document.getElementById('errorAlert');
         
         if (mainForm) mainForm.style.display = 'block';
+        if (confirmationPage) confirmationPage.style.display = 'none';
         if (successAlert) successAlert.style.display = 'none';
         if (errorAlert) errorAlert.style.display = 'none';
         
@@ -1479,15 +1135,14 @@ function resetForm() {
             window.app.selectedMaterials = [];
             window.app.filteredMaterials = [];
             window.app.selectedSubcategory = '';
-            window.app.currentStep = 'form';
+            window.app.pendingSubmissionData = null;
             window.app.renderSelectedMaterials();
             window.app.resetMaterialSelection();
             window.app.validateForm();
         }
         
-        // Reload page to restore original form
-        location.reload();
-        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
         console.error('❌ Error resetting form:', error);
     }
@@ -1496,7 +1151,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App with Confirmation');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox + Confirmation + Supplier_ID Filter)');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
