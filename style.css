@@ -500,6 +500,7 @@ body {
   padding-bottom: 1rem;
   border-bottom: 2px solid var(--gray-100);
   position: relative;
+  padding-top: 3rem; /* Add space for back button */
 }
 
 .form-header h2 {
@@ -527,6 +528,7 @@ body {
   font-size: 0.9rem;
   cursor: pointer;
   transition: var(--transition);
+  z-index: 1;
 }
 
 .back-btn:hover {
@@ -539,6 +541,10 @@ body {
   .back-btn {
     position: static;
     margin-bottom: 1rem;
+  }
+  
+  .form-header {
+    padding-top: 1rem; /* Reset padding on mobile */
   }
 }
 
