@@ -191,6 +191,8 @@ class MaterialManagementApp {
                     break;
             }
 
+            // Update field requirements and validate
+            this.updateFieldRequirements(selectedMethod);
             this.validateForm();
         } catch (error) {
             console.error('❌ Error handling request method change:', error);
@@ -1065,7 +1067,7 @@ class MaterialManagementApp {
             const requiredFields = ['requestorName', 'requestorEmail'];
             let isValid = true;
 
-            // Check required fields
+            // Check basic required fields (always required)
             for (const fieldName of requiredFields) {
                 const field = form.querySelector(`[name="${fieldName}"]`);
                 if (!field || !field.value.trim()) {
@@ -1086,7 +1088,7 @@ class MaterialManagementApp {
             // Validate based on request method
             switch (requestMethod) {
                 case 'pdf':
-                    // PDF only - require PDF file and supplier
+                    // PDF only - require PDF file and PDF supplier (not regular supplier)
                     if (!this.uploadedFile) {
                         isValid = false;
                         break;
@@ -1140,9 +1142,63 @@ class MaterialManagementApp {
                     break;
             }
 
+            // Update form field required attributes based on request method
+            this.updateFieldRequirements(requestMethod);
+
             submitBtn.disabled = !isValid;
+            
+            // Debug log for validation
+            console.log('🔍 Form validation:', {
+                requestMethod,
+                hasUploadedFile: !!this.uploadedFile,
+                selectedMaterials: this.selectedMaterials.length,
+                isValid,
+                requiredFieldsCheck: {
+                    requestorName: !!form.querySelector('[name="requestorName"]')?.value.trim(),
+                    requestorEmail: !!form.querySelector('[name="requestorEmail"]')?.value.trim(),
+                    category: form.querySelector('[name="category"]')?.value.trim() || 'N/A (PDF only)',
+                    supplier: form.querySelector('[name="supplier"]')?.value.trim() || 'N/A',
+                    pdfSupplier: form.querySelector('[name="pdfSupplier"]')?.value.trim() || 'N/A'
+                }
+            });
+            
         } catch (error) {
             console.error('❌ Error validating form:', error);
+        }
+    }
+
+    // NEW: Update field requirements based on request method
+    updateFieldRequirements(requestMethod) {
+        try {
+            const categoryField = document.getElementById('category');
+            const supplierField = document.getElementById('supplier');
+            const pdfSupplierField = document.getElementById('pdfSupplier');
+
+            // Remove all required attributes first
+            if (categoryField) categoryField.removeAttribute('required');
+            if (supplierField) supplierField.removeAttribute('required');
+            if (pdfSupplierField) pdfSupplierField.removeAttribute('required');
+
+            // Add required attributes based on request method
+            switch (requestMethod) {
+                case 'pdf':
+                    // PDF only - only PDF supplier is required
+                    if (pdfSupplierField) pdfSupplierField.setAttribute('required', '');
+                    break;
+                case 'mixed':
+                    // PDF + System - category and supplier required
+                    if (categoryField) categoryField.setAttribute('required', '');
+                    if (supplierField) supplierField.setAttribute('required', '');
+                    break;
+                case 'system':
+                default:
+                    // System only - category and supplier required
+                    if (categoryField) categoryField.setAttribute('required', '');
+                    if (supplierField) supplierField.setAttribute('required', '');
+                    break;
+            }
+        } catch (error) {
+            console.error('❌ Error updating field requirements:', error);
         }
     }
 
