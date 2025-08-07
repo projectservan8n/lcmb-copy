@@ -312,6 +312,16 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
       throw new Error(`PDF file too large: ${(req.file.size / 1024 / 1024).toFixed(2)}MB (max 10MB)`);
     }
     
+    // Parse materials if it's a string
+    let materials = req.body.materials || '[]';
+    if (typeof materials === 'string') {
+      try {
+        materials = JSON.parse(materials);
+      } catch (e) {
+        console.log('Materials is not JSON, keeping as string');
+      }
+    }
+    
     console.log('📄 Binary PDF upload data received:', {
       requestType: req.body.requestType,
       supplierName: req.body.supplierName,
@@ -324,7 +334,8 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
       urgency: req.body.urgency || 'Normal',
       hasProjectRef: !!req.body.projectRef,
       hasNotes: !!req.body.notes,
-      categories: req.body.categories ? JSON.parse(req.body.categories) : []
+      materialsCount: Array.isArray(materials) ? materials.length : 0,
+      materials: materials
     });
     
     // Create FormData for n8n webhook with binary PDF
@@ -338,33 +349,25 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
       knownLength: req.file.size
     });
     
-    // FIXED: Structure the body data properly for n8n webhook
-    // n8n webhook expects the data in the 'body' field as a JSON object
-    const bodyData = {
-      body: {
-        requestType: req.body.requestType,
-        supplierName: req.body.supplierName,
-        supplierEmail: req.body.supplierEmail,
-        requestorName: req.body.requestorName,
-        requestorEmail: req.body.requestorEmail,
-        urgency: req.body.urgency || 'Normal',
-        projectRef: req.body.projectRef || '',
-        notes: req.body.notes || '',
-        category: req.body.category || 'PDF Upload',
-        filename: req.body.filename,
-        categories: req.body.categories || '[]',
-        materials: req.body.materials || '[]'
-      }
-    };
+    // Add each field individually to the FormData
+    formData.append('requestType', req.body.requestType);
+    formData.append('supplierName', req.body.supplierName);
+    formData.append('supplierEmail', req.body.supplierEmail);
+    formData.append('supplierId', req.body.supplierId || '');
+    formData.append('requestorName', req.body.requestorName);
+    formData.append('requestorEmail', req.body.requestorEmail);
+    formData.append('urgency', req.body.urgency || 'Normal');
+    formData.append('projectRef', req.body.projectRef || '');
+    formData.append('notes', req.body.notes || '');
+    formData.append('category', req.body.category || 'PDF Upload');
+    formData.append('filename', req.body.filename);
+    formData.append('categories', req.body.categories || '[]');
     
-    // Add each field from bodyData.body to the FormData
-    // This matches how n8n expects to receive webhook data
-    Object.keys(bodyData.body).forEach(key => {
-      formData.append(key, bodyData.body[key]);
-    });
+    // CRITICAL: Send materials as string for n8n to parse
+    formData.append('materials', typeof materials === 'string' ? materials : JSON.stringify(materials));
     
     console.log('📤 Forwarding binary PDF to n8n webhook with property name: pdfFile0');
-    console.log('📋 Body structure being sent:', bodyData.body);
+    console.log('📋 Materials being sent:', typeof materials === 'string' ? materials : JSON.stringify(materials));
     
     const startTime = Date.now();
     const result = await callWebhook(WEBHOOKS.PDF_UPLOAD, 'POST', formData, true);
@@ -377,7 +380,8 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
       quoteId: result?.quoteId,
       pdfFileName: result?.pdfFileName,
       driveLink: result?.driveLink ? 'Available' : 'Not Available',
-      supplier: result?.supplier
+      supplier: result?.supplier,
+      materialsCount: result?.materialsCount
     });
     
     // Ensure we always return a proper JSON response
@@ -390,7 +394,8 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
       driveLink: result?.driveLink || null,
       supplier: result?.supplier || req.body.supplierName,
       timestamp: new Date().toISOString(),
-      status: result?.status || (req.body.requestType === 'quote' ? 'QUOTE' : 'ORDER')
+      status: result?.status || (req.body.requestType === 'quote' ? 'QUOTE' : 'ORDER'),
+      materialsCount: result?.materialsCount || 0
     };
     
     console.log('📤 Sending response to frontend:', response);
