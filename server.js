@@ -264,7 +264,7 @@ app.post('/api/quote/submit', async (req, res) => {
   }
 });
 
-// NEW: Binary PDF Upload API - FIXED VERSION
+// NEW: Binary PDF Upload API - FIXED VERSION with correct property name
 app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Processing binary PDF upload...`);
@@ -309,36 +309,34 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
     // Create FormData for n8n webhook with binary PDF
     const formData = new FormData();
     
-    // Add the PDF file as binary data
-    formData.append('pdfFile', req.file.buffer, {
+    // IMPORTANT: Add the PDF file as binary data with the correct property name
+    // n8n expects 'pdfFile0' based on the error message in your workflow
+    formData.append('pdfFile0', req.file.buffer, {
       filename: req.file.originalname,
       contentType: req.file.mimetype,
       knownLength: req.file.size
     });
     
-    // Add all other form fields
-    formData.append('requestType', req.body.requestType);
-    formData.append('supplierName', req.body.supplierName);
-    formData.append('supplierEmail', req.body.supplierEmail);
-    formData.append('requestorName', req.body.requestorName);
-    formData.append('requestorEmail', req.body.requestorEmail);
-    formData.append('urgency', req.body.urgency || 'Normal');
-    formData.append('projectRef', req.body.projectRef || '');
-    formData.append('notes', req.body.notes || '');
-    formData.append('category', req.body.category || 'PDF Upload');
-    formData.append('filename', req.body.filename);
+    // Add all other form fields to the body
+    const bodyData = {
+      requestType: req.body.requestType,
+      supplierName: req.body.supplierName,
+      supplierEmail: req.body.supplierEmail,
+      requestorName: req.body.requestorName,
+      requestorEmail: req.body.requestorEmail,
+      urgency: req.body.urgency || 'Normal',
+      projectRef: req.body.projectRef || '',
+      notes: req.body.notes || '',
+      category: req.body.category || 'PDF Upload',
+      filename: req.body.filename,
+      categories: req.body.categories || '[]',
+      materials: req.body.materials || '[]'
+    };
     
-    // Add categories if provided
-    if (req.body.categories) {
-      formData.append('categories', req.body.categories);
-    }
+    // Add body data as JSON string
+    formData.append('body', JSON.stringify(bodyData));
     
-    // Add materials array if this is from "both" method
-    if (req.body.materials) {
-      formData.append('materials', req.body.materials);
-    }
-    
-    console.log('📤 Forwarding binary PDF to n8n webhook...');
+    console.log('📤 Forwarding binary PDF to n8n webhook with property name: pdfFile0');
     
     const startTime = Date.now();
     const result = await callWebhook(WEBHOOKS.PDF_UPLOAD, 'POST', formData, true);
@@ -463,7 +461,8 @@ app.get('/debug/webhooks', async (req, res) => {
       // We don't actually send test data, just check if endpoint responds
       results.pdfUpload = { 
         status: 'available',
-        note: 'Endpoint available (not tested with actual data to avoid creating test records)'
+        note: 'Endpoint available (not tested with actual data to avoid creating test records)',
+        expectedBinaryProperty: 'pdfFile0'
       };
       console.log(`✅ PDF upload endpoint available`);
     } catch (error) {
@@ -483,7 +482,7 @@ app.get('/debug/webhooks', async (req, res) => {
         results.dataLoad?.status === 'success' 
           ? '✅ Data loading is working correctly'
           : '❌ Check n8n workflow execution and Google Sheets access',
-        '📄 PDF upload endpoint is configured and ready',
+        '📄 PDF upload endpoint is configured and ready (expects binary property: pdfFile0)',
         '🔧 All webhook URLs are properly configured',
         results.dataLoad?.dataStructure?.materialsByCategoryAndSupplier === 'Available'
           ? '✅ Enhanced material filtering is available'
@@ -506,18 +505,19 @@ app.get('/debug/pdf-test', (req, res) => {
     timestamp: new Date().toISOString(),
     instructions: [
       '1. Use POST method to /api/pdf/upload',
-      '2. Include required fields: requestType, supplierName, supplierEmail, requestorName, requestorEmail, pdfData, filename',
-      '3. pdfData should be base64 encoded PDF content',
-      '4. Maximum file size: 10MB',
-      '5. Supported request types: order, quote'
+      '2. Send as multipart/form-data with binary PDF file',
+      '3. Binary field name must be: pdfFile',
+      '4. n8n webhook expects property: pdfFile0',
+      '5. Maximum file size: 10MB',
+      '6. Supported request types: order, quote'
     ],
     requiredFields: [
+      'pdfFile (binary PDF file)',
       'requestType (order|quote)',
       'supplierName (string)',
       'supplierEmail (email)',
       'requestorName (string)', 
       'requestorEmail (email)',
-      'pdfData (base64 string)',
       'filename (string)'
     ],
     optionalFields: [
@@ -525,9 +525,11 @@ app.get('/debug/pdf-test', (req, res) => {
       'urgency (string, default: "Normal")',
       'projectRef (string)',
       'notes (string)',
-      'materials (array, for "both" method)'
+      'materials (array, for "both" method)',
+      'categories (JSON array string)'
     ],
-    webhookEndpoint: WEBHOOKS.PDF_UPLOAD
+    webhookEndpoint: WEBHOOKS.PDF_UPLOAD,
+    binaryPropertyMapping: 'pdfFile -> pdfFile0 (for n8n webhook)'
   });
 });
 
@@ -637,7 +639,7 @@ app.listen(PORT, () => {
   console.log(`   📊 GET /api/data/load - Load form data`);
   console.log(`   📦 POST /api/order/submit - Submit material order`);
   console.log(`   💬 POST /api/quote/submit - Submit quote request`);
-  console.log(`   📄 POST /api/pdf/upload - Upload PDF request`);
+  console.log(`   📄 POST /api/pdf/upload - Upload PDF request (binary: pdfFile -> pdfFile0)`);
   console.log('');
   console.log('🔧 Debug Endpoints:');
   console.log(`   ✅ GET /health - Health check`);
@@ -649,4 +651,5 @@ app.listen(PORT, () => {
   console.log('💡 Visit / to load page with initial data');
   console.log('🔧 Visit /debug/webhooks to test all webhook connectivity');
   console.log('📄 Visit /debug/pdf-test for PDF upload documentation');
+  console.log('📌 Binary PDF property mapping: pdfFile -> pdfFile0 (for n8n)');
 });
