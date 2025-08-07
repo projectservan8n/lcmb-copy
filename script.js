@@ -260,14 +260,89 @@ class MaterialManagementApp {
                 this.showSupplierInfo(selectedOption);
             }
 
-            // Populate subcategories for selected category
-            if (selectedCategory && this.formData?.data?.materials?.[selectedCategory]) {
-                this.populateSubcategories(selectedCategory);
+            // Get supplier ID for filtering materials
+            const supplierId = selectedOption?.dataset.id;
+            console.log('📋 Supplier ID for filtering:', supplierId);
+
+            // Populate subcategories and materials for selected category and supplier
+            if (selectedCategory && this.formData?.data?.materials?.[selectedCategory] && supplierId) {
+                this.populateSubcategoriesForSupplier(selectedCategory, supplierId);
+                this.populateMaterialsForSupplier(selectedCategory, supplierId, '');
             }
 
             this.validateForm();
         } catch (error) {
             console.error('❌ Error handling supplier change:', error);
+        }
+    }
+
+    populateSubcategoriesForSupplier(category, supplierId) {
+        try {
+            const subcategorySelect = document.getElementById('subcategory');
+            if (!subcategorySelect) return;
+
+            // Filter materials by supplier ID first
+            const materials = this.formData.data.materials[category] || [];
+            const supplierMaterials = materials.filter(m => m.supplierId === supplierId);
+            
+            // Get unique subcategories for this supplier
+            const subcategories = [...new Set(supplierMaterials.map(m => m.subcategory).filter(sub => sub))];
+            
+            subcategorySelect.innerHTML = '<option value="">All subcategories</option>';
+            subcategories.forEach(subcategory => {
+                const option = document.createElement('option');
+                option.value = subcategory;
+                option.textContent = subcategory;
+                subcategorySelect.appendChild(option);
+            });
+
+            // Show subcategory dropdown if there are subcategories
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+            if (subcategoryGroup) {
+                subcategoryGroup.style.display = subcategories.length > 0 ? 'block' : 'none';
+            }
+
+            console.log(`✅ Found ${subcategories.length} subcategories for supplier ${supplierId} in ${category}`);
+            
+        } catch (error) {
+            console.error('❌ Error populating subcategories for supplier:', error);
+        }
+    }
+
+    populateMaterialsForSupplier(category, supplierId, subcategory = '') {
+        try {
+            const materialSearch = document.getElementById('materialSearch');
+            const materialsContainer = document.getElementById('materialsContainer');
+            
+            if (!category || !supplierId || !this.formData?.data?.materials?.[category]) return;
+
+            // Filter materials by supplier ID first
+            let materials = this.formData.data.materials[category].filter(m => m.supplierId === supplierId);
+            
+            // Then filter by subcategory if selected
+            if (subcategory) {
+                materials = materials.filter(m => m.subcategory === subcategory);
+            }
+
+            this.filteredMaterials = materials;
+            
+            // Enable search and show materials container
+            if (materialSearch) {
+                materialSearch.disabled = false;
+                materialSearch.placeholder = `Search from ${materials.length} materials for this supplier...`;
+            }
+            
+            if (materialsContainer) {
+                materialsContainer.style.display = 'block';
+            }
+
+            // Render materials with checkbox approach
+            this.renderMaterialsList();
+            
+            console.log(`📦 Populated ${materials.length} materials for supplier ${supplierId} in ${category}${subcategory ? ` > ${subcategory}` : ''}`);
+            
+        } catch (error) {
+            console.error('❌ Error populating materials for supplier:', error);
         }
     }
 
@@ -305,17 +380,22 @@ class MaterialManagementApp {
         try {
             const subcategorySelect = document.getElementById('subcategory');
             const categorySelect = document.getElementById('category');
+            const supplierSelect = document.getElementById('supplier');
             
-            if (!subcategorySelect || !categorySelect) return;
+            if (!subcategorySelect || !categorySelect || !supplierSelect) return;
             
             const selectedSubcategory = subcategorySelect.value;
             const selectedCategory = categorySelect.value;
+            const selectedSupplierOption = supplierSelect.selectedOptions[0];
+            const supplierId = selectedSupplierOption?.dataset.id;
             
             this.selectedSubcategory = selectedSubcategory;
             console.log('📁 Subcategory changed to:', selectedSubcategory || 'All');
             
-            // Repopulate materials based on subcategory
-            this.populateMaterials(selectedCategory, selectedSubcategory);
+            // Repopulate materials based on supplier and subcategory
+            if (selectedCategory && supplierId) {
+                this.populateMaterialsForSupplier(selectedCategory, supplierId, selectedSubcategory);
+            }
             
         } catch (error) {
             console.error('❌ Error handling subcategory change:', error);
@@ -1183,7 +1263,7 @@ class MaterialManagementApp {
                                 const supplierOption = supplierSelect.querySelector(`option[value="${currentFormData.supplier}"]`);
                                 if (supplierOption) {
                                     supplierSelect.value = currentFormData.supplier;
-                                    // Trigger supplier change to populate materials
+                    // Trigger supplier change to populate materials
                                     this.handleSupplierChange();
                                     
                                     // Wait for materials to populate, then restore selected materials
@@ -1191,7 +1271,7 @@ class MaterialManagementApp {
                                         this.restoreSelectedMaterials();
                                         // Re-validate form after everything is restored
                                         this.validateForm();
-                                    }, 800);
+                                    }, 1000); // Increased timeout for supplier filtering
                                 } else {
                                     console.warn('⚠️ Supplier option not found:', currentFormData.supplier);
                                 }
