@@ -317,26 +317,33 @@ app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
       knownLength: req.file.size
     });
     
-    // Add all other form fields to the body
+    // FIXED: Structure the body data properly for n8n webhook
+    // n8n webhook expects the data in the 'body' field as a JSON object
     const bodyData = {
-      requestType: req.body.requestType,
-      supplierName: req.body.supplierName,
-      supplierEmail: req.body.supplierEmail,
-      requestorName: req.body.requestorName,
-      requestorEmail: req.body.requestorEmail,
-      urgency: req.body.urgency || 'Normal',
-      projectRef: req.body.projectRef || '',
-      notes: req.body.notes || '',
-      category: req.body.category || 'PDF Upload',
-      filename: req.body.filename,
-      categories: req.body.categories || '[]',
-      materials: req.body.materials || '[]'
+      body: {
+        requestType: req.body.requestType,
+        supplierName: req.body.supplierName,
+        supplierEmail: req.body.supplierEmail,
+        requestorName: req.body.requestorName,
+        requestorEmail: req.body.requestorEmail,
+        urgency: req.body.urgency || 'Normal',
+        projectRef: req.body.projectRef || '',
+        notes: req.body.notes || '',
+        category: req.body.category || 'PDF Upload',
+        filename: req.body.filename,
+        categories: req.body.categories || '[]',
+        materials: req.body.materials || '[]'
+      }
     };
     
-    // Add body data as JSON string
-    formData.append('body', JSON.stringify(bodyData));
+    // Add each field from bodyData.body to the FormData
+    // This matches how n8n expects to receive webhook data
+    Object.keys(bodyData.body).forEach(key => {
+      formData.append(key, bodyData.body[key]);
+    });
     
     console.log('📤 Forwarding binary PDF to n8n webhook with property name: pdfFile0');
+    console.log('📋 Body structure being sent:', bodyData.body);
     
     const startTime = Date.now();
     const result = await callWebhook(WEBHOOKS.PDF_UPLOAD, 'POST', formData, true);
