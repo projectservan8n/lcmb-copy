@@ -756,6 +756,15 @@ class MaterialManagementApp {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
+            // Store current form state for restoration later
+            this.lastSelectedCategory = data.category;
+            this.lastSelectedSupplier = data.supplier;
+            this.lastRequestorName = data.requestorName;
+            this.lastRequestorEmail = data.requestorEmail;
+            this.lastUrgency = data.urgency;
+            this.lastProjectRef = data.projectRef;
+            this.lastNotes = data.notes;
+            
             // Get supplier details
             const supplierSelect = document.getElementById('supplier');
             const selectedSupplierOption = supplierSelect.selectedOptions[0];
@@ -925,13 +934,304 @@ class MaterialManagementApp {
 
     backToForm() {
         try {
-            console.log('🔙 Going back to form');
+            console.log('🔙 Going back to form while preserving data');
             
-            // Reload the page to restore the original form
-            location.reload();
+            // Store the current state
+            this.currentStep = 'form';
+            
+            // Restore the original form HTML structure
+            this.restoreOriginalForm();
+            
+            // Re-populate all form fields with current data
+            this.restoreFormData();
+            
+            // Re-setup event listeners
+            this.setupEventListeners();
+            
+            // Re-validate the form
+            this.validateForm();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             
         } catch (error) {
             console.error('❌ Error going back to form:', error);
+            // Fallback to reload if something goes wrong
+            location.reload();
+        }
+    }
+
+    restoreOriginalForm() {
+        try {
+            const mainForm = document.getElementById('mainForm');
+            if (!mainForm) return;
+
+            // Restore the original form HTML
+            const originalFormHTML = `
+                <div class="form-header">
+                    <h2>Submit Material Request</h2>
+                    <p>Select your request type and fill in the details below</p>
+                </div>
+
+                <form id="materialForm" class="material-form">
+                    <!-- Request Type -->
+                    <div class="form-group">
+                        <label class="form-label">Request Type *</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="requestType" value="order" checked>
+                                <span class="radio-custom"></span>
+                                <div class="radio-content">
+                                    <strong>Material Order</strong>
+                                    <p>Place an order for immediate delivery</p>
+                                </div>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="requestType" value="quote">
+                                <span class="radio-custom"></span>
+                                <div class="radio-content">
+                                    <strong>Quote Request</strong>
+                                    <p>Request pricing information</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label for="category" class="form-label">Category *</label>
+                        <select id="category" name="category" class="form-select" required>
+                            <option value="">Select a category...</option>
+                        </select>
+                    </div>
+
+                    <!-- Supplier -->
+                    <div class="form-group">
+                        <label for="supplier" class="form-label">Supplier *</label>
+                        <select id="supplier" name="supplier" class="form-select" required>
+                            <option value="">First select a category...</option>
+                        </select>
+                        <div id="supplierInfo" class="supplier-info" style="display: none;">
+                            <div class="supplier-details">
+                                <span id="supplierEmail"></span>
+                                <span id="supplierPhone"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subcategory (Hidden initially) -->
+                    <div class="form-group" id="subcategoryGroup" style="display: none;">
+                        <label for="subcategory" class="form-label">Subcategory</label>
+                        <select id="subcategory" name="subcategory" class="form-select">
+                            <option value="">All subcategories</option>
+                        </select>
+                    </div>
+
+                    <!-- Enhanced Materials Selection -->
+                    <div class="form-group">
+                        <label class="form-label">Materials Required *</label>
+                        <p class="form-help-text">Browse materials and specify the quantities you need for your order.</p>
+                        
+                        <!-- Materials Search and List Container -->
+                        <div id="materialsContainer" class="materials-selection-container" style="display: none;">
+                            <!-- Search Bar -->
+                            <div class="materials-search">
+                                <input type="text" 
+                                       id="materialSearch" 
+                                       class="form-input" 
+                                       placeholder="Select category and supplier first..."
+                                       disabled>
+                                <div id="materialsResultInfo" class="search-result-info"></div>
+                            </div>
+
+                            <!-- Materials List -->
+                            <div id="materialsList" class="materials-list">
+                                <!-- Materials will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Selected Materials -->
+                        <div class="selected-materials-section">
+                            <h4>Your Order</h4>
+                            <div id="materialsSummary" class="materials-summary"></div>
+                            <div id="selectedMaterials" class="selected-materials">
+                                <div class="no-selection">No materials added to your order yet...</div>
+                            </div>
+                        </div>
+
+                        <!-- Legacy Add Material Button (Hidden) -->
+                        <button type="button" id="addMaterial" class="btn btn-secondary" disabled style="display: none;">Add Material</button>
+                    </div>
+
+                    <!-- Requestor Information -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="requestorName" class="form-label">Your Name *</label>
+                            <input type="text" id="requestorName" name="requestorName" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="requestorEmail" class="form-label">Your Email *</label>
+                            <input type="email" id="requestorEmail" name="requestorEmail" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <!-- Additional Details -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="urgency" class="form-label">Priority Level</label>
+                            <select id="urgency" name="urgency" class="form-select">
+                                <option value="Normal">Normal</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectRef" class="form-label">ServiceM8 Job #</label>
+                            <input type="text" id="projectRef" name="projectRef" class="form-input" placeholder="Optional">
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Special Instructions</label>
+                        <textarea id="notes" name="notes" class="form-textarea" rows="3" placeholder="Any special requirements or instructions..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-actions">
+                        <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+                            <span class="btn-text">Submit Request</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner-small"></span>
+                                Submitting...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            `;
+
+            mainForm.innerHTML = originalFormHTML;
+            console.log('✅ Original form structure restored');
+            
+        } catch (error) {
+            console.error('❌ Error restoring original form:', error);
+        }
+    }
+
+    restoreFormData() {
+        try {
+            console.log('🔄 Restoring form data from saved state');
+            
+            // Get the current form data that was in the confirmation
+            const currentFormData = this.getCurrentFormData();
+            
+            // Restore categories first
+            if (this.formData?.data?.categories) {
+                const categorySelect = document.getElementById('category');
+                if (categorySelect) {
+                    categorySelect.innerHTML = '<option value="">Select a category...</option>';
+                    this.formData.data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = category.name;
+                        if (category.description) {
+                            option.dataset.description = category.description;
+                        }
+                        categorySelect.appendChild(option);
+                    });
+                }
+            }
+            
+            // Restore request type
+            if (currentFormData.requestType) {
+                const requestTypeRadio = document.querySelector(`input[name="requestType"][value="${currentFormData.requestType}"]`);
+                if (requestTypeRadio) {
+                    requestTypeRadio.checked = true;
+                    this.handleRequestTypeChange();
+                }
+            }
+            
+            // Restore category
+            if (currentFormData.category) {
+                const categorySelect = document.getElementById('category');
+                if (categorySelect) {
+                    categorySelect.value = currentFormData.category;
+                    this.handleCategoryChange();
+                }
+                
+                // Wait a bit for suppliers to populate, then restore supplier
+                setTimeout(() => {
+                    if (currentFormData.supplier) {
+                        const supplierSelect = document.getElementById('supplier');
+                        if (supplierSelect) {
+                            supplierSelect.value = currentFormData.supplier;
+                            this.handleSupplierChange();
+                        }
+                        
+                        // Wait for materials to populate, then restore them
+                        setTimeout(() => {
+                            this.restoreSelectedMaterials();
+                        }, 500);
+                    }
+                }, 500);
+            }
+            
+            // Restore basic form fields
+            const fieldsToRestore = [
+                'requestorName', 'requestorEmail', 'urgency', 'projectRef', 'notes'
+            ];
+            
+            fieldsToRestore.forEach(fieldName => {
+                if (currentFormData[fieldName]) {
+                    const field = document.getElementById(fieldName);
+                    if (field) {
+                        field.value = currentFormData[fieldName];
+                    }
+                }
+            });
+            
+            console.log('✅ Form data restored successfully');
+            
+        } catch (error) {
+            console.error('❌ Error restoring form data:', error);
+        }
+    }
+
+    getCurrentFormData() {
+        try {
+            // Extract form data from various sources (DOM elements, stored state, etc.)
+            return {
+                requestType: document.querySelector('input[name="requestType"]:checked')?.value || 'order',
+                category: this.lastSelectedCategory || '',
+                supplier: this.lastSelectedSupplier || '',
+                requestorName: this.lastRequestorName || '',
+                requestorEmail: this.lastRequestorEmail || '',
+                urgency: this.lastUrgency || 'Normal',
+                projectRef: this.lastProjectRef || '',
+                notes: this.lastNotes || ''
+            };
+        } catch (error) {
+            console.error('❌ Error getting current form data:', error);
+            return {};
+        }
+    }
+
+    restoreSelectedMaterials() {
+        try {
+            console.log('📦 Restoring selected materials:', this.selectedMaterials);
+            
+            // Re-render the selected materials
+            this.renderSelectedMaterials();
+            
+            // Re-populate and re-render the materials list to show checkboxes correctly
+            if (this.lastSelectedCategory && this.formData?.data?.materials?.[this.lastSelectedCategory]) {
+                this.populateMaterials(this.lastSelectedCategory, this.selectedSubcategory);
+            }
+            
+            console.log('✅ Selected materials restored successfully');
+            
+        } catch (error) {
+            console.error('❌ Error restoring selected materials:', error);
         }
     }
 
