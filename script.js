@@ -1839,7 +1839,7 @@ class MaterialManagementApp {
         }
     }
 
-  async handleConfirmedSubmission() {
+ async handleConfirmedSubmission() {
     if (!this.pendingSubmissionData) {
         this.showError('No submission data found. Please go back and fill the form again.');
         return;
@@ -1858,6 +1858,7 @@ class MaterialManagementApp {
         const data = this.pendingSubmissionData;
         console.log('📤 Submitting confirmed request:', data);
         console.log('🔍 Current method:', this.currentMethod);
+        console.log('📦 Materials count:', data.materials?.length || 0);
         
         // FIXED: Route based on method type
         let response;
@@ -1866,6 +1867,7 @@ class MaterialManagementApp {
         if (this.currentMethod === 'both' && this.additionalPdfFile) {
             // BOTH METHOD: Send everything through PDF Upload API
             console.log('📄 BOTH method detected - sending materials + PDF through PDF Upload API');
+            console.log('📦 Materials being sent:', data.materials);
             
             try {
                 // Create FormData for PDF upload with materials
@@ -1888,14 +1890,27 @@ class MaterialManagementApp {
                 pdfFormData.append('filename', this.additionalPdfFile.name);
                 
                 // CRITICAL: Add materials as JSON string for BOTH method
-                pdfFormData.append('materials', JSON.stringify(data.materials || []));
+                // Ensure materials have all required fields
+                const materialsToSend = data.materials.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    code: m.code || '',
+                    unit: m.unit || 'pcs',
+                    quantity: m.quantity || 1,
+                    subcategory: m.subcategory || '',
+                    supplierId: m.supplierId || '',
+                    supplierName: m.supplierName || ''
+                }));
+                
+                pdfFormData.append('materials', JSON.stringify(materialsToSend));
                 
                 console.log('📤 Sending BOTH method data to PDF Upload API:', {
                     requestType: data.requestType,
                     supplier: data.supplier,
-                    materialsCount: data.materials?.length || 0,
+                    materialsCount: materialsToSend.length,
                     pdfFile: this.additionalPdfFile.name,
-                    method: 'BOTH_WORLDS'
+                    method: 'BOTH_WORLDS',
+                    materialsPreview: materialsToSend.slice(0, 2)
                 });
                 
                 // Send to PDF Upload API (this will handle everything)
