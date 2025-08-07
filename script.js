@@ -1406,28 +1406,54 @@ class MaterialManagementApp {
             if (btnLoading) btnLoading.style.display = 'flex';
 
             const data = this.pendingSubmissionData;
-            console.log('📤 Submitting confirmed request to supplier:', data);
+            console.log('📤 Submitting confirmed request to supplier:', {
+                requestMethod: data.requestMethod,
+                hasUploadedFile: !!this.uploadedFile,
+                fileName: this.uploadedFile?.name,
+                fileSize: this.uploadedFile?.size,
+                supplier: data.supplier,
+                materials: data.materials?.length || 0
+            });
             
             // Prepare FormData for file upload if needed
             const formData = new FormData();
             
-            // Add all form fields
+            // Add all form fields (except materials and uploadedFile which are objects)
             Object.keys(data).forEach(key => {
                 if (key === 'materials' || key === 'uploadedFile') {
                     formData.append(key, JSON.stringify(data[key]));
-                } else {
+                } else if (data[key] !== null && data[key] !== undefined) {
                     formData.append(key, data[key]);
                 }
             });
             
-            // Add PDF file if present
-            if (this.uploadedFile) {
-                formData.append('pdfFile', this.uploadedFile);
+            // Add PDF file if present (CRITICAL: Only add if we have the file)
+            if (this.uploadedFile && (data.requestMethod === 'pdf' || data.requestMethod === 'mixed')) {
+                console.log('📄 Adding PDF file to FormData:', {
+                    name: this.uploadedFile.name,
+                    size: this.uploadedFile.size,
+                    type: this.uploadedFile.type
+                });
+                formData.append('pdfFile', this.uploadedFile, this.uploadedFile.name);
+            } else {
+                console.log('📄 No PDF file to attach or not a PDF request method');
+            }
+            
+            // Debug FormData contents
+            console.log('📦 FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    console.log(`  ${key}: [FILE] ${value.name} (${value.size} bytes)`);
+                } else {
+                    console.log(`  ${key}: ${typeof value === 'string' ? value.substring(0, 50) + '...' : value}`);
+                }
             }
             
             // Determine endpoint
             const requestType = data.requestType;
             const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
+            
+            console.log(`🚀 Submitting to endpoint: ${endpoint}`);
             
             // Submit form with proper content type for file upload
             const response = await fetch(endpoint, {
