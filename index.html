@@ -540,81 +540,26 @@
                 </div>
             </div>
 
-            <!-- Order History Section -->
+            <!-- Order History Section - UPDATED FOR SCRIPT.JS -->
             <div class="history-container" id="orderHistorySection" style="display: none;">
                 <div class="history-header">
                     <h2>📋 Order History</h2>
                     <p>View all past orders and quote requests</p>
-                    <button class="btn btn-secondary" onclick="refreshOrderHistory()">
-                        <span>🔄 Refresh</span>
-                    </button>
                 </div>
 
-                <!-- History Filters -->
-                <div class="history-filters">
-                    <div class="filter-group">
-                        <label>Status:</label>
-                        <select id="historyStatusFilter" onchange="filterOrderHistory()">
-                            <option value="">All</option>
-                            <option value="ORDER">Orders</option>
-                            <option value="QUOTE">Quotes</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Supplier:</label>
-                        <select id="historySupplierFilter" onchange="filterOrderHistory()">
-                            <option value="">All Suppliers</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Search:</label>
-                        <input type="text" id="historySearch" placeholder="Search orders..." onkeyup="filterOrderHistory()">
-                    </div>
+                <!-- History Stats (script.js will populate this) -->
+                <div id="historyStats" class="history-stats">
+                    <!-- Stats will be populated by script.js -->
                 </div>
 
-                <!-- History Stats -->
-                <div class="history-stats" id="historyStats">
-                    <!-- Stats will be populated here -->
+                <!-- History Filters (script.js will populate this) -->
+                <div id="historyFilters" class="history-filters">
+                    <!-- Filters will be populated by script.js -->
                 </div>
 
-                <!-- History Table -->
-                <div class="history-table-container">
-                    <table class="history-table" id="historyTable">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Supplier</th>
-                                <th>Category</th>
-                                <th>Items</th>
-                                <th>Status</th>
-                                <th>PDF</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody">
-                            <tr>
-                                <td colspan="9" class="loading-cell">Loading order history...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Order Details Modal -->
-                <div class="modal" id="orderDetailsModal" style="display: none;">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 id="modalOrderTitle">Order Details</h3>
-                            <button class="modal-close" onclick="closeOrderModal()">✕</button>
-                        </div>
-                        <div class="modal-body" id="modalOrderBody">
-                            <!-- Order details will be populated here -->
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" onclick="closeOrderModal()">Close</button>
-                        </div>
-                    </div>
+                <!-- History Container (script.js will populate this) -->
+                <div id="historyContainer" class="history-content">
+                    <!-- Order cards will be populated by script.js -->
                 </div>
             </div>
         </div>
@@ -650,6 +595,48 @@
         </div>
     </footer>
 
+    <!-- JavaScript Functions -->
+    <script>
+        // Tab switching function to work with the enhanced script.js
+        function switchTab(tabName) {
+            // Hide all content sections
+            document.getElementById('newRequestContent').style.display = 'none';
+            document.getElementById('orderHistorySection').style.display = 'none';
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
+            
+            if (tabName === 'newRequest') {
+                document.getElementById('newRequestContent').style.display = 'block';
+                document.getElementById('newRequestTab').classList.add('active');
+                // Reset to method selection
+                if (window.app) {
+                    window.app.showMethodSelection();
+                }
+            } else if (tabName === 'orderHistory') {
+                document.getElementById('orderHistorySection').style.display = 'block';
+                document.getElementById('orderHistoryTab').classList.add('active');
+                // Load order history
+                if (window.app) {
+                    window.app.showOrderHistory();
+                }
+            }
+        }
+
+        // Alternative function name for backward compatibility
+        function showOrderHistory() {
+            switchTab('orderHistory');
+        }
+
+        // Global function to refresh order history (called from script.js)
+        function refreshOrderHistory() {
+            if (window.app) {
+                window.app.refreshOrderHistory();
+            }
+        }
+    </script>
+
+    <!-- Load the enhanced script.js -->
     <script src="script.js"></script>
 </body>
 </html>
