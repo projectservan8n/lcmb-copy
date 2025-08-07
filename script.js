@@ -1738,64 +1738,132 @@ class MaterialManagementApp {
         }
     }
 
-    async handleConfirmedSubmission() {
-        if (!this.pendingSubmissionData) {
-            this.showError('No submission data found. Please go back and fill the form again.');
-            return;
+   async handleConfirmedSubmission() {
+    if (!this.pendingSubmissionData) {
+        this.showError('No submission data found. Please go back and fill the form again.');
+        return;
+    }
+    
+    try {
+        const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+        const btnText = confirmSubmitBtn?.querySelector('.btn-text');
+        const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
+        
+        // Disable form
+        if (confirmSubmitBtn) confirmSubmitBtn.disabled = true;
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoading) btnLoading.style.display = 'flex';
+
+        const data = this.pendingSubmissionData;
+        console.log('📤 Submitting confirmed request to supplier:', data);
+        
+        // Check if we have an additional PDF file (for "both" method)
+        let pdfUploadResult = null;
+        if (this.currentMethod === 'both' && this.additionalPdfFile) {
+            console.log('📄 Uploading additional PDF file first...');
+            
+            try {
+                // Create FormData for PDF upload
+                const pdfFormData = new FormData();
+                
+                // Add PDF file as binary
+                pdfFormData.append('pdfFile', this.additionalPdfFile, this.additionalPdfFile.name);
+                
+                // Add metadata for PDF upload
+                pdfFormData.append('requestType', data.requestType);
+                pdfFormData.append('supplierName', data.supplier);
+                pdfFormData.append('supplierEmail', data.supplierEmail || '');
+                pdfFormData.append('requestorName', data.requestorName);
+                pdfFormData.append('requestorEmail', data.requestorEmail);
+                pdfFormData.append('urgency', data.urgency || 'Normal');
+                pdfFormData.append('projectRef', data.projectRef || '');
+                pdfFormData.append('notes', data.notes || '');
+                pdfFormData.append('category', data.category);
+                pdfFormData.append('filename', this.additionalPdfFile.name);
+                
+                // Add materials as JSON string for the PDF upload
+                pdfFormData.append('materials', JSON.stringify(data.materials || []));
+                
+                console.log('📤 Uploading PDF to Drive via /api/pdf/upload...');
+                
+                // Upload PDF first
+                const pdfResponse = await fetch('/api/pdf/upload', {
+                    method: 'POST',
+                    body: pdfFormData
+                });
+                
+                if (!pdfResponse.ok) {
+                    throw new Error(`PDF upload failed: ${pdfResponse.statusText}`);
+                }
+                
+                pdfUploadResult = await pdfResponse.json();
+                console.log('✅ PDF uploaded successfully:', pdfUploadResult);
+                
+                // Add PDF info to the order/quote data
+                data.pdfFileName = pdfUploadResult.pdfFileName || this.additionalPdfFile.name;
+                data.pdfDriveLink = pdfUploadResult.driveLink || '';
+                data.pdfFileId = pdfUploadResult.pdfFileId || '';
+                data.requestMethod = 'BOTH_WORLDS'; // Mark as combined request
+                
+            } catch (pdfError) {
+                console.error('❌ PDF upload failed:', pdfError);
+                throw new Error(`PDF upload failed: ${pdfError.message}`);
+            }
         }
         
-        try {
-            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
-            const btnText = confirmSubmitBtn?.querySelector('.btn-text');
-            const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
-            
-            // Disable form
-            if (confirmSubmitBtn) confirmSubmitBtn.disabled = true;
-            if (btnText) btnText.style.display = 'none';
-            if (btnLoading) btnLoading.style.display = 'flex';
+        // Now submit the order/quote with PDF info included
+        const requestType = data.requestType;
+        const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
+        
+        console.log('📦 Submitting final request with data:', {
+            requestType: requestType,
+            supplier: data.supplier,
+            materials: data.materials?.length || 0,
+            hasPdf: !!data.pdfDriveLink,
+            pdfFileName: data.pdfFileName,
+            method: this.currentMethod
+        });
+        
+        // Submit form with PDF info if available
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
 
-            const data = this.pendingSubmissionData;
-            console.log('📤 Submitting confirmed request to supplier:', data);
-            
-            // Determine endpoint
-            const requestType = data.requestType;
-            const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
-            
-            // Submit form
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
+        const result = await response.json();
+        console.log('✅ Confirmed submission result:', result);
 
-            const result = await response.json();
-            console.log('✅ Confirmed submission result:', result);
-
-            if (result.success !== false) {
-                const type = requestType === 'order' ? 'order' : 'quote';
-                const id = result.orderId || result.quoteId || result.id || `${type.toUpperCase()}-${Date.now()}`;
-                this.showSuccess(type, id, data.supplier);
+        if (result.success !== false) {
+            const type = requestType === 'order' ? 'order' : 'quote';
+            const id = result.orderId || result.quoteId || result.id || `${type.toUpperCase()}-${Date.now()}`;
+            
+            // Show success with PDF info if applicable
+            if (this.currentMethod === 'both' && pdfUploadResult) {
+                this.showBothMethodSuccess(type, id, data.supplier, pdfUploadResult);
             } else {
-                throw new Error(result.error || 'Submission failed');
+                this.showSuccess(type, id, data.supplier);
             }
-
-        } catch (error) {
-            console.error('❌ Confirmed submission error:', error);
-            this.showError(`Submission failed: ${error.message}`);
-        } finally {
-            // Re-enable form
-            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
-            const btnText = confirmSubmitBtn?.querySelector('.btn-text');
-            const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
-            
-            if (confirmSubmitBtn) confirmSubmitBtn.disabled = false;
-            if (btnText) btnText.style.display = 'inline';
-            if (btnLoading) btnLoading.style.display = 'none';
+        } else {
+            throw new Error(result.error || 'Submission failed');
         }
-    }
 
+    } catch (error) {
+        console.error('❌ Confirmed submission error:', error);
+        this.showError(`Submission failed: ${error.message}`);
+    } finally {
+        // Re-enable form
+        const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+        const btnText = confirmSubmitBtn?.querySelector('.btn-text');
+        const btnLoading = confirmSubmitBtn?.querySelector('.btn-loading');
+        
+        if (confirmSubmitBtn) confirmSubmitBtn.disabled = false;
+        if (btnText) btnText.style.display = 'inline';
+        if (btnLoading) btnLoading.style.display = 'none';
+    }
+}
     // ===============================================
     // UI HELPER FUNCTIONS
     // ===============================================
