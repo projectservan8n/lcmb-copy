@@ -1,4 +1,4 @@
-// Enhanced script.js with PDF Upload, Tab Navigation, and Order History
+// Enhanced script.js with PDF Upload, Tab Navigation, Order History, and Container Expansion
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
@@ -13,7 +13,7 @@ class MaterialManagementApp {
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App (PDF + History + Tabs)');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App (PDF + History + Tabs + Container Expansion)');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -34,211 +34,210 @@ class MaterialManagementApp {
         this.validateForm();
     }
 
-setupEventListeners() {
-    try {
-        console.log('⚙️ Setting up enhanced event listeners...');
-        
-        // Request type change
-        const requestTypeInputs = document.querySelectorAll('input[name="requestType"]');
-        if (requestTypeInputs && requestTypeInputs.length > 0) {
-            requestTypeInputs.forEach(input => {
-                if (input) {
-                    input.addEventListener('change', () => this.handleRequestTypeChange());
-                }
-            });
-        }
-
-        // PDF mode change
-        const pdfModeInputs = document.querySelectorAll('input[name="pdfMode"]');
-        if (pdfModeInputs && pdfModeInputs.length > 0) {
-            pdfModeInputs.forEach(input => {
-                if (input) {
-                    input.addEventListener('change', () => this.handlePDFModeChange());
-                }
-            });
-        }
-
-        // Category change
-        const categorySelect = document.getElementById('category');
-        if (categorySelect) {
-            categorySelect.addEventListener('change', () => this.handleCategoryChange());
-        }
-
-        // Supplier change
-        const supplierSelect = document.getElementById('supplier');
-        if (supplierSelect) {
-            supplierSelect.addEventListener('change', () => this.handleSupplierChange());
-        }
-
-        // Subcategory change
-        const subcategorySelect = document.getElementById('subcategory');
-        if (subcategorySelect) {
-            subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
-        }
-
-        // Material search
-        const materialSearch = document.getElementById('materialSearch');
-        if (materialSearch) {
-            materialSearch.addEventListener('input', () => this.handleMaterialSearch());
-        }
-
-        // Form submission
-        const form = document.getElementById('materialForm');
-        if (form) {
-            form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+    setupEventListeners() {
+        try {
+            console.log('⚙️ Setting up enhanced event listeners...');
             
-            // Form validation on input changes
-            const formInputs = form.querySelectorAll('input, select, textarea');
-            if (formInputs && formInputs.length > 0) {
-                formInputs.forEach(input => {
+            // Request type change
+            const requestTypeInputs = document.querySelectorAll('input[name="requestType"]');
+            if (requestTypeInputs && requestTypeInputs.length > 0) {
+                requestTypeInputs.forEach(input => {
                     if (input) {
-                        input.addEventListener('change', () => this.validateForm());
-                        input.addEventListener('input', () => this.validateForm());
+                        input.addEventListener('change', () => this.handleRequestTypeChange());
                     }
                 });
             }
-        }
 
-        // Confirmation page event listeners
-        const backToEditBtn = document.getElementById('backToEditBtn');
-        if (backToEditBtn) {
-            backToEditBtn.addEventListener('click', () => this.goBackToEdit());
-        }
+            // PDF mode change
+            const pdfModeInputs = document.querySelectorAll('input[name="pdfMode"]');
+            if (pdfModeInputs && pdfModeInputs.length > 0) {
+                pdfModeInputs.forEach(input => {
+                    if (input) {
+                        input.addEventListener('change', () => this.handlePDFModeChange());
+                    }
+                });
+            }
 
-        const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
-        if (confirmSubmitBtn) {
-            confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
-        }
+            // Category change
+            const categorySelect = document.getElementById('category');
+            if (categorySelect) {
+                categorySelect.addEventListener('change', () => this.handleCategoryChange());
+            }
 
-        const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
-        if (addMoreMaterialsBtn) {
-            addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
-        }
+            // Supplier change
+            const supplierSelect = document.getElementById('supplier');
+            if (supplierSelect) {
+                supplierSelect.addEventListener('change', () => this.handleSupplierChange());
+            }
 
-        // Order history event listeners
-        const historySearch = document.getElementById('historySearch');
-        if (historySearch) {
-            historySearch.addEventListener('input', () => this.filterOrderHistory());
-        }
+            // Subcategory change
+            const subcategorySelect = document.getElementById('subcategory');
+            if (subcategorySelect) {
+                subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
+            }
 
-        const statusFilter = document.getElementById('statusFilter');
-        if (statusFilter) {
-            statusFilter.addEventListener('change', () => this.filterOrderHistory());
-        }
+            // Material search
+            const materialSearch = document.getElementById('materialSearch');
+            if (materialSearch) {
+                materialSearch.addEventListener('input', () => this.handleMaterialSearch());
+            }
 
-        const supplierFilter = document.getElementById('supplierFilter');
-        if (supplierFilter) {
-            supplierFilter.addEventListener('change', () => this.filterOrderHistory());
-        }
-
-        const categoryFilter = document.getElementById('categoryFilter');
-        if (categoryFilter) {
-            categoryFilter.addEventListener('change', () => this.filterOrderHistory());
-        }
-
-        const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
-        if (refreshHistoryBtn) {
-            refreshHistoryBtn.addEventListener('click', () => this.loadOrderHistory());
-        }
-
-        // Event delegation for dynamic buttons (replaces onclick handlers)
-// Event delegation for dynamic buttons (replaces onclick handlers)
-const self = this;
-document.addEventListener('click', function(e) {
-    // Handle toggle materials buttons
-    if (e.target.closest('.toggle-materials')) {
-        const button = e.target.closest('.toggle-materials');
-        const materialsSection = button.closest('.materials-section');
-        const materialsDiv = materialsSection?.querySelector('.materials-list-history');
-        
-        if (materialsDiv) {
-            const orderId = materialsDiv.id.replace('materials-', '');
-            self.toggleMaterials(orderId);
-        }
-        return;
-    }
-    
-    // Handle quantity buttons (+ and - buttons)
-    if (e.target.classList.contains('qty-btn')) {
-        const index = parseInt(e.target.dataset.index);
-        const change = parseInt(e.target.dataset.change);
-        if (!isNaN(index) && !isNaN(change)) {
-            self.updateQuantity(index, change);
-        }
-        return;
-    }
-    
-    // Handle remove material buttons
-    if (e.target.classList.contains('remove-material')) {
-        const index = parseInt(e.target.dataset.index);
-        if (!isNaN(index)) {
-            self.removeMaterial(index);
-        }
-        return;
-    }
-    
-    // Handle order action buttons (PDF, Duplicate, Contact)
-    if (e.target.closest('[data-action]')) {
-        const button = e.target.closest('[data-action]');
-        const action = button.dataset.action;
-        const orderId = button.dataset.orderId;
-        const email = button.dataset.email;
-        const pdfLink = button.dataset.pdfLink;
-        
-        switch (action) {
-            case 'viewPDF':
-                self.viewPDF(pdfLink);
-                break;
-            case 'duplicateOrder':
-                self.duplicateOrder(orderId);
-                break;
-            case 'contactSupplier':
-                self.contactSupplier(email, orderId);
-                break;
-        }
-        return;
-    }
-});
-        
-        console.log('✅ Enhanced event listeners setup complete');
-    } catch (error) {
-        console.error('❌ Error setting up event listeners:', error);
-    }
-}
-
-setupTabNavigation() {
-    try {
-        console.log('🔗 Setting up tab navigation...');
-        
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-        
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetTab = button.dataset.tab;
+            // Form submission
+            const form = document.getElementById('materialForm');
+            if (form) {
+                form.addEventListener('submit', (e) => this.handleFormSubmit(e));
                 
-                // Update active tab button
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                
-                // Update active tab content
-                tabContents.forEach(content => content.classList.remove('active'));
-                const targetContent = document.getElementById(`${targetTab}-content`);
-                if (targetContent) {
-                    targetContent.classList.add('active');
+                // Form validation on input changes
+                const formInputs = form.querySelectorAll('input, select, textarea');
+                if (formInputs && formInputs.length > 0) {
+                    formInputs.forEach(input => {
+                        if (input) {
+                            input.addEventListener('change', () => this.validateForm());
+                            input.addEventListener('input', () => this.validateForm());
+                        }
+                    });
+                }
+            }
+
+            // Confirmation page event listeners
+            const backToEditBtn = document.getElementById('backToEditBtn');
+            if (backToEditBtn) {
+                backToEditBtn.addEventListener('click', () => this.goBackToEdit());
+            }
+
+            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+            if (confirmSubmitBtn) {
+                confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
+            }
+
+            const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
+            if (addMoreMaterialsBtn) {
+                addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
+            }
+
+            // Order history event listeners
+            const historySearch = document.getElementById('historySearch');
+            if (historySearch) {
+                historySearch.addEventListener('input', () => this.filterOrderHistory());
+            }
+
+            const statusFilter = document.getElementById('statusFilter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', () => this.filterOrderHistory());
+            }
+
+            const supplierFilter = document.getElementById('supplierFilter');
+            if (supplierFilter) {
+                supplierFilter.addEventListener('change', () => this.filterOrderHistory());
+            }
+
+            const categoryFilter = document.getElementById('categoryFilter');
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', () => this.filterOrderHistory());
+            }
+
+            const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+            if (refreshHistoryBtn) {
+                refreshHistoryBtn.addEventListener('click', () => this.loadOrderHistory());
+            }
+
+            // Event delegation for dynamic buttons
+            const self = this;
+            document.addEventListener('click', function(e) {
+                // Handle toggle materials buttons
+                if (e.target.closest('.toggle-materials')) {
+                    const button = e.target.closest('.toggle-materials');
+                    const materialsSection = button.closest('.materials-section');
+                    const materialsDiv = materialsSection?.querySelector('.materials-list-history');
+                    
+                    if (materialsDiv) {
+                        const orderId = materialsDiv.id.replace('materials-', '');
+                        self.toggleMaterials(orderId);
+                    }
+                    return;
                 }
                 
-                // Update current tab and handle tab-specific logic
-                this.currentTab = targetTab;
-                this.handleTabChange(targetTab);
+                // Handle quantity buttons (+ and - buttons)
+                if (e.target.classList.contains('qty-btn')) {
+                    const index = parseInt(e.target.dataset.index);
+                    const change = parseInt(e.target.dataset.change);
+                    if (!isNaN(index) && !isNaN(change)) {
+                        self.updateQuantity(index, change);
+                    }
+                    return;
+                }
+                
+                // Handle remove material buttons
+                if (e.target.classList.contains('remove-material')) {
+                    const index = parseInt(e.target.dataset.index);
+                    if (!isNaN(index)) {
+                        self.removeMaterial(index);
+                    }
+                    return;
+                }
+                
+                // Handle order action buttons (PDF, Duplicate, Contact)
+                if (e.target.closest('[data-action]')) {
+                    const button = e.target.closest('[data-action]');
+                    const action = button.dataset.action;
+                    const orderId = button.dataset.orderId;
+                    const email = button.dataset.email;
+                    const pdfLink = button.dataset.pdfLink;
+                    
+                    switch (action) {
+                        case 'viewPDF':
+                            self.viewPDF(pdfLink);
+                            break;
+                        case 'duplicateOrder':
+                            self.duplicateOrder(orderId);
+                            break;
+                        case 'contactSupplier':
+                            self.contactSupplier(email, orderId);
+                            break;
+                    }
+                    return;
+                }
             });
-        });
-        
-        console.log('✅ Tab navigation setup complete');
-    } catch (error) {
-        console.error('❌ Error setting up tab navigation:', error);
+            
+            console.log('✅ Enhanced event listeners setup complete');
+        } catch (error) {
+            console.error('❌ Error setting up event listeners:', error);
+        }
     }
-}
+
+    setupTabNavigation() {
+        try {
+            console.log('🔗 Setting up tab navigation...');
+            
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+                    
+                    // Update active tab button
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Update active tab content
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    const targetContent = document.getElementById(`${targetTab}-content`);
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+                    
+                    // Update current tab and handle tab-specific logic
+                    this.currentTab = targetTab;
+                    this.handleTabChange(targetTab);
+                });
+            });
+            
+            console.log('✅ Tab navigation setup complete');
+        } catch (error) {
+            console.error('❌ Error setting up tab navigation:', error);
+        }
+    }
 
     handleTabChange(tabName) {
         try {
@@ -247,6 +246,11 @@ setupTabNavigation() {
             if (tabName === 'order-history') {
                 // Load order history when switching to history tab
                 this.loadOrderHistory();
+            }
+            
+            // Contract container when switching away from submit-request tab
+            if (tabName !== 'submit-request') {
+                this.expandContainerForMaterials();
             }
             
             // Hide any alerts when switching tabs
@@ -499,10 +503,11 @@ setupTabNavigation() {
                 if (categoryGroup) categoryGroup.style.display = 'block';
                 if (supplierGroup) supplierGroup.style.display = 'block';
                 
-                // Clear selected materials
+                // Clear selected materials and contract container
                 this.selectedMaterials = [];
                 this.renderSelectedMaterials();
                 this.resetMaterialSelection();
+                this.expandContainerForMaterials();
             }
             
             this.validateForm();
@@ -658,10 +663,37 @@ setupTabNavigation() {
         supplierSelect.appendChild(option);
     }
 
+    // NEW: Container expansion function
+    expandContainerForMaterials() {
+        try {
+            const formContainer = document.querySelector('.form-container');
+            const materialsContainer = document.getElementById('materialsContainer');
+            
+            if (formContainer && materialsContainer) {
+                // Check if materials are being displayed
+                const isDisplayed = materialsContainer.style.display !== 'none' && 
+                                   this.filteredMaterials && 
+                                   this.filteredMaterials.length > 0;
+                
+                if (isDisplayed) {
+                    formContainer.classList.add('expanded-for-materials');
+                    console.log('📏 Container expanded for materials display');
+                } else {
+                    formContainer.classList.remove('expanded-for-materials');
+                    console.log('📏 Container returned to normal width');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error expanding container:', error);
+        }
+    }
+
+    // UPDATED: handleSupplierChange with container expansion
     handleSupplierChange() {
         try {
             const supplierSelect = document.getElementById('supplier');
             const categorySelect = document.getElementById('category');
+            const materialsContainer = document.getElementById('materialsContainer');
             
             if (!supplierSelect) return;
             
@@ -674,6 +706,11 @@ setupTabNavigation() {
 
             if (!selectedSupplier) {
                 this.hideSupplierInfo();
+                if (materialsContainer) {
+                    materialsContainer.style.display = 'none';
+                }
+                // Contract the container back to normal
+                this.expandContainerForMaterials();
                 this.validateForm();
                 return;
             }
@@ -683,6 +720,11 @@ setupTabNavigation() {
             if (selectedOption) {
                 this.showSupplierInfo(selectedOption);
                 console.log('🔍 Selected Supplier ID:', selectedOption.dataset.id);
+            }
+
+            // Show materials container
+            if (materialsContainer) {
+                materialsContainer.style.display = 'block';
             }
 
             // Only populate materials if not in PDF-only mode
@@ -763,273 +805,328 @@ setupTabNavigation() {
         }
     }
 
+    // UPDATED: populateMaterials function with container expansion
     populateMaterials(category, subcategory = '') {
-    try {
-        const materialSearch = document.getElementById('materialSearch');
-        const materialsContainer = document.getElementById('materialsContainer');
-        const materialsList = document.getElementById('materialsList');
-        const supplierSelect = document.getElementById('supplier');
-        
-        console.log('🔍 populateMaterials called:', { category, subcategory });
-        console.log('📋 Elements found:', {
-            materialSearch: !!materialSearch,
-            materialsContainer: !!materialsContainer,
-            materialsList: !!materialsList,
-            supplierSelect: !!supplierSelect
-        });
-        
-        if (!category || !supplierSelect.value) {
-            console.log('⚠️ Missing category or supplier');
-            return;
-        }
+        try {
+            const materialSearch = document.getElementById('materialSearch');
+            const materialsContainer = document.getElementById('materialsContainer');
+            const materialsList = document.getElementById('materialsList');
+            const supplierSelect = document.getElementById('supplier');
+            
+            console.log('🔍 populateMaterials called:', { category, subcategory });
+            console.log('📋 Elements found:', {
+                materialSearch: !!materialSearch,
+                materialsContainer: !!materialsContainer,
+                materialsList: !!materialsList,
+                supplierSelect: !!supplierSelect
+            });
+            
+            if (!category || !supplierSelect.value) {
+                console.log('⚠️ Missing category or supplier');
+                return;
+            }
 
-        // Get selected supplier ID from the option's dataset
-        const selectedOption = supplierSelect.selectedOptions[0];
-        if (!selectedOption) {
-            console.log('⚠️ No supplier option selected');
-            return;
-        }
-        
-        const selectedSupplierId = selectedOption.dataset.id;
-        if (!selectedSupplierId) {
-            console.log('⚠️ No supplier ID found in dataset');
-            return;
-        }
+            // Get selected supplier ID from the option's dataset
+            const selectedOption = supplierSelect.selectedOptions[0];
+            if (!selectedOption) {
+                console.log('⚠️ No supplier option selected');
+                return;
+            }
+            
+            const selectedSupplierId = selectedOption.dataset.id;
+            if (!selectedSupplierId) {
+                console.log('⚠️ No supplier ID found in dataset');
+                return;
+            }
 
-        console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}, Subcategory: ${subcategory || 'All'}`);
+            console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}, Subcategory: ${subcategory || 'All'}`);
 
-        // Get materials for this specific category and supplier ID
-        let materials = [];
-        
-        // Check if we have the new grouped structure (preferred)
-        if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
-            materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
-            console.log('✅ Using materialsByCategoryAndSupplier structure');
-        } else if (this.formData?.data?.materials?.[category]) {
-            // Fallback: filter from the flat structure
-            materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
-            console.log('⚠️ Using fallback materials filtering');
-        } else {
-            console.log('❌ No materials found for category:', category);
-            materials = [];
-        }
-        
-        // Filter by subcategory if selected
-        if (subcategory) {
-            const beforeFilter = materials.length;
-            materials = materials.filter(m => m.subcategory === subcategory);
-            console.log(`📁 Filtered by subcategory: ${beforeFilter} → ${materials.length} materials`);
-        }
+            // Get materials for this specific category and supplier ID
+            let materials = [];
+            
+            // Check if we have the new grouped structure (preferred)
+            if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
+                materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
+                console.log('✅ Using materialsByCategoryAndSupplier structure');
+            } else if (this.formData?.data?.materials?.[category]) {
+                // Fallback: filter from the flat structure
+                materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
+                console.log('⚠️ Using fallback materials filtering');
+            } else {
+                console.log('❌ No materials found for category:', category);
+                materials = [];
+            }
+            
+            // Filter by subcategory if selected
+            if (subcategory) {
+                const beforeFilter = materials.length;
+                materials = materials.filter(m => m.subcategory === subcategory);
+                console.log(`📁 Filtered by subcategory: ${beforeFilter} → ${materials.length} materials`);
+            }
 
-        this.filteredMaterials = materials;
-        
-        console.log(`📦 Final result: ${materials.length} materials for supplier ${selectedSupplierId}`);
-        
-        // FORCE SHOW the materials container
-        if (materialsContainer) {
-            materialsContainer.style.display = 'block';
-            console.log('👁️ Materials container made visible');
-        }
-        
-        // Enable search and update placeholder
-        if (materialSearch) {
-            materialSearch.disabled = false;
-            materialSearch.placeholder = materials.length > 0 
-                ? `Search from ${materials.length} materials...`
-                : 'No materials available for this supplier...';
-        }
+            this.filteredMaterials = materials;
+            
+            console.log(`📦 Final result: ${materials.length} materials for supplier ${selectedSupplierId}`);
+            
+            // FORCE SHOW the materials container
+            if (materialsContainer) {
+                materialsContainer.style.display = 'block';
+                materialsContainer.style.visibility = 'visible';
+                materialsContainer.style.opacity = '1';
+                console.log('👁️ Materials container made visible');
+            }
+            
+            // EXPAND THE FORM CONTAINER FOR MATERIALS
+            this.expandContainerForMaterials();
+            
+            // Enable search and update placeholder
+            if (materialSearch) {
+                materialSearch.disabled = false;
+                materialSearch.placeholder = materials.length > 0 
+                    ? `Search from ${materials.length} materials...`
+                    : 'No materials available for this supplier...';
+            }
 
-        // FORCE render materials with debug logging
-        console.log('🎨 About to render materials list...');
-        this.renderMaterialsList();
-        
-    } catch (error) {
-        console.error('❌ Error populating materials:', error);
-        console.error('Stack trace:', error.stack);
+            // Render materials with container-aware sizing
+            console.log('🎨 About to render materials list...');
+            this.renderMaterialsList();
+            
+        } catch (error) {
+            console.error('❌ Error populating materials:', error);
+            console.error('Stack trace:', error.stack);
+        }
     }
-}
 
-renderMaterialsList(searchTerm = '') {
-    try {
-        const materialsList = document.getElementById('materialsList');
-        if (!materialsList) {
-            console.error('❌ materialsList element not found!');
-            return;
-        }
+    // UPDATED: renderMaterialsList with container-aware sizing
+    renderMaterialsList(searchTerm = '') {
+        try {
+            const materialsList = document.getElementById('materialsList');
+            if (!materialsList) {
+                console.error('❌ materialsList element not found!');
+                return;
+            }
 
-        console.log('🎨 renderMaterialsList called with:', {
-            searchTerm,
-            filteredMaterialsCount: this.filteredMaterials?.length || 0,
-            materialsListElement: !!materialsList
-        });
-
-        let materialsToShow = this.filteredMaterials || [];
-
-        // Apply search filter
-        if (searchTerm) {
-            materialsToShow = this.filteredMaterials.filter(material => 
-                material.name.toLowerCase().includes(searchTerm) ||
-                (material.code && material.code.toLowerCase().includes(searchTerm)) ||
-                (material.subcategory && material.subcategory.toLowerCase().includes(searchTerm))
-            );
-        }
-
-        // Limit results for performance
-        const maxResults = 100;
-        const displayMaterials = materialsToShow.slice(0, maxResults);
-
-        console.log('📊 Materials to display:', {
-            totalAvailable: materialsToShow.length,
-            displaying: displayMaterials.length,
-            maxResults
-        });
-
-        if (displayMaterials.length === 0) {
-            console.log('⚠️ No materials to display');
-            materialsList.innerHTML = `
-                <div class="no-materials">
-                    <p>No materials found${searchTerm ? ` for "${searchTerm}"` : ''}.</p>
-                    ${searchTerm ? '<p>Try a different search term.</p>' : '<p>Try selecting a different category or supplier.</p>'}
-                </div>
-            `;
-            return;
-        }
-
-        // FORCE the grid layout with inline styles as backup
-        materialsList.style.cssText = `
-            display: grid !important;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
-            gap: 1.25rem !important;
-            padding: 1.5rem !important;
-            max-height: 500px;
-            overflow-y: auto;
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius-lg);
-            background: var(--white);
-            width: 100% !important;
-            box-sizing: border-box !important;
-        `;
-
-        // Grid-based material cards with full clickability
-        const cardsHTML = displayMaterials.map(material => {
-            const isSelected = this.selectedMaterials.some(m => m.id === material.id);
-            return `
-                <div class="material-card ${isSelected ? 'selected' : ''}" 
-                     data-material-id="${material.id}"
-                     style="
-                         background: var(--white) !important;
-                         border: 2px solid ${isSelected ? 'var(--primary-blue)' : 'var(--gray-200)'} !important;
-                         border-radius: var(--radius-lg);
-                         padding: 1.25rem !important;
-                         min-width: 280px !important;
-                         min-height: 160px !important;
-                         width: 100% !important;
-                         display: flex !important;
-                         flex-direction: column !important;
-                         justify-content: space-between;
-                         cursor: pointer;
-                         transition: var(--transition);
-                         box-shadow: var(--shadow-sm);
-                         box-sizing: border-box !important;
-                     ">
-                    <div class="material-card-header">
-                        <div class="material-checkbox-section">
-                            <input type="checkbox" 
-                                   class="material-checkbox" 
-                                   data-material-id="${material.id}"
-                                   ${isSelected ? 'checked' : ''}>
-                            <span class="checkbox-custom"></span>
-                        </div>
-                        <div class="material-status">
-                            ${isSelected ? '<span class="selected-badge">✓ Selected</span>' : '<span class="select-badge">Click to Select</span>'}
-                        </div>
-                    </div>
-                    <div class="material-card-body">
-                        <div class="material-name">${material.name}</div>
-                        <div class="material-meta">
-                            ${material.code ? `<span class="material-code">Code: ${material.code}</span>` : ''}
-                            <span class="material-unit">Unit: ${material.unit}</span>
-                            <span class="material-category">${material.subcategory}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        materialsList.innerHTML = cardsHTML;
-
-        console.log('✅ Materials HTML rendered, adding event listeners...');
-
-        // Add event listeners to entire cards for clickability
-        materialsList.querySelectorAll('.material-card').forEach(card => {
-            const materialId = card.dataset.materialId;
-            const checkbox = card.querySelector('.material-checkbox');
-            
-            console.log('🔗 Adding listeners to card:', materialId);
-            
-            // Make entire card clickable
-            card.addEventListener('click', (e) => {
-                // Don't trigger if clicking directly on checkbox (prevent double toggle)
-                if (e.target.type === 'checkbox') return;
-                
-                console.log('🖱️ Card clicked:', materialId);
-                
-                // Toggle checkbox
-                checkbox.checked = !checkbox.checked;
-                
-                // Trigger change event
-                if (checkbox.checked) {
-                    this.addMaterialById(materialId, 1);
-                    card.classList.add('selected');
-                    card.style.borderColor = 'var(--primary-blue)';
-                } else {
-                    this.removeMaterialById(materialId);
-                    card.classList.remove('selected');
-                    card.style.borderColor = 'var(--gray-200)';
-                }
-                
-                // Update status badge
-                const statusBadge = card.querySelector('.material-status');
-                if (checkbox.checked) {
-                    statusBadge.innerHTML = '<span class="selected-badge">✓ Selected</span>';
-                } else {
-                    statusBadge.innerHTML = '<span class="select-badge">Click to Select</span>';
-                }
+            console.log('🎨 renderMaterialsList called with:', {
+                searchTerm,
+                filteredMaterialsCount: this.filteredMaterials?.length || 0,
+                materialsListElement: !!materialsList
             });
 
-            // Also handle direct checkbox clicks
-            checkbox.addEventListener('change', (e) => {
-                console.log('☑️ Checkbox changed:', materialId, e.target.checked);
-                
-                const isChecked = e.target.checked;
-                
-                if (isChecked) {
-                    this.addMaterialById(materialId, 1);
-                    card.classList.add('selected');
-                    card.style.borderColor = 'var(--primary-blue)';
-                    card.querySelector('.material-status').innerHTML = '<span class="selected-badge">✓ Selected</span>';
-                } else {
-                    this.removeMaterialById(materialId);
-                    card.classList.remove('selected');
-                    card.style.borderColor = 'var(--gray-200)';
-                    card.querySelector('.material-status').innerHTML = '<span class="select-badge">Click to Select</span>';
-                }
+            let materialsToShow = this.filteredMaterials || [];
+
+            // Apply search filter
+            if (searchTerm) {
+                materialsToShow = this.filteredMaterials.filter(material => 
+                    material.name.toLowerCase().includes(searchTerm) ||
+                    (material.code && material.code.toLowerCase().includes(searchTerm)) ||
+                    (material.subcategory && material.subcategory.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            // Limit results for performance
+            const maxResults = 100;
+            const displayMaterials = materialsToShow.slice(0, maxResults);
+
+            console.log('📊 Materials to display:', {
+                totalAvailable: materialsToShow.length,
+                displaying: displayMaterials.length,
+                maxResults
             });
-        });
 
-        // Show result count
-        const resultInfo = document.getElementById('materialsResultInfo');
-        if (resultInfo) {
-            resultInfo.textContent = `Showing ${displayMaterials.length}${materialsToShow.length > maxResults ? ` of ${materialsToShow.length}` : ''} materials`;
+            if (displayMaterials.length === 0) {
+                console.log('⚠️ No materials to display');
+                materialsList.innerHTML = `
+                    <div class="no-materials" style="grid-column: 1 / -1; text-align: center; padding: 3rem 2rem; color: var(--gray-500); background: var(--white); border-radius: var(--radius-md); border: 2px dashed var(--gray-300);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🔍</div>
+                        <p>No materials found${searchTerm ? ` for "${searchTerm}"` : ''}.</p>
+                        ${searchTerm ? '<p>Try a different search term.</p>' : '<p>Try selecting a different category or supplier.</p>'}
+                    </div>
+                `;
+                return;
+            }
+
+            // RESPONSIVE GRID based on container size
+            const formContainer = document.querySelector('.form-container');
+            const isExpanded = formContainer?.classList.contains('expanded-for-materials');
+            
+            const gridColumns = isExpanded 
+                ? 'repeat(auto-fill, minmax(280px, 1fr))' // Wider container
+                : 'repeat(auto-fill, minmax(220px, 1fr))'; // Narrow container
+            
+            // FORCE the grid layout with responsive sizing
+            materialsList.style.cssText = `
+                display: grid !important;
+                grid-template-columns: ${gridColumns} !important;
+                gap: 1rem !important;
+                padding: 1.25rem !important;
+                max-height: 500px !important;
+                overflow-y: auto !important;
+                border: 2px solid var(--gray-200) !important;
+                border-radius: var(--radius-lg) !important;
+                background: var(--white) !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            `;
+
+            // Generate cards with adaptive sizing
+            const cardMinWidth = isExpanded ? '260px' : '200px';
+            const cardMinHeight = isExpanded ? '160px' : '140px';
+            
+            const cardsHTML = displayMaterials.map(material => {
+                const isSelected = this.selectedMaterials.some(m => m.id === material.id);
+                return `
+                    <div class="material-card ${isSelected ? 'selected' : ''}" 
+                         data-material-id="${material.id}"
+                         style="
+                             background: ${isSelected ? 'var(--accent-blue)' : 'var(--white)'} !important;
+                             border: 2px solid ${isSelected ? 'var(--primary-blue)' : 'var(--gray-200)'} !important;
+                             border-radius: var(--radius-lg) !important;
+                             padding: 1rem !important;
+                             min-width: ${cardMinWidth} !important;
+                             min-height: ${cardMinHeight} !important;
+                             width: 100% !important;
+                             display: flex !important;
+                             flex-direction: column !important;
+                             justify-content: space-between !important;
+                             cursor: pointer !important;
+                             transition: var(--transition) !important;
+                             box-shadow: var(--shadow-sm) !important;
+                             box-sizing: border-box !important;
+                         ">
+                        <div class="material-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                            <div class="material-checkbox-section">
+                                <input type="checkbox" 
+                                       class="material-checkbox" 
+                                       data-material-id="${material.id}"
+                                       style="display: none;"
+                                       ${isSelected ? 'checked' : ''}>
+                                <span class="checkbox-custom" style="
+                                    width: 18px; 
+                                    height: 18px; 
+                                    border: 2px solid ${isSelected ? 'var(--primary-blue)' : 'var(--gray-300)'}; 
+                                    border-radius: var(--radius-sm); 
+                                    background: ${isSelected ? 'var(--primary-blue)' : 'var(--white)'};
+                                    display: block;
+                                    position: relative;
+                                    cursor: pointer;
+                                ">${isSelected ? '<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--white); font-weight: bold; font-size: 10px;">✓</span>' : ''}</span>
+                            </div>
+                            <div class="material-status">
+                                ${isSelected ? 
+                                    '<span class="selected-badge" style="background: var(--success-green); color: var(--white); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500;">✓ Selected</span>' : 
+                                    '<span class="select-badge" style="background: var(--gray-100); color: var(--gray-600); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500; border: 1px solid var(--gray-200);">Select</span>'
+                                }
+                            </div>
+                        </div>
+                        <div class="material-card-body" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div class="material-name" style="font-weight: 600; color: var(--gray-800); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.3; min-height: 2rem; word-break: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${material.name}</div>
+                            <div class="material-meta" style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: auto;">
+                                ${material.code ? `<span class="material-code" style="background: var(--gray-100); color: var(--gray-700); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500; border: 1px solid var(--gray-200); display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis;">Code: ${material.code}</span>` : ''}
+                                <span class="material-unit" style="background: var(--accent-blue); color: var(--primary-blue); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500; border: 1px solid var(--primary-blue); display: inline-block;">Unit: ${material.unit}</span>
+                                <span class="material-category" style="background: var(--gray-50); color: var(--gray-600); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500; border: 1px solid var(--gray-300); display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis;">${material.subcategory}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            materialsList.innerHTML = cardsHTML;
+            
+            console.log(`✅ Rendered ${displayMaterials.length} material cards in ${isExpanded ? 'expanded' : 'normal'} container`);
+
+            // Add click event listeners
+            this.addMaterialCardListeners(materialsList);
+
+            // Show result count
+            const resultInfo = document.getElementById('materialsResultInfo');
+            if (resultInfo) {
+                resultInfo.textContent = `Showing ${displayMaterials.length}${materialsToShow.length > maxResults ? ` of ${materialsToShow.length}` : ''} materials`;
+            }
+
+        } catch (error) {
+            console.error('❌ Error rendering materials list:', error);
+            console.error('Stack trace:', error.stack);
         }
-
-        console.log('✅ All event listeners added successfully');
-
-    } catch (error) {
-        console.error('❌ Error rendering materials list:', error);
-        console.error('Stack trace:', error.stack);
     }
-}
+
+    // NEW: Separate function for adding event listeners
+    addMaterialCardListeners(materialsList) {
+        try {
+            materialsList.querySelectorAll('.material-card').forEach(card => {
+                const materialId = card.dataset.materialId;
+                const checkbox = card.querySelector('.material-checkbox');
+                
+                console.log('🔗 Adding listeners to card:', materialId);
+                
+                // Make entire card clickable
+                card.addEventListener('click', (e) => {
+                    if (e.target.type === 'checkbox') return;
+                    
+                    checkbox.checked = !checkbox.checked;
+                    this.handleMaterialCardToggle(card, materialId, checkbox.checked);
+                });
+
+                // Handle direct checkbox clicks
+                checkbox.addEventListener('change', (e) => {
+                    this.handleMaterialCardToggle(card, materialId, e.target.checked);
+                });
+            });
+        } catch (error) {
+            console.error('❌ Error adding material card listeners:', error);
+        }
+    }
+
+    // NEW: Handle material card toggle with visual updates
+    handleMaterialCardToggle(card, materialId, isChecked) {
+        try {
+            const checkboxCustom = card.querySelector('.checkbox-custom');
+            const statusBadge = card.querySelector('.material-status');
+            
+            if (isChecked) {
+                this.addMaterialById(materialId, 1);
+                card.classList.add('selected');
+                card.style.background = 'var(--accent-blue)';
+                card.style.borderColor = 'var(--primary-blue)';
+                
+                // Update checkbox visual
+                checkboxCustom.style.background = 'var(--primary-blue)';
+                checkboxCustom.style.borderColor = 'var(--primary-blue)';
+                checkboxCustom.innerHTML = '<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--white); font-weight: bold; font-size: 10px;">✓</span>';
+                
+                // Update badge
+                statusBadge.innerHTML = '<span class="selected-badge" style="background: var(--success-green); color: var(--white); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500;">✓ Selected</span>';
+            } else {
+                this.removeMaterialById(materialId);
+                card.classList.remove('selected');
+                card.style.background = 'var(--white)';
+                card.style.borderColor = 'var(--gray-200)';
+                
+                // Update checkbox visual
+                checkboxCustom.style.background = 'var(--white)';
+                checkboxCustom.style.borderColor = 'var(--gray-300)';
+                checkboxCustom.innerHTML = '';
+                
+                // Update badge
+                statusBadge.innerHTML = '<span class="select-badge" style="background: var(--gray-100); color: var(--gray-600); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500; border: 1px solid var(--gray-200);">Select</span>';
+            }
+        } catch (error) {
+            console.error('❌ Error handling material card toggle:', error);
+        }
+    }
+
+    handleMaterialSearch() {
+        try {
+            const materialSearch = document.getElementById('materialSearch');
+            if (!materialSearch) return;
+            
+            const searchTerm = materialSearch.value.toLowerCase().trim();
+            console.log('🔍 Material search:', searchTerm);
+            
+            this.renderMaterialsList(searchTerm);
+        } catch (error) {
+            console.error('❌ Error handling material search:', error);
+        }
+    }
 
     addMaterialById(materialId, quantity = 1) {
         try {
@@ -1084,53 +1181,53 @@ renderMaterialsList(searchTerm = '') {
     }
 
     renderSelectedMaterials() {
-    try {
-        const container = document.getElementById('selectedMaterials');
-        if (!container) return;
-        
-        if (this.selectedMaterials.length === 0) {
-            container.innerHTML = '<div class="no-selection">No materials selected yet...</div>';
-            return;
-        }
+        try {
+            const container = document.getElementById('selectedMaterials');
+            if (!container) return;
+            
+            if (this.selectedMaterials.length === 0) {
+                container.innerHTML = '<div class="no-selection">No materials selected yet...</div>';
+                return;
+            }
 
-        container.innerHTML = this.selectedMaterials.map((material, index) => `
-            <div class="selected-material-item" data-index="${index}">
-                <div class="material-info">
-                    <div class="material-name">${material.name}</div>
-                    <div class="material-meta">
-                        ${material.code ? `Code: ${material.code} • ` : ''}
-                        Unit: ${material.unit} • 
-                        ${material.subcategory} • 
-                        Supplier: ${material.supplierName}
+            container.innerHTML = this.selectedMaterials.map((material, index) => `
+                <div class="selected-material-item" data-index="${index}">
+                    <div class="material-info">
+                        <div class="material-name">${material.name}</div>
+                        <div class="material-meta">
+                            ${material.code ? `Code: ${material.code} • ` : ''}
+                            Unit: ${material.unit} • 
+                            ${material.subcategory} • 
+                            Supplier: ${material.supplierName}
+                        </div>
+                    </div>
+                    <div class="material-controls">
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn minus" data-index="${index}" data-change="-1" ${material.quantity <= 1 ? 'disabled' : ''}>−</button>
+                            <span class="quantity-display">${material.quantity} ${material.unit}</span>
+                            <button type="button" class="qty-btn plus" data-index="${index}" data-change="1">+</button>
+                        </div>
+                        <button type="button" class="remove-material" data-index="${index}">
+                            Remove
+                        </button>
                     </div>
                 </div>
-                <div class="material-controls">
-                    <div class="quantity-controls">
-                        <button type="button" class="qty-btn minus" data-index="${index}" data-change="-1" ${material.quantity <= 1 ? 'disabled' : ''}>−</button>
-                        <span class="quantity-display">${material.quantity} ${material.unit}</span>
-                        <button type="button" class="qty-btn plus" data-index="${index}" data-change="1">+</button>
-                    </div>
-                    <button type="button" class="remove-material" data-index="${index}">
-                        Remove
-                    </button>
-                </div>
-            </div>
-        `).join('');
+            `).join('');
 
-        // Update summary
-        const totalItems = this.selectedMaterials.length;
-        const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
-        
-        const summary = document.getElementById('materialsSummary');
-        if (summary) {
-            summary.innerHTML = `
-                <strong>${totalItems} unique materials, ${totalQuantity} total items</strong>
-            `;
+            // Update summary
+            const totalItems = this.selectedMaterials.length;
+            const totalQuantity = this.selectedMaterials.reduce((sum, m) => sum + m.quantity, 0);
+            
+            const summary = document.getElementById('materialsSummary');
+            if (summary) {
+                summary.innerHTML = `
+                    <strong>${totalItems} unique materials, ${totalQuantity} total items</strong>
+                `;
+            }
+        } catch (error) {
+            console.error('❌ Error rendering selected materials:', error);
         }
-    } catch (error) {
-        console.error('❌ Error rendering selected materials:', error);
     }
-}
 
     updateQuantity(index, change) {
         try {
@@ -1162,7 +1259,22 @@ renderMaterialsList(searchTerm = '') {
                     const card = checkbox.closest('.material-card');
                     if (card) {
                         card.classList.remove('selected');
-                        card.querySelector('.material-status').innerHTML = '<span class="select-badge">Click to Select</span>';
+                        card.style.background = 'var(--white)';
+                        card.style.borderColor = 'var(--gray-200)';
+                        
+                        // Update checkbox visual
+                        const checkboxCustom = card.querySelector('.checkbox-custom');
+                        if (checkboxCustom) {
+                            checkboxCustom.style.background = 'var(--white)';
+                            checkboxCustom.style.borderColor = 'var(--gray-300)';
+                            checkboxCustom.innerHTML = '';
+                        }
+                        
+                        // Update badge
+                        const statusBadge = card.querySelector('.material-status');
+                        if (statusBadge) {
+                            statusBadge.innerHTML = '<span class="select-badge" style="background: var(--gray-100); color: var(--gray-600); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 500; border: 1px solid var(--gray-200);">Select</span>';
+                        }
                     }
                 }
                 
@@ -1204,6 +1316,9 @@ renderMaterialsList(searchTerm = '') {
             this.filteredMaterials = [];
             this.selectedMaterials = [];
             this.selectedSubcategory = '';
+            
+            // Contract container back to normal
+            this.expandContainerForMaterials();
             
             // Update display
             this.renderSelectedMaterials();
@@ -1509,6 +1624,9 @@ renderMaterialsList(searchTerm = '') {
             if (mainForm) mainForm.style.display = 'block';
             if (confirmationPage) confirmationPage.style.display = 'none';
             
+            // Re-expand container if materials are available
+            this.expandContainerForMaterials();
+            
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
@@ -1716,144 +1834,144 @@ renderMaterialsList(searchTerm = '') {
         }
     }
 
-renderOrderCard(order) {
-    try {
-        const materials = this.parseMaterialsList(order.materialsList);
-        const hasPdf = order.pdfLink && order.pdfLink !== 'N/A';
-        
-        // Calculate total quantity correctly
-        const totalQuantity = materials.reduce((sum, material) => {
-            return sum + (material.quantity || 1);
-        }, 0);
-        
-        return `
-            <div class="order-card">
-                <div class="order-header">
-                    <div class="order-id-section">
-                        <h4 class="order-id">${order.orderId || 'N/A'}</h4>
-                        <span class="order-status ${order.status?.toLowerCase()}">${order.status}</span>
+    renderOrderCard(order) {
+        try {
+            const materials = this.parseMaterialsList(order.materialsList);
+            const hasPdf = order.pdfLink && order.pdfLink !== 'N/A';
+            
+            // Calculate total quantity correctly
+            const totalQuantity = materials.reduce((sum, material) => {
+                return sum + (material.quantity || 1);
+            }, 0);
+            
+            return `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id-section">
+                            <h4 class="order-id">${order.orderId || 'N/A'}</h4>
+                            <span class="order-status ${order.status?.toLowerCase()}">${order.status}</span>
+                        </div>
+                        <div class="order-date">
+                            ${this.formatDate(order.date)} at ${order.time}
+                        </div>
                     </div>
-                    <div class="order-date">
-                        ${this.formatDate(order.date)} at ${order.time}
-                    </div>
-                </div>
-                
-                <div class="order-details">
-                    <div class="order-info-grid">
-                        <div class="info-item">
-                            <label>Supplier:</label>
-                            <span>${order.supplierName || 'N/A'}</span>
+                    
+                    <div class="order-details">
+                        <div class="order-info-grid">
+                            <div class="info-item">
+                                <label>Supplier:</label>
+                                <span>${order.supplierName || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Category:</label>
+                                <span>${order.category || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Requestor:</label>
+                                <span>${order.requestorName || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Priority:</label>
+                                <span class="priority ${order.urgency?.toLowerCase()}">${order.urgency || 'Normal'}</span>
+                            </div>
+                            ${order.projectRef ? `
+                            <div class="info-item">
+                                <label>Job #:</label>
+                                <span>${order.projectRef}</span>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="info-item">
-                            <label>Category:</label>
-                            <span>${order.category || 'N/A'}</span>
+                        
+                        ${materials.length > 0 ? `
+                        <div class="materials-section">
+                            <div class="materials-header">
+                                <h5>Materials (${materials.length} items, ${totalQuantity} total qty)</h5>
+                                <button type="button" class="toggle-materials" data-order-id="${order.orderId}">
+                                    <span class="toggle-icon">▼</span>
+                                    <span class="toggle-text">Show Details</span>
+                                </button>
+                            </div>
+                            <div class="materials-list-history" id="materials-${order.orderId}" style="display: none;">
+                                ${materials.map(material => `
+                                    <div class="material-item-history">
+                                        <div class="material-name">${material.name}</div>
+                                        <div class="material-details">
+                                            ${material.code ? `Code: ${material.code} • ` : ''}
+                                            Qty: ${material.quantity || 1} ${material.unit || 'pcs'}
+                                            ${material.subcategory ? ` • ${material.subcategory}` : ''}
+                                            ${material.supplierName ? ` • Supplier: ${material.supplierName}` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <label>Requestor:</label>
-                            <span>${order.requestorName || 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Priority:</label>
-                            <span class="priority ${order.urgency?.toLowerCase()}">${order.urgency || 'Normal'}</span>
-                        </div>
-                        ${order.projectRef ? `
-                        <div class="info-item">
-                            <label>Job #:</label>
-                            <span>${order.projectRef}</span>
+                        ` : ''}
+                        
+                        ${order.notes ? `
+                        <div class="notes-section">
+                            <h5>Special Instructions</h5>
+                            <p class="order-notes">${order.notes}</p>
                         </div>
                         ` : ''}
                     </div>
                     
-                    ${materials.length > 0 ? `
-                    <div class="materials-section">
-                        <div class="materials-header">
-                            <h5>Materials (${materials.length} items, ${totalQuantity} total qty)</h5>
-                            <button type="button" class="toggle-materials" data-order-id="${order.orderId}">
-                                <span class="toggle-icon">▼</span>
-                                <span class="toggle-text">Show Details</span>
-                            </button>
-                        </div>
-                        <div class="materials-list-history" id="materials-${order.orderId}" style="display: none;">
-                            ${materials.map(material => `
-                                <div class="material-item-history">
-                                    <div class="material-name">${material.name}</div>
-                                    <div class="material-details">
-                                        ${material.code ? `Code: ${material.code} • ` : ''}
-                                        Qty: ${material.quantity || 1} ${material.unit || 'pcs'}
-                                        ${material.subcategory ? ` • ${material.subcategory}` : ''}
-                                        ${material.supplierName ? ` • Supplier: ${material.supplierName}` : ''}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
+                    <div class="order-actions">
+                        ${hasPdf ? `
+                        <button type="button" class="btn btn-secondary" data-action="viewPDF" data-pdf-link="${order.pdfLink}">
+                            📄 View PDF
+                        </button>
+                        ` : ''}
+                        <button type="button" class="btn btn-secondary" data-action="duplicateOrder" data-order-id="${order.orderId}">
+                            📋 Duplicate Order
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-action="contactSupplier" data-email="${order.supplierEmail}" data-order-id="${order.orderId}">
+                            📧 Contact Supplier
+                        </button>
                     </div>
-                    ` : ''}
-                    
-                    ${order.notes ? `
-                    <div class="notes-section">
-                        <h5>Special Instructions</h5>
-                        <p class="order-notes">${order.notes}</p>
-                    </div>
-                    ` : ''}
                 </div>
-                
-                <div class="order-actions">
-                    ${hasPdf ? `
-                    <button type="button" class="btn btn-secondary" data-action="viewPDF" data-pdf-link="${order.pdfLink}">
-                        📄 View PDF
-                    </button>
-                    ` : ''}
-                    <button type="button" class="btn btn-secondary" data-action="duplicateOrder" data-order-id="${order.orderId}">
-                        📋 Duplicate Order
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-action="contactSupplier" data-email="${order.supplierEmail}" data-order-id="${order.orderId}">
-                        📧 Contact Supplier
-                    </button>
-                </div>
-            </div>
-        `;
-        
-    } catch (error) {
-        console.error('❌ Error rendering order card:', error);
-        return '<div class="order-card error">Error displaying order</div>';
+            `;
+            
+        } catch (error) {
+            console.error('❌ Error rendering order card:', error);
+            return '<div class="order-card error">Error displaying order</div>';
+        }
     }
-}
 
-parseMaterialsList(materialsList) {
-    try {
-        if (!materialsList) return [];
-        
-        if (typeof materialsList === 'string') {
-            try {
-                // Parse the JSON string from Google Sheets
-                const parsed = JSON.parse(materialsList);
-                if (Array.isArray(parsed)) {
-                    return parsed;
+    parseMaterialsList(materialsList) {
+        try {
+            if (!materialsList) return [];
+            
+            if (typeof materialsList === 'string') {
+                try {
+                    // Parse the JSON string from Google Sheets
+                    const parsed = JSON.parse(materialsList);
+                    if (Array.isArray(parsed)) {
+                        return parsed;
+                    }
+                } catch (e) {
+                    console.log('⚠️ Could not parse JSON materials list, trying comma-separated:', e);
+                    // Fallback: try to parse as comma-separated list
+                    return materialsList.split(',').map(item => ({
+                        name: item.trim(),
+                        quantity: 1,
+                        unit: 'pcs',
+                        code: '',
+                        subcategory: ''
+                    }));
                 }
-            } catch (e) {
-                console.log('⚠️ Could not parse JSON materials list, trying comma-separated:', e);
-                // Fallback: try to parse as comma-separated list
-                return materialsList.split(',').map(item => ({
-                    name: item.trim(),
-                    quantity: 1,
-                    unit: 'pcs',
-                    code: '',
-                    subcategory: ''
-                }));
             }
+            
+            if (Array.isArray(materialsList)) {
+                return materialsList;
+            }
+            
+            return [];
+            
+        } catch (error) {
+            console.error('❌ Error parsing materials list:', error);
+            return [];
         }
-        
-        if (Array.isArray(materialsList)) {
-            return materialsList;
-        }
-        
-        return [];
-        
-    } catch (error) {
-        console.error('❌ Error parsing materials list:', error);
-        return [];
     }
-}
 
     formatDate(dateString) {
         try {
@@ -2118,6 +2236,9 @@ parseMaterialsList(materialsList) {
             // Clear pending data
             this.pendingSubmissionData = null;
 
+            // Contract container
+            this.expandContainerForMaterials();
+
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
@@ -2246,7 +2367,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App (PDF + History + Tabs)');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App (PDF + History + Tabs + Container Expansion)');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
