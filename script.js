@@ -764,207 +764,272 @@ setupTabNavigation() {
     }
 
     populateMaterials(category, subcategory = '') {
-        try {
-            const materialSearch = document.getElementById('materialSearch');
-            const materialsContainer = document.getElementById('materialsContainer');
-            const supplierSelect = document.getElementById('supplier');
-            
-            if (!category || !supplierSelect.value) {
-                console.log('⚠️ Missing category or supplier');
-                return;
-            }
-
-            // Get selected supplier ID from the option's dataset
-            const selectedOption = supplierSelect.selectedOptions[0];
-            if (!selectedOption) {
-                console.log('⚠️ No supplier option selected');
-                return;
-            }
-            
-            const selectedSupplierId = selectedOption.dataset.id;
-            if (!selectedSupplierId) {
-                console.log('⚠️ No supplier ID found in dataset');
-                return;
-            }
-
-            console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}, Subcategory: ${subcategory || 'All'}`);
-
-            // Get materials for this specific category and supplier ID
-            let materials = [];
-            
-            // Check if we have the new grouped structure (preferred)
-            if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
-                materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
-                console.log('✅ Using materialsByCategoryAndSupplier structure');
-            } else if (this.formData?.data?.materials?.[category]) {
-                // Fallback: filter from the flat structure
-                materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
-                console.log('⚠️ Using fallback materials filtering');
-            } else {
-                console.log('❌ No materials found for category:', category);
-                materials = [];
-            }
-            
-            // Filter by subcategory if selected
-            if (subcategory) {
-                const beforeFilter = materials.length;
-                materials = materials.filter(m => m.subcategory === subcategory);
-                console.log(`📁 Filtered by subcategory: ${beforeFilter} → ${materials.length} materials`);
-            }
-
-            this.filteredMaterials = materials;
-            
-            console.log(`📦 Final result: ${materials.length} materials for supplier ${selectedSupplierId}`);
-            
-            // Enable search and show materials container
-            if (materialSearch) {
-                materialSearch.disabled = false;
-                materialSearch.placeholder = `Search from ${materials.length} materials...`;
-            }
-            
-            if (materialsContainer) {
-                materialsContainer.style.display = 'block';
-            }
-
-            // Render materials with checkbox approach
-            this.renderMaterialsList();
-            
-        } catch (error) {
-            console.error('❌ Error populating materials:', error);
+    try {
+        const materialSearch = document.getElementById('materialSearch');
+        const materialsContainer = document.getElementById('materialsContainer');
+        const materialsList = document.getElementById('materialsList');
+        const supplierSelect = document.getElementById('supplier');
+        
+        console.log('🔍 populateMaterials called:', { category, subcategory });
+        console.log('📋 Elements found:', {
+            materialSearch: !!materialSearch,
+            materialsContainer: !!materialsContainer,
+            materialsList: !!materialsList,
+            supplierSelect: !!supplierSelect
+        });
+        
+        if (!category || !supplierSelect.value) {
+            console.log('⚠️ Missing category or supplier');
+            return;
         }
-    }
 
-    handleMaterialSearch() {
-        try {
-            const materialSearch = document.getElementById('materialSearch');
-            if (!materialSearch) return;
-            
-            const searchTerm = materialSearch.value.toLowerCase();
-            console.log('🔍 Searching materials:', searchTerm);
-            
-            this.renderMaterialsList(searchTerm);
-            
-        } catch (error) {
-            console.error('❌ Error handling material search:', error);
+        // Get selected supplier ID from the option's dataset
+        const selectedOption = supplierSelect.selectedOptions[0];
+        if (!selectedOption) {
+            console.log('⚠️ No supplier option selected');
+            return;
         }
+        
+        const selectedSupplierId = selectedOption.dataset.id;
+        if (!selectedSupplierId) {
+            console.log('⚠️ No supplier ID found in dataset');
+            return;
+        }
+
+        console.log(`🔍 Loading materials for Category: ${category}, Supplier ID: ${selectedSupplierId}, Subcategory: ${subcategory || 'All'}`);
+
+        // Get materials for this specific category and supplier ID
+        let materials = [];
+        
+        // Check if we have the new grouped structure (preferred)
+        if (this.formData?.data?.materialsByCategoryAndSupplier?.[category]?.[selectedSupplierId]) {
+            materials = this.formData.data.materialsByCategoryAndSupplier[category][selectedSupplierId];
+            console.log('✅ Using materialsByCategoryAndSupplier structure');
+        } else if (this.formData?.data?.materials?.[category]) {
+            // Fallback: filter from the flat structure
+            materials = this.formData.data.materials[category].filter(m => m.supplierId === selectedSupplierId);
+            console.log('⚠️ Using fallback materials filtering');
+        } else {
+            console.log('❌ No materials found for category:', category);
+            materials = [];
+        }
+        
+        // Filter by subcategory if selected
+        if (subcategory) {
+            const beforeFilter = materials.length;
+            materials = materials.filter(m => m.subcategory === subcategory);
+            console.log(`📁 Filtered by subcategory: ${beforeFilter} → ${materials.length} materials`);
+        }
+
+        this.filteredMaterials = materials;
+        
+        console.log(`📦 Final result: ${materials.length} materials for supplier ${selectedSupplierId}`);
+        
+        // FORCE SHOW the materials container
+        if (materialsContainer) {
+            materialsContainer.style.display = 'block';
+            console.log('👁️ Materials container made visible');
+        }
+        
+        // Enable search and update placeholder
+        if (materialSearch) {
+            materialSearch.disabled = false;
+            materialSearch.placeholder = materials.length > 0 
+                ? `Search from ${materials.length} materials...`
+                : 'No materials available for this supplier...';
+        }
+
+        // FORCE render materials with debug logging
+        console.log('🎨 About to render materials list...');
+        this.renderMaterialsList();
+        
+    } catch (error) {
+        console.error('❌ Error populating materials:', error);
+        console.error('Stack trace:', error.stack);
     }
+}
 
-    renderMaterialsList(searchTerm = '') {
-        try {
-            const materialsList = document.getElementById('materialsList');
-            if (!materialsList) return;
+renderMaterialsList(searchTerm = '') {
+    try {
+        const materialsList = document.getElementById('materialsList');
+        if (!materialsList) {
+            console.error('❌ materialsList element not found!');
+            return;
+        }
 
-            let materialsToShow = this.filteredMaterials;
+        console.log('🎨 renderMaterialsList called with:', {
+            searchTerm,
+            filteredMaterialsCount: this.filteredMaterials?.length || 0,
+            materialsListElement: !!materialsList
+        });
 
-            // Apply search filter
-            if (searchTerm) {
-                materialsToShow = this.filteredMaterials.filter(material => 
-                    material.name.toLowerCase().includes(searchTerm) ||
-                    (material.code && material.code.toLowerCase().includes(searchTerm)) ||
-                    (material.subcategory && material.subcategory.toLowerCase().includes(searchTerm))
-                );
-            }
+        let materialsToShow = this.filteredMaterials || [];
 
-            // Limit results for performance
-            const maxResults = 100;
-            const displayMaterials = materialsToShow.slice(0, maxResults);
+        // Apply search filter
+        if (searchTerm) {
+            materialsToShow = this.filteredMaterials.filter(material => 
+                material.name.toLowerCase().includes(searchTerm) ||
+                (material.code && material.code.toLowerCase().includes(searchTerm)) ||
+                (material.subcategory && material.subcategory.toLowerCase().includes(searchTerm))
+            );
+        }
 
-            if (displayMaterials.length === 0) {
-                materialsList.innerHTML = `
-                    <div class="no-materials">
-                        <p>No materials found${searchTerm ? ` for "${searchTerm}"` : ''}.</p>
-                        ${searchTerm ? '<p>Try a different search term.</p>' : ''}
-                    </div>
-                `;
-                return;
-            }
+        // Limit results for performance
+        const maxResults = 100;
+        const displayMaterials = materialsToShow.slice(0, maxResults);
 
-            // Grid-based material cards with full clickability
-            materialsList.innerHTML = displayMaterials.map(material => {
-                const isSelected = this.selectedMaterials.some(m => m.id === material.id);
-                return `
-                    <div class="material-card ${isSelected ? 'selected' : ''}" data-material-id="${material.id}">
-                        <div class="material-card-header">
-                            <div class="material-checkbox-section">
-                                <input type="checkbox" 
-                                       class="material-checkbox" 
-                                       data-material-id="${material.id}"
-                                       ${isSelected ? 'checked' : ''}>
-                                <span class="checkbox-custom"></span>
-                            </div>
-                            <div class="material-status">
-                                ${isSelected ? '<span class="selected-badge">✓ Selected</span>' : '<span class="select-badge">Click to Select</span>'}
-                            </div>
+        console.log('📊 Materials to display:', {
+            totalAvailable: materialsToShow.length,
+            displaying: displayMaterials.length,
+            maxResults
+        });
+
+        if (displayMaterials.length === 0) {
+            console.log('⚠️ No materials to display');
+            materialsList.innerHTML = `
+                <div class="no-materials">
+                    <p>No materials found${searchTerm ? ` for "${searchTerm}"` : ''}.</p>
+                    ${searchTerm ? '<p>Try a different search term.</p>' : '<p>Try selecting a different category or supplier.</p>'}
+                </div>
+            `;
+            return;
+        }
+
+        // FORCE the grid layout with inline styles as backup
+        materialsList.style.cssText = `
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+            gap: 1.25rem !important;
+            padding: 1.5rem !important;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            background: var(--white);
+            width: 100% !important;
+            box-sizing: border-box !important;
+        `;
+
+        // Grid-based material cards with full clickability
+        const cardsHTML = displayMaterials.map(material => {
+            const isSelected = this.selectedMaterials.some(m => m.id === material.id);
+            return `
+                <div class="material-card ${isSelected ? 'selected' : ''}" 
+                     data-material-id="${material.id}"
+                     style="
+                         background: var(--white) !important;
+                         border: 2px solid ${isSelected ? 'var(--primary-blue)' : 'var(--gray-200)'} !important;
+                         border-radius: var(--radius-lg);
+                         padding: 1.25rem !important;
+                         min-width: 280px !important;
+                         min-height: 160px !important;
+                         width: 100% !important;
+                         display: flex !important;
+                         flex-direction: column !important;
+                         justify-content: space-between;
+                         cursor: pointer;
+                         transition: var(--transition);
+                         box-shadow: var(--shadow-sm);
+                         box-sizing: border-box !important;
+                     ">
+                    <div class="material-card-header">
+                        <div class="material-checkbox-section">
+                            <input type="checkbox" 
+                                   class="material-checkbox" 
+                                   data-material-id="${material.id}"
+                                   ${isSelected ? 'checked' : ''}>
+                            <span class="checkbox-custom"></span>
                         </div>
-                        <div class="material-card-body">
-                            <div class="material-name">${material.name}</div>
-                            <div class="material-meta">
-                                ${material.code ? `<span class="material-code">Code: ${material.code}</span>` : ''}
-                                <span class="material-unit">Unit: ${material.unit}</span>
-                                <span class="material-category">${material.subcategory}</span>
-                            </div>
+                        <div class="material-status">
+                            ${isSelected ? '<span class="selected-badge">✓ Selected</span>' : '<span class="select-badge">Click to Select</span>'}
                         </div>
                     </div>
-                `;
-            }).join('');
+                    <div class="material-card-body">
+                        <div class="material-name">${material.name}</div>
+                        <div class="material-meta">
+                            ${material.code ? `<span class="material-code">Code: ${material.code}</span>` : ''}
+                            <span class="material-unit">Unit: ${material.unit}</span>
+                            <span class="material-category">${material.subcategory}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
-            // Add event listeners to entire cards for clickability
-            materialsList.querySelectorAll('.material-card').forEach(card => {
-                const materialId = card.dataset.materialId;
-                const checkbox = card.querySelector('.material-checkbox');
+        materialsList.innerHTML = cardsHTML;
+
+        console.log('✅ Materials HTML rendered, adding event listeners...');
+
+        // Add event listeners to entire cards for clickability
+        materialsList.querySelectorAll('.material-card').forEach(card => {
+            const materialId = card.dataset.materialId;
+            const checkbox = card.querySelector('.material-checkbox');
+            
+            console.log('🔗 Adding listeners to card:', materialId);
+            
+            // Make entire card clickable
+            card.addEventListener('click', (e) => {
+                // Don't trigger if clicking directly on checkbox (prevent double toggle)
+                if (e.target.type === 'checkbox') return;
                 
-                // Make entire card clickable
-                card.addEventListener('click', (e) => {
-                    // Don't trigger if clicking directly on checkbox (prevent double toggle)
-                    if (e.target.type === 'checkbox') return;
-                    
-                    // Toggle checkbox
-                    checkbox.checked = !checkbox.checked;
-                    
-                    // Trigger change event
-                    if (checkbox.checked) {
-                        this.addMaterialById(materialId, 1);
-                        card.classList.add('selected');
-                    } else {
-                        this.removeMaterialById(materialId);
-                        card.classList.remove('selected');
-                    }
-                    
-                    // Update status badge
-                    const statusBadge = card.querySelector('.material-status');
-                    if (checkbox.checked) {
-                        statusBadge.innerHTML = '<span class="selected-badge">✓ Selected</span>';
-                    } else {
-                        statusBadge.innerHTML = '<span class="select-badge">Click to Select</span>';
-                    }
-                });
-
-                // Also handle direct checkbox clicks
-                checkbox.addEventListener('change', (e) => {
-                    const isChecked = e.target.checked;
-                    
-                    if (isChecked) {
-                        this.addMaterialById(materialId, 1);
-                        card.classList.add('selected');
-                        card.querySelector('.material-status').innerHTML = '<span class="selected-badge">✓ Selected</span>';
-                    } else {
-                        this.removeMaterialById(materialId);
-                        card.classList.remove('selected');
-                        card.querySelector('.material-status').innerHTML = '<span class="select-badge">Click to Select</span>';
-                    }
-                });
+                console.log('🖱️ Card clicked:', materialId);
+                
+                // Toggle checkbox
+                checkbox.checked = !checkbox.checked;
+                
+                // Trigger change event
+                if (checkbox.checked) {
+                    this.addMaterialById(materialId, 1);
+                    card.classList.add('selected');
+                    card.style.borderColor = 'var(--primary-blue)';
+                } else {
+                    this.removeMaterialById(materialId);
+                    card.classList.remove('selected');
+                    card.style.borderColor = 'var(--gray-200)';
+                }
+                
+                // Update status badge
+                const statusBadge = card.querySelector('.material-status');
+                if (checkbox.checked) {
+                    statusBadge.innerHTML = '<span class="selected-badge">✓ Selected</span>';
+                } else {
+                    statusBadge.innerHTML = '<span class="select-badge">Click to Select</span>';
+                }
             });
 
-            // Show result count
-            const resultInfo = document.getElementById('materialsResultInfo');
-            if (resultInfo) {
-                resultInfo.textContent = `Showing ${displayMaterials.length}${materialsToShow.length > maxResults ? ` of ${materialsToShow.length}` : ''} materials`;
-            }
+            // Also handle direct checkbox clicks
+            checkbox.addEventListener('change', (e) => {
+                console.log('☑️ Checkbox changed:', materialId, e.target.checked);
+                
+                const isChecked = e.target.checked;
+                
+                if (isChecked) {
+                    this.addMaterialById(materialId, 1);
+                    card.classList.add('selected');
+                    card.style.borderColor = 'var(--primary-blue)';
+                    card.querySelector('.material-status').innerHTML = '<span class="selected-badge">✓ Selected</span>';
+                } else {
+                    this.removeMaterialById(materialId);
+                    card.classList.remove('selected');
+                    card.style.borderColor = 'var(--gray-200)';
+                    card.querySelector('.material-status').innerHTML = '<span class="select-badge">Click to Select</span>';
+                }
+            });
+        });
 
-        } catch (error) {
-            console.error('❌ Error rendering materials list:', error);
+        // Show result count
+        const resultInfo = document.getElementById('materialsResultInfo');
+        if (resultInfo) {
+            resultInfo.textContent = `Showing ${displayMaterials.length}${materialsToShow.length > maxResults ? ` of ${materialsToShow.length}` : ''} materials`;
         }
+
+        console.log('✅ All event listeners added successfully');
+
+    } catch (error) {
+        console.error('❌ Error rendering materials list:', error);
+        console.error('Stack trace:', error.stack);
     }
+}
 
     addMaterialById(materialId, quantity = 1) {
         try {
