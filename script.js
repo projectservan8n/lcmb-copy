@@ -649,102 +649,146 @@ class MaterialManagementApp {
     }
 
     async handlePdfFormSubmit(e) {
-        e.preventDefault();
+    e.preventDefault();
+    
+    if (!this.pdfFile) {
+        this.showError('Please select a PDF file.');
+        return;
+    }
+    
+    try {
+        const form = e.target;
+        const submitBtn = document.getElementById('pdfSubmitBtn');
+        const btnText = submitBtn?.querySelector('.btn-text');
+        const btnLoading = submitBtn?.querySelector('.btn-loading');
         
-        if (!this.pdfFile) {
-            this.showError('Please select a PDF file.');
-            return;
+        // Disable form
+        if (submitBtn) submitBtn.disabled = true;
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoading) btnLoading.style.display = 'flex';
+
+        console.log('📤 Submitting PDF form with binary data...');
+
+        // Prepare form data
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Get supplier info from dropdown
+        const pdfSupplierSelect = document.getElementById('pdfSupplier');
+        const selectedOption = pdfSupplierSelect?.selectedOptions[0];
+        
+        const supplierName = data.pdfSupplier || '';
+        const supplierEmail = selectedOption?.dataset.email || '';
+        
+        if (!supplierName || !supplierEmail) {
+            throw new Error('Please select a supplier from the dropdown');
         }
+        
+        // Get selected categories
+        const selectedCategories = this.getSelectedPdfCategories();
+        const categoryString = selectedCategories.length > 0 ? selectedCategories.join(', ') : 'PDF Upload';
+        
+        // Create FormData for binary upload
+        const uploadFormData = new FormData();
+        
+        // Add PDF file as binary
+        uploadFormData.append('pdfFile', this.pdfFile, this.pdfFile.name);
+        
+        // Add other form data
+        uploadFormData.append('requestType', data.pdfRequestType);
+        uploadFormData.append('supplierName', supplierName);
+        uploadFormData.append('supplierEmail', supplierEmail);
+        uploadFormData.append('requestorName', data.pdfRequestorName);
+        uploadFormData.append('requestorEmail', data.pdfRequestorEmail);
+        uploadFormData.append('urgency', data.pdfUrgency || 'Normal');
+        uploadFormData.append('projectRef', data.pdfProjectRef || '');
+        uploadFormData.append('notes', data.pdfNotes || '');
+        uploadFormData.append('category', categoryString);
+        uploadFormData.append('categories', JSON.stringify(selectedCategories));
+        uploadFormData.append('filename', this.pdfFile.name);
+        
+        console.log('📦 PDF submission with binary data:', {
+            requestType: data.pdfRequestType,
+            supplierName: supplierName,
+            filename: this.pdfFile.name,
+            pdfSize: this.formatFileSize(this.pdfFile.size),
+            categories: selectedCategories,
+            uploadMethod: 'multipart/form-data binary'
+        });
+
+        // Submit to PDF upload endpoint with binary data
+        const response = await fetch('/api/pdf/upload', {
+            method: 'POST',
+            body: uploadFormData // No Content-Type header - let browser set it for multipart
+        });
+
+        console.log('📡 Response status:', response.status, response.statusText);
+        
+        // Check if response is ok first
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Server error response:', errorText);
+            throw new Error(`Server error (${response.status}): ${response.statusText}`);
+        }
+
+        // Try to parse JSON response
+        let result;
+        const responseText = await response.text();
+        console.log('📋 Raw response:', responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
         
         try {
-            const form = e.target;
-            const submitBtn = document.getElementById('pdfSubmitBtn');
-            const btnText = submitBtn?.querySelector('.btn-text');
-            const btnLoading = submitBtn?.querySelector('.btn-loading');
-            
-            // Disable form
-            if (submitBtn) submitBtn.disabled = true;
-            if (btnText) btnText.style.display = 'none';
-            if (btnLoading) btnLoading.style.display = 'flex';
-
-            console.log('📤 Submitting PDF form with binary data...');
-
-            // Prepare form data
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            
-            // Get supplier info from dropdown
-            const pdfSupplierSelect = document.getElementById('pdfSupplier');
-            const selectedOption = pdfSupplierSelect?.selectedOptions[0];
-            
-            const supplierName = data.pdfSupplier || '';
-            const supplierEmail = selectedOption?.dataset.email || '';
-            
-            if (!supplierName || !supplierEmail) {
-                throw new Error('Please select a supplier from the dropdown');
-            }
-            
-            // Get selected categories
-            const selectedCategories = this.getSelectedPdfCategories();
-            const categoryString = selectedCategories.length > 0 ? selectedCategories.join(', ') : 'PDF Upload';
-            
-            // Create FormData for binary upload
-            const uploadFormData = new FormData();
-            
-            // Add PDF file as binary
-            uploadFormData.append('pdfFile', this.pdfFile, this.pdfFile.name);
-            
-            // Add other form data
-            uploadFormData.append('requestType', data.pdfRequestType);
-            uploadFormData.append('supplierName', supplierName);
-            uploadFormData.append('supplierEmail', supplierEmail);
-            uploadFormData.append('requestorName', data.pdfRequestorName);
-            uploadFormData.append('requestorEmail', data.pdfRequestorEmail);
-            uploadFormData.append('urgency', data.pdfUrgency || 'Normal');
-            uploadFormData.append('projectRef', data.pdfProjectRef || '');
-            uploadFormData.append('notes', data.pdfNotes || '');
-            uploadFormData.append('category', categoryString);
-            uploadFormData.append('categories', JSON.stringify(selectedCategories));
-            uploadFormData.append('filename', this.pdfFile.name);
-            
-            console.log('📦 PDF submission with binary data:', {
-                requestType: data.pdfRequestType,
-                supplierName: supplierName,
-                filename: this.pdfFile.name,
-                pdfSize: this.formatFileSize(this.pdfFile.size),
-                categories: selectedCategories,
-                uploadMethod: 'multipart/form-data binary'
-            });
-
-            // Submit to PDF upload endpoint with binary data
-            const response = await fetch('/api/pdf/upload', {
-                method: 'POST',
-                body: uploadFormData // No Content-Type header - let browser set it for multipart
-            });
-
-            const result = await response.json();
-            console.log('✅ PDF binary submission result:', result);
-
-            if (result.success !== false) {
-                this.showPdfSuccess(result, data.pdfRequestType);
-            } else {
-                throw new Error(result.error || 'PDF submission failed');
-            }
-
-        } catch (error) {
-            console.error('❌ PDF binary submission error:', error);
-            this.showError(`PDF submission failed: ${error.message}`);
-        } finally {
-            // Re-enable form
-            const submitBtn = document.getElementById('pdfSubmitBtn');
-            const btnText = submitBtn?.querySelector('.btn-text');
-            const btnLoading = submitBtn?.querySelector('.btn-loading');
-            
-            if (submitBtn) submitBtn.disabled = false;
-            if (btnText) btnText.style.display = 'inline';
-            if (btnLoading) btnLoading.style.display = 'none';
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('❌ JSON parse error:', parseError);
+            console.error('❌ Response was not valid JSON:', responseText);
+            throw new Error('Server returned invalid response format');
         }
+        
+        console.log('✅ PDF binary submission result:', result);
+
+        // Check for success (handle different success indicators)
+        const isSuccess = result && (
+            result.success === true || 
+            result.success !== false || 
+            result.orderId || 
+            result.quoteId || 
+            result.message
+        );
+
+        if (isSuccess) {
+            this.showPdfSuccess(result, data.pdfRequestType);
+        } else {
+            const errorMessage = result?.error || result?.message || 'PDF submission failed';
+            throw new Error(errorMessage);
+        }
+
+    } catch (error) {
+        console.error('❌ PDF binary submission error:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = 'PDF submission failed';
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Network error - please check your connection and try again';
+        } else if (error.message.includes('invalid response format')) {
+            errorMessage = 'Server configuration error - please contact support';
+        } else if (error.message.includes('Server error')) {
+            errorMessage = error.message;
+        } else {
+            errorMessage = `PDF submission failed: ${error.message}`;
+        }
+        
+        this.showError(errorMessage);
+    } finally {
+        // Re-enable form
+        const submitBtn = document.getElementById('pdfSubmitBtn');
+        const btnText = submitBtn?.querySelector('.btn-text');
+        const btnLoading = submitBtn?.querySelector('.btn-loading');
+        
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnText) btnText.style.display = 'inline';
+        if (btnLoading) btnLoading.style.display = 'none';
     }
+}
 
     showPdfSuccess(result, requestType) {
         try {
