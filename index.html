@@ -215,13 +215,13 @@
                             </select>
                         </div>
 
-                        <!-- Enhanced Materials Selection -->
+                        <!-- FIXED: Enhanced Materials Selection -->
                         <div class="form-group" id="materialsGroup">
                             <label class="form-label">Materials Required *</label>
                             <p class="form-help-text" id="materialsHelpText">Browse materials and specify the quantities you need for your order.</p>
                             
-                            <!-- Materials Search and List Container -->
-                            <div id="materialsContainer" class="materials-selection-container" style="display: none;">
+                            <!-- Materials Search and List Container - ALWAYS VISIBLE WHEN NEEDED -->
+                            <div id="materialsContainer" class="materials-selection-container" style="display: block;">
                                 <!-- Search Bar -->
                                 <div class="materials-search">
                                     <input type="text" 
@@ -232,16 +232,22 @@
                                     <div id="materialsResultInfo" class="search-result-info"></div>
                                 </div>
 
-                                <!-- Materials List -->
+                                <!-- Materials Grid - FIXED STRUCTURE -->
                                 <div id="materialsList" class="materials-list">
-                                    <!-- Materials will be populated here -->
+                                    <!-- Initial loading state -->
+                                    <div class="materials-loading-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📦</div>
+                                        <p style="color: var(--gray-500);">Select a category and supplier to browse materials...</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Selected Materials -->
+                            <!-- Selected Materials Summary -->
                             <div class="selected-materials-section">
-                                <h4>Your Order</h4>
-                                <div id="materialsSummary" class="materials-summary"></div>
+                                <h4>🛒 Your Order</h4>
+                                <div id="materialsSummary" class="materials-summary">
+                                    <strong>0 materials selected</strong>
+                                </div>
                                 <div id="selectedMaterials" class="selected-materials">
                                     <div class="no-selection">No materials added to your order yet...</div>
                                 </div>
