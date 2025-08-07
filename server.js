@@ -1,8 +1,9 @@
-// server.js - Enhanced with Debug Logging
+// server.js - Enhanced with File Upload Support and Debug Logging
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,13 +15,31 @@ const WEBHOOKS = {
   QUOTE_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/quotesubmit'
 };
 
+// Configure multer for file uploads
+const storage = multer.memoryStorage(); // Store files in memory
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 1 // Only allow 1 file
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
+
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static('.'));
 
 // Enhanced Webhook Helper function with detailed logging
-async function callWebhook(webhookUrl, method = 'GET', data = null) {
+async function callWebhook(webhookUrl, method = 'GET', data = null, file = null) {
   try {
     console.log(`🔗 [${new Date().toISOString()}] Calling webhook: ${method} ${webhookUrl}`);
     
@@ -28,7 +47,6 @@ async function callWebhook(webhookUrl, method = 'GET', data = null) {
       method,
       url: webhookUrl,
       headers: {
-        'Content-Type': 'application/json',
         'User-Agent': 'LCMB-Material-Management/1.0',
         'Accept': 'application/json'
       },
@@ -38,8 +56,42 @@ async function callWebhook(webhookUrl, method = 'GET', data = null) {
       }
     };
 
-    if (data) {
+    // Handle file uploads with FormData
+    if (file || (data && data.requestMethod && (data.requestMethod === 'pdf' || data.requestMethod === 'mixed'))) {
+      const FormData = require('form-data');
+      const formData = new FormData();
+      
+      // Add all data fields
+      if (data) {
+        Object.keys(data).forEach(key => {
+          if (key === 'materials' && Array.isArray(data[key])) {
+            formData.append(key, JSON.stringify(data[key]));
+          } else if (key === 'uploadedFile' && typeof data[key] === 'object') {
+            formData.append(key, JSON.stringify(data[key]));
+          } else {
+            formData.append(key, data[key]);
+          }
+        });
+      }
+      
+      // Add PDF file if present
+      if (file) {
+        formData.append('pdfFile', file.buffer, {
+          filename: file.originalname,
+          contentType: file.mimetype
+        });
+        console.log(`📎 Adding PDF file: ${file.originalname} (${file.size} bytes)`);
+      }
+      
+      config.data = formData;
+      config.headers = {
+        ...config.headers,
+        ...formData.getHeaders()
+      };
+    } else if (data) {
+      // Regular JSON data
       config.data = data;
+      config.headers['Content-Type'] = 'application/json';
       console.log(`📦 Request data:`, JSON.stringify(data, null, 2));
     }
 
@@ -165,17 +217,42 @@ app.get('/api/data/load', async (req, res) => {
   }
 });
 
-app.post('/api/order/submit', async (req, res) => {
+// ENHANCED: Order submission with file upload support
+app.post('/api/order/submit', upload.single('pdfFile'), async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Submitting order via webhook...`);
+    
+    // Parse form data
+    const formData = { ...req.body };
+    
+    // Parse JSON fields
+    if (formData.materials && typeof formData.materials === 'string') {
+      try {
+        formData.materials = JSON.parse(formData.materials);
+      } catch (e) {
+        console.warn('⚠️ Failed to parse materials JSON, using as string');
+      }
+    }
+    
+    if (formData.uploadedFile && typeof formData.uploadedFile === 'string') {
+      try {
+        formData.uploadedFile = JSON.parse(formData.uploadedFile);
+      } catch (e) {
+        console.warn('⚠️ Failed to parse uploadedFile JSON, using as string');
+      }
+    }
+    
     console.log('📦 Order data received:', {
-      category: req.body.category,
-      supplier: req.body.supplier,
-      materials: req.body.materials?.length || 0,
-      requestorName: req.body.requestorName
+      requestMethod: formData.requestMethod,
+      category: formData.category,
+      supplier: formData.supplier,
+      materials: formData.materials?.length || 0,
+      requestorName: formData.requestorName,
+      hasFile: !!req.file,
+      fileName: req.file?.originalname
     });
     
-    const result = await callWebhook(WEBHOOKS.ORDER_SUBMIT, 'POST', req.body);
+    const result = await callWebhook(WEBHOOKS.ORDER_SUBMIT, 'POST', formData, req.file);
     console.log(`✅ [${new Date().toISOString()}] Order submission successful`);
     res.json(result);
   } catch (error) {
@@ -188,17 +265,42 @@ app.post('/api/order/submit', async (req, res) => {
   }
 });
 
-app.post('/api/quote/submit', async (req, res) => {
+// ENHANCED: Quote submission with file upload support
+app.post('/api/quote/submit', upload.single('pdfFile'), async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Submitting quote via webhook...`);
+    
+    // Parse form data
+    const formData = { ...req.body };
+    
+    // Parse JSON fields
+    if (formData.materials && typeof formData.materials === 'string') {
+      try {
+        formData.materials = JSON.parse(formData.materials);
+      } catch (e) {
+        console.warn('⚠️ Failed to parse materials JSON, using as string');
+      }
+    }
+    
+    if (formData.uploadedFile && typeof formData.uploadedFile === 'string') {
+      try {
+        formData.uploadedFile = JSON.parse(formData.uploadedFile);
+      } catch (e) {
+        console.warn('⚠️ Failed to parse uploadedFile JSON, using as string');
+      }
+    }
+    
     console.log('💬 Quote data received:', {
-      category: req.body.category,
-      supplier: req.body.supplier,
-      materials: req.body.materials?.length || 0,
-      requestorName: req.body.requestorName
+      requestMethod: formData.requestMethod,
+      category: formData.category,
+      supplier: formData.supplier,
+      materials: formData.materials?.length || 0,
+      requestorName: formData.requestorName,
+      hasFile: !!req.file,
+      fileName: req.file?.originalname
     });
     
-    const result = await callWebhook(WEBHOOKS.QUOTE_SUBMIT, 'POST', req.body);
+    const result = await callWebhook(WEBHOOKS.QUOTE_SUBMIT, 'POST', formData, req.file);
     console.log(`✅ [${new Date().toISOString()}] Quote submission successful`);
     res.json(result);
   } catch (error) {
@@ -218,6 +320,7 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     uptime: process.uptime(),
+    features: ['file-upload', 'pdf-support'],
     webhooks: {
       dataLoad: WEBHOOKS.DATA_LOAD,
       orderSubmit: WEBHOOKS.ORDER_SUBMIT,
@@ -265,8 +368,11 @@ app.get('/debug/webhooks', async (req, res) => {
       totalTestTime: `${totalTime}ms`,
       webhookUrls: WEBHOOKS,
       testResults: results,
+      fileUploadSupport: true,
+      maxFileSize: '10MB',
+      supportedFormats: ['PDF'],
       recommendations: results.dataLoad?.status === 'success' 
-        ? ['✅ Webhooks are working correctly']
+        ? ['✅ Webhooks are working correctly', '✅ PDF upload support enabled']
         : ['❌ Check n8n workflow execution', '❌ Verify Google Sheets access', '❌ Check webhook URLs']
     });
   } catch (error) {
@@ -309,6 +415,36 @@ app.get('/force-load', async (req, res) => {
   }
 });
 
+// Handle multer errors
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        error: 'File size too large. Maximum size is 10MB.',
+        timestamp: new Date().toISOString()
+      });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        error: 'Too many files. Only 1 file allowed.',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  if (error.message === 'Only PDF files are allowed') {
+    return res.status(400).json({
+      success: false,
+      error: 'Only PDF files are allowed.',
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  next(error);
+});
+
 // 404 handler
 app.use((req, res) => {
   console.log(`⚠️ [${new Date().toISOString()}] 404 Not Found: ${req.method} ${req.url}`);
@@ -326,14 +462,15 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log('🚀 LCMB Material Management Server Started');
+  console.log('🚀 LCMB Material Management Server Started (Enhanced with PDF Upload)');
   console.log(`📍 Server: http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('📎 Features: PDF Upload Support, File Size Limit: 10MB');
   console.log('🔗 Webhook Endpoints:');
   console.log(`   📊 Data Load: ${WEBHOOKS.DATA_LOAD}`);
   console.log(`   📦 Order Submit: ${WEBHOOKS.ORDER_SUBMIT}`);
   console.log(`   💬 Quote Submit: ${WEBHOOKS.QUOTE_SUBMIT}`);
-  console.log('✅ Ready to receive requests!');
+  console.log('✅ Ready to receive requests with file uploads!');
   console.log('💡 Visit / to load page with initial data');
   console.log('🔧 Visit /debug/webhooks to test webhook connectivity');
   console.log('🔄 Visit /force-load to manually test data loading');
