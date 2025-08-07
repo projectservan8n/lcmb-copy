@@ -229,6 +229,20 @@ app.post('/api/order/submit', upload.single('pdfFile'), async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Submitting order via webhook...`);
     
+    // Debug what we received
+    console.log('📥 Request details:', {
+      bodyKeys: Object.keys(req.body),
+      hasFile: !!req.file,
+      fileDetails: req.file ? {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      } : null,
+      contentType: req.get('Content-Type'),
+      requestMethod: req.body.requestMethod
+    });
+    
     // Parse form data
     const formData = { ...req.body };
     
