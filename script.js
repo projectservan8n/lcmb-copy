@@ -1,4 +1,4 @@
-// Enhanced script.js with PDF Upload Feature
+// Enhanced script.js with Method Selection and PDF Upload Support
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
@@ -6,11 +6,12 @@ class MaterialManagementApp {
         this.filteredMaterials = [];
         this.selectedSubcategory = '';
         this.pendingSubmissionData = null;
-        this.uploadedFile = null; // Store the uploaded PDF file
+        this.uploadedFile = null;
+        this.currentMethod = null;
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App with PDF Upload');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -26,113 +27,24 @@ class MaterialManagementApp {
         }
         
         this.setupEventListeners();
-        this.validateForm();
+        this.showMethodSelection();
     }
 
     setupEventListeners() {
         try {
             console.log('⚙️ Setting up enhanced event listeners...');
             
-            // Request type change
-            const requestTypeInputs = document.querySelectorAll('input[name="requestType"]');
-            if (requestTypeInputs && requestTypeInputs.length > 0) {
-                requestTypeInputs.forEach(input => {
-                    if (input) {
-                        input.addEventListener('change', () => this.handleRequestTypeChange());
-                    }
-                });
-            }
-
-            // NEW: Request method change
-            const requestMethodInputs = document.querySelectorAll('input[name="requestMethod"]');
-            if (requestMethodInputs && requestMethodInputs.length > 0) {
-                requestMethodInputs.forEach(input => {
-                    if (input) {
-                        input.addEventListener('change', () => this.handleRequestMethodChange());
-                    }
-                });
-            }
-
-            // Category change
-            const categorySelect = document.getElementById('category');
-            if (categorySelect) {
-                categorySelect.addEventListener('change', () => this.handleCategoryChange());
-            }
-
-            // Supplier change
-            const supplierSelect = document.getElementById('supplier');
-            if (supplierSelect) {
-                supplierSelect.addEventListener('change', () => this.handleSupplierChange());
-            }
-
-            // PDF Supplier change
-            const pdfSupplierSelect = document.getElementById('pdfSupplier');
-            if (pdfSupplierSelect) {
-                pdfSupplierSelect.addEventListener('change', () => this.handlePdfSupplierChange());
-            }
-
-            // Subcategory change
-            const subcategorySelect = document.getElementById('subcategory');
-            if (subcategorySelect) {
-                subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
-            }
-
-            // Material search
-            const materialSearch = document.getElementById('materialSearch');
-            if (materialSearch) {
-                materialSearch.addEventListener('input', () => this.handleMaterialSearch());
-            }
-
-            // NEW: PDF file upload
-            const pdfFileInput = document.getElementById('pdfFile');
-            const fileUploadArea = document.getElementById('fileUploadArea');
-            const removeFileBtn = document.getElementById('removeFile');
-
-            if (pdfFileInput && fileUploadArea) {
-                pdfFileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-                
-                // Drag and drop functionality
-                fileUploadArea.addEventListener('click', () => pdfFileInput.click());
-                fileUploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
-                fileUploadArea.addEventListener('drop', (e) => this.handleFileDrop(e));
-            }
-
-            if (removeFileBtn) {
-                removeFileBtn.addEventListener('click', () => this.removeUploadedFile());
-            }
-
-            // Form submission
-            const form = document.getElementById('materialForm');
-            if (form) {
-                form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-                
-                // Form validation on input changes
-                const formInputs = form.querySelectorAll('input, select, textarea');
-                if (formInputs && formInputs.length > 0) {
-                    formInputs.forEach(input => {
-                        if (input) {
-                            input.addEventListener('change', () => this.validateForm());
-                            input.addEventListener('input', () => this.validateForm());
-                        }
-                    });
-                }
-            }
-
-            // Confirmation page event listeners
-            const backToEditBtn = document.getElementById('backToEditBtn');
-            if (backToEditBtn) {
-                backToEditBtn.addEventListener('click', () => this.goBackToEdit());
-            }
-
-            const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
-            if (confirmSubmitBtn) {
-                confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
-            }
-
-            const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
-            if (addMoreMaterialsBtn) {
-                addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
-            }
+            // Method selection listeners
+            this.setupMethodSelectionListeners();
+            
+            // PDF upload listeners
+            this.setupPdfUploadListeners();
+            
+            // Form listeners
+            this.setupFormListeners();
+            
+            // Navigation listeners
+            this.setupNavigationListeners();
             
             console.log('✅ Enhanced event listeners setup complete');
         } catch (error) {
@@ -140,254 +52,419 @@ class MaterialManagementApp {
         }
     }
 
-    // NEW: Handle request method change
-    handleRequestMethodChange() {
+    setupMethodSelectionListeners() {
+        // Method selection cards
+        const systemCard = document.getElementById('systemMethodCard');
+        const pdfCard = document.getElementById('pdfMethodCard');
+        const bothCard = document.getElementById('bothMethodCard');
+
+        if (systemCard) {
+            systemCard.addEventListener('click', () => this.selectMethod('system'));
+        }
+        if (pdfCard) {
+            pdfCard.addEventListener('click', () => this.selectMethod('pdf'));
+        }
+        if (bothCard) {
+            bothCard.addEventListener('click', () => this.selectMethod('both'));
+        }
+    }
+
+    setupPdfUploadListeners() {
+        // PDF file upload for PDF method
+        const pdfFile = document.getElementById('pdfFile');
+        const pdfUploadArea = document.getElementById('pdfUploadArea');
+        const removePdfBtn = document.getElementById('removePdfBtn');
+
+        if (pdfFile) {
+            pdfFile.addEventListener('change', (e) => this.handlePdfFileUpload(e));
+        }
+
+        if (pdfUploadArea) {
+            pdfUploadArea.addEventListener('click', () => pdfFile?.click());
+            pdfUploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
+            pdfUploadArea.addEventListener('drop', (e) => this.handleFileDrop(e));
+        }
+
+        if (removePdfBtn) {
+            removePdfBtn.addEventListener('click', () => this.removePdfFile());
+        }
+
+        // Additional PDF file upload for Both method
+        const additionalPdfFile = document.getElementById('additionalPdfFile');
+        const additionalPdfUploadArea = document.getElementById('additionalPdfUploadArea');
+        const removeAdditionalPdfBtn = document.getElementById('removeAdditionalPdfBtn');
+
+        if (additionalPdfFile) {
+            additionalPdfFile.addEventListener('change', (e) => this.handleAdditionalPdfFileUpload(e));
+        }
+
+        if (additionalPdfUploadArea) {
+            additionalPdfUploadArea.addEventListener('click', () => additionalPdfFile?.click());
+            additionalPdfUploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
+            additionalPdfUploadArea.addEventListener('drop', (e) => this.handleAdditionalFileDrop(e));
+        }
+
+        if (removeAdditionalPdfBtn) {
+            removeAdditionalPdfBtn.addEventListener('click', () => this.removeAdditionalPdfFile());
+        }
+    }
+
+    setupFormListeners() {
+        // Request type changes
+        const requestTypeInputs = document.querySelectorAll('input[name="requestType"], input[name="pdfRequestType"]');
+        requestTypeInputs.forEach(input => {
+            if (input) {
+                input.addEventListener('change', () => this.handleRequestTypeChange());
+            }
+        });
+
+        // Form field changes
+        const categorySelect = document.getElementById('category');
+        const supplierSelect = document.getElementById('supplier');
+        const subcategorySelect = document.getElementById('subcategory');
+        const materialSearch = document.getElementById('materialSearch');
+
+        if (categorySelect) {
+            categorySelect.addEventListener('change', () => this.handleCategoryChange());
+        }
+        if (supplierSelect) {
+            supplierSelect.addEventListener('change', () => this.handleSupplierChange());
+        }
+        if (subcategorySelect) {
+            subcategorySelect.addEventListener('change', () => this.handleSubcategoryChange());
+        }
+        if (materialSearch) {
+            materialSearch.addEventListener('input', () => this.handleMaterialSearch());
+        }
+
+        // Form submissions
+        const pdfForm = document.getElementById('pdfMaterialForm');
+        const mainForm = document.getElementById('materialForm');
+
+        if (pdfForm) {
+            pdfForm.addEventListener('submit', (e) => this.handlePdfFormSubmit(e));
+        }
+        if (mainForm) {
+            mainForm.addEventListener('submit', (e) => this.handleMainFormSubmit(e));
+        }
+
+        // Form validation on input changes
+        const allInputs = document.querySelectorAll('input, select, textarea');
+        allInputs.forEach(input => {
+            if (input) {
+                input.addEventListener('change', () => this.validateCurrentForm());
+                input.addEventListener('input', () => this.validateCurrentForm());
+            }
+        });
+    }
+
+    setupNavigationListeners() {
+        // Back to methods buttons
+        const backToMethodsBtn = document.getElementById('backToMethodsBtn');
+        const backToMethodsFromMain = document.getElementById('backToMethodsFromMain');
+
+        if (backToMethodsBtn) {
+            backToMethodsBtn.addEventListener('click', () => this.showMethodSelection());
+        }
+        if (backToMethodsFromMain) {
+            backToMethodsFromMain.addEventListener('click', () => this.showMethodSelection());
+        }
+
+        // Confirmation page listeners
+        const backToEditBtn = document.getElementById('backToEditBtn');
+        const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+        const addMoreMaterialsBtn = document.getElementById('addMoreMaterialsBtn');
+
+        if (backToEditBtn) {
+            backToEditBtn.addEventListener('click', () => this.goBackToEdit());
+        }
+        if (confirmSubmitBtn) {
+            confirmSubmitBtn.addEventListener('click', () => this.handleConfirmedSubmission());
+        }
+        if (addMoreMaterialsBtn) {
+            addMoreMaterialsBtn.addEventListener('click', () => this.goBackToEdit());
+        }
+    }
+
+    selectMethod(method) {
         try {
-            const selectedMethod = document.querySelector('input[name="requestMethod"]:checked')?.value;
-            console.log('📋 Request method changed to:', selectedMethod);
-
-            const pdfUploadGroup = document.getElementById('pdfUploadGroup');
-            const categoryGroup = document.getElementById('categoryGroup');
-            const supplierGroup = document.getElementById('supplierGroup');
-            const pdfSupplierGroup = document.getElementById('pdfSupplierGroup');
-            const materialsGroup = document.getElementById('materialsGroup');
-            const subcategoryGroup = document.getElementById('subcategoryGroup');
-
+            console.log('📋 Method selected:', method);
+            this.currentMethod = method;
+            
             // Reset form state
-            this.resetMaterialSelection();
-            this.removeUploadedFile();
-
-            switch (selectedMethod) {
-                case 'pdf':
-                    // PDF only - show PDF upload and all suppliers
-                    if (pdfUploadGroup) pdfUploadGroup.style.display = 'block';
-                    if (pdfSupplierGroup) pdfSupplierGroup.style.display = 'block';
-                    if (categoryGroup) categoryGroup.style.display = 'none';
-                    if (supplierGroup) supplierGroup.style.display = 'none';
-                    if (materialsGroup) materialsGroup.style.display = 'none';
-                    if (subcategoryGroup) subcategoryGroup.style.display = 'none';
-                    
-                    // Populate all suppliers for PDF upload
-                    this.populateAllSuppliersForPDF();
-                    break;
-
-                case 'mixed':
-                    // PDF + System - show everything
-                    if (pdfUploadGroup) pdfUploadGroup.style.display = 'block';
-                    if (pdfSupplierGroup) pdfSupplierGroup.style.display = 'none';
-                    if (categoryGroup) categoryGroup.style.display = 'block';
-                    if (supplierGroup) supplierGroup.style.display = 'block';
-                    if (materialsGroup) materialsGroup.style.display = 'block';
-                    break;
-
+            this.resetFormState();
+            
+            // Hide method selection
+            const methodSelection = document.getElementById('methodSelection');
+            if (methodSelection) methodSelection.style.display = 'none';
+            
+            // Show appropriate form
+            switch (method) {
                 case 'system':
-                default:
-                    // System only - hide PDF upload
-                    if (pdfUploadGroup) pdfUploadGroup.style.display = 'none';
-                    if (pdfSupplierGroup) pdfSupplierGroup.style.display = 'none';
-                    if (categoryGroup) categoryGroup.style.display = 'block';
-                    if (supplierGroup) supplierGroup.style.display = 'block';
-                    if (materialsGroup) materialsGroup.style.display = 'block';
+                    this.showSystemForm();
                     break;
+                case 'pdf':
+                    this.showPdfForm();
+                    break;
+                case 'both':
+                    this.showBothForm();
+                    break;
+                default:
+                    console.error('❌ Unknown method:', method);
             }
-
-            // Update field requirements and validate
-            this.updateFieldRequirements(selectedMethod);
-            this.validateForm();
-        } catch (error) {
-            console.error('❌ Error handling request method change:', error);
-        }
-    }
-
-    // NEW: Populate all suppliers for PDF upload
-    populateAllSuppliersForPDF() {
-        try {
-            const pdfSupplierSelect = document.getElementById('pdfSupplier');
-            if (!pdfSupplierSelect || !this.formData?.data?.suppliers) return;
-
-            pdfSupplierSelect.innerHTML = '<option value="">Select a supplier...</option>';
             
-            this.formData.data.suppliers.forEach(supplier => {
-                const option = document.createElement('option');
-                option.value = supplier.name;
-                option.dataset.email = supplier.email || '';
-                option.dataset.phone = supplier.phone || '';
-                option.dataset.id = supplier.id || '';
-                option.textContent = supplier.name;
-                pdfSupplierSelect.appendChild(option);
-            });
-
-            console.log(`✅ Populated ${this.formData.data.suppliers.length} suppliers for PDF upload`);
         } catch (error) {
-            console.error('❌ Error populating PDF suppliers:', error);
+            console.error('❌ Error selecting method:', error);
         }
     }
 
-    // NEW: Handle PDF supplier change
-    handlePdfSupplierChange() {
+    showMethodSelection() {
         try {
-            const pdfSupplierSelect = document.getElementById('pdfSupplier');
-            if (!pdfSupplierSelect) return;
+            console.log('🔄 Showing method selection');
             
-            const selectedSupplier = pdfSupplierSelect.value;
-            console.log('🏢 PDF Supplier changed to:', selectedSupplier);
+            // Hide all forms
+            const methodSelection = document.getElementById('methodSelection');
+            const pdfForm = document.getElementById('pdfForm');
+            const mainForm = document.getElementById('mainForm');
+            const confirmationPage = document.getElementById('confirmationPage');
             
-            if (!selectedSupplier) {
-                this.hidePdfSupplierInfo();
-                this.validateForm();
-                return;
-            }
-
-            // Show supplier info
-            const selectedOption = pdfSupplierSelect.selectedOptions[0];
-            if (selectedOption) {
-                this.showPdfSupplierInfo(selectedOption);
-            }
-
-            this.validateForm();
+            if (methodSelection) methodSelection.style.display = 'block';
+            if (pdfForm) pdfForm.style.display = 'none';
+            if (mainForm) mainForm.style.display = 'none';
+            if (confirmationPage) confirmationPage.style.display = 'none';
+            
+            // Reset current method
+            this.currentMethod = null;
+            this.resetFormState();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
         } catch (error) {
-            console.error('❌ Error handling PDF supplier change:', error);
+            console.error('❌ Error showing method selection:', error);
         }
     }
 
-    // NEW: Show PDF supplier info
-    showPdfSupplierInfo(supplierOption) {
+    showSystemForm() {
         try {
-            const supplierInfo = document.getElementById('pdfSupplierInfo');
-            const supplierEmail = document.getElementById('pdfSupplierEmail');
-            const supplierPhone = document.getElementById('pdfSupplierPhone');
-
-            if (supplierOption && supplierInfo && supplierEmail && supplierPhone) {
-                supplierEmail.textContent = `📧 ${supplierOption.dataset.email || 'N/A'}`;
-                supplierPhone.textContent = `📞 ${supplierOption.dataset.phone || 'N/A'}`;
-                supplierInfo.style.display = 'block';
-            }
+            console.log('📋 Showing system form');
+            
+            const mainForm = document.getElementById('mainForm');
+            const mainFormTitle = document.getElementById('mainFormTitle');
+            const mainFormSubtitle = document.getElementById('mainFormSubtitle');
+            const additionalPdfSection = document.getElementById('additionalPdfSection');
+            
+            if (mainForm) mainForm.style.display = 'block';
+            if (mainFormTitle) mainFormTitle.textContent = '🖥️ System Material Order';
+            if (mainFormSubtitle) mainFormSubtitle.textContent = 'Select materials from our system catalog';
+            if (additionalPdfSection) additionalPdfSection.style.display = 'none';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
         } catch (error) {
-            console.error('❌ Error showing PDF supplier info:', error);
+            console.error('❌ Error showing system form:', error);
         }
     }
 
-    // NEW: Hide PDF supplier info
-    hidePdfSupplierInfo() {
+    showPdfForm() {
         try {
-            const supplierInfo = document.getElementById('pdfSupplierInfo');
-            if (supplierInfo) {
-                supplierInfo.style.display = 'none';
-            }
+            console.log('📄 Showing PDF form');
+            
+            const pdfForm = document.getElementById('pdfForm');
+            if (pdfForm) pdfForm.style.display = 'block';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
         } catch (error) {
-            console.error('❌ Error hiding PDF supplier info:', error);
+            console.error('❌ Error showing PDF form:', error);
         }
     }
 
-    // NEW: Handle file upload
-    handleFileUpload(e) {
+    showBothForm() {
+        try {
+            console.log('🔄 Showing both methods form');
+            
+            const mainForm = document.getElementById('mainForm');
+            const mainFormTitle = document.getElementById('mainFormTitle');
+            const mainFormSubtitle = document.getElementById('mainFormSubtitle');
+            const additionalPdfSection = document.getElementById('additionalPdfSection');
+            
+            if (mainForm) mainForm.style.display = 'block';
+            if (mainFormTitle) mainFormTitle.textContent = '🔄 Combined Material Request';
+            if (mainFormSubtitle) mainFormSubtitle.textContent = 'Select system materials and attach PDF specifications';
+            if (additionalPdfSection) additionalPdfSection.style.display = 'block';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+        } catch (error) {
+            console.error('❌ Error showing both form:', error);
+        }
+    }
+
+    handlePdfFileUpload(e) {
         const file = e.target.files[0];
         if (file) {
-            this.processUploadedFile(file);
+            this.processPdfFile(file, 'main');
         }
     }
 
-    // NEW: Handle drag over
+    handleAdditionalPdfFileUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            this.processPdfFile(file, 'additional');
+        }
+    }
+
     handleDragOver(e) {
         e.preventDefault();
         e.stopPropagation();
-        const fileUploadArea = document.getElementById('fileUploadArea');
-        if (fileUploadArea) {
-            fileUploadArea.classList.add('drag-over');
-        }
+        const area = e.currentTarget;
+        area.classList.add('drag-over');
     }
 
-    // NEW: Handle file drop
     handleFileDrop(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        const fileUploadArea = document.getElementById('fileUploadArea');
-        if (fileUploadArea) {
-            fileUploadArea.classList.remove('drag-over');
-        }
-
+        const area = e.currentTarget;
+        area.classList.remove('drag-over');
+        
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-            this.processUploadedFile(files[0]);
+            this.processPdfFile(files[0], 'main');
         }
     }
 
-    // NEW: Process uploaded file
-    processUploadedFile(file) {
-        try {
-            console.log('📄 Processing uploaded file:', file.name);
+    handleAdditionalFileDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const area = e.currentTarget;
+        area.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            this.processPdfFile(files[0], 'additional');
+        }
+    }
 
+    processPdfFile(file, type = 'main') {
+        try {
+            console.log(`📄 Processing ${type} PDF file:`, file.name);
+            
             // Validate file type
             if (file.type !== 'application/pdf') {
                 this.showError('Please upload a PDF file only.');
                 return;
             }
-
+            
             // Validate file size (10MB max)
-            const maxSize = 10 * 1024 * 1024; // 10MB
+            const maxSize = 10 * 1024 * 1024;
             if (file.size > maxSize) {
                 this.showError('File size must be less than 10MB.');
                 return;
             }
-
-            // Store the file
-            this.uploadedFile = file;
-
-            // Show file preview
-            this.showFilePreview(file);
             
-            // Validate form
-            this.validateForm();
-
-            console.log('✅ File processed successfully:', {
+            // Store the file
+            if (type === 'main') {
+                this.uploadedFile = file;
+                this.showPdfPreview(file);
+            } else {
+                this.additionalFile = file;
+                this.showAdditionalPdfPreview(file);
+            }
+            
+            // Validate current form
+            this.validateCurrentForm();
+            
+            console.log(`✅ ${type} PDF file processed successfully:`, {
                 name: file.name,
                 size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
                 type: file.type
             });
-
+            
         } catch (error) {
-            console.error('❌ Error processing uploaded file:', error);
-            this.showError('Error processing uploaded file: ' + error.message);
+            console.error('❌ Error processing PDF file:', error);
+            this.showError('Error processing PDF file: ' + error.message);
         }
     }
 
-    // NEW: Show file preview
-    showFilePreview(file) {
+    showPdfPreview(file) {
         try {
-            const fileUploadArea = document.getElementById('fileUploadArea');
-            const filePreview = document.getElementById('filePreview');
-            const fileName = document.getElementById('fileName');
-            const fileSize = document.getElementById('fileSize');
-
-            if (fileUploadArea) fileUploadArea.style.display = 'none';
-            if (filePreview) filePreview.style.display = 'block';
-            if (fileName) fileName.textContent = file.name;
-            if (fileSize) fileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
-
+            const pdfUploadArea = document.getElementById('pdfUploadArea');
+            const pdfFileInfo = document.getElementById('pdfFileInfo');
+            const pdfFileName = document.getElementById('pdfFileName');
+            const pdfFileSize = document.getElementById('pdfFileSize');
+            
+            if (pdfUploadArea) pdfUploadArea.style.display = 'none';
+            if (pdfFileInfo) pdfFileInfo.style.display = 'flex';
+            if (pdfFileName) pdfFileName.textContent = file.name;
+            if (pdfFileSize) pdfFileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            
         } catch (error) {
-            console.error('❌ Error showing file preview:', error);
+            console.error('❌ Error showing PDF preview:', error);
         }
     }
 
-    // NEW: Remove uploaded file
-    removeUploadedFile() {
+    showAdditionalPdfPreview(file) {
         try {
-            console.log('🗑️ Removing uploaded file');
+            const additionalPdfUploadArea = document.getElementById('additionalPdfUploadArea');
+            const additionalPdfFileInfo = document.getElementById('additionalPdfFileInfo');
+            const additionalPdfFileName = document.getElementById('additionalPdfFileName');
+            const additionalPdfFileSize = document.getElementById('additionalPdfFileSize');
+            
+            if (additionalPdfUploadArea) additionalPdfUploadArea.style.display = 'none';
+            if (additionalPdfFileInfo) additionalPdfFileInfo.style.display = 'flex';
+            if (additionalPdfFileName) additionalPdfFileName.textContent = file.name;
+            if (additionalPdfFileSize) additionalPdfFileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            
+        } catch (error) {
+            console.error('❌ Error showing additional PDF preview:', error);
+        }
+    }
 
+    removePdfFile() {
+        try {
+            console.log('🗑️ Removing PDF file');
+            
             this.uploadedFile = null;
-
-            const pdfFileInput = document.getElementById('pdfFile');
-            const fileUploadArea = document.getElementById('fileUploadArea');
-            const filePreview = document.getElementById('filePreview');
-
-            if (pdfFileInput) pdfFileInput.value = '';
-            if (fileUploadArea) fileUploadArea.style.display = 'block';
-            if (filePreview) filePreview.style.display = 'none';
-
-            this.validateForm();
+            
+            const pdfFile = document.getElementById('pdfFile');
+            const pdfUploadArea = document.getElementById('pdfUploadArea');
+            const pdfFileInfo = document.getElementById('pdfFileInfo');
+            
+            if (pdfFile) pdfFile.value = '';
+            if (pdfUploadArea) pdfUploadArea.style.display = 'block';
+            if (pdfFileInfo) pdfFileInfo.style.display = 'none';
+            
+            this.validateCurrentForm();
+            
         } catch (error) {
-            console.error('❌ Error removing uploaded file:', error);
+            console.error('❌ Error removing PDF file:', error);
+        }
+    }
+
+    removeAdditionalPdfFile() {
+        try {
+            console.log('🗑️ Removing additional PDF file');
+            
+            this.additionalFile = null;
+            
+            const additionalPdfFile = document.getElementById('additionalPdfFile');
+            const additionalPdfUploadArea = document.getElementById('additionalPdfUploadArea');
+            const additionalPdfFileInfo = document.getElementById('additionalPdfFileInfo');
+            
+            if (additionalPdfFile) additionalPdfFile.value = '';
+            if (additionalPdfUploadArea) additionalPdfUploadArea.style.display = 'block';
+            if (additionalPdfFileInfo) additionalPdfFileInfo.style.display = 'none';
+            
+            this.validateCurrentForm();
+            
+        } catch (error) {
+            console.error('❌ Error removing additional PDF file:', error);
         }
     }
 
@@ -426,11 +503,10 @@ class MaterialManagementApp {
                 return;
             }
 
-            console.log('📋 Populating enhanced form with data:', {
+            console.log('📋 Populating form with data:', {
                 suppliers: data.data.suppliers?.length || 0,
                 categories: data.data.categories?.length || 0,
-                materials: Object.keys(data.data.materials || {}).length,
-                materialsByCategoryAndSupplier: data.data.materialsByCategoryAndSupplier ? 'Available' : 'Not Available'
+                materials: Object.keys(data.data.materials || {}).length
             });
 
             // Populate categories
@@ -449,9 +525,6 @@ class MaterialManagementApp {
                 console.log(`✅ Populated ${data.data.categories.length} categories`);
             }
 
-            // Populate all suppliers for PDF upload
-            this.populateAllSuppliersForPDF();
-
             this.showLoading(false);
         } catch (error) {
             console.error('❌ Error populating form:', error);
@@ -461,13 +534,13 @@ class MaterialManagementApp {
 
     handleRequestTypeChange() {
         try {
-            const selectedType = document.querySelector('input[name="requestType"]:checked')?.value;
-            const submitBtn = document.getElementById('submitBtn');
+            const requestType = this.getSelectedRequestType();
+            const submitBtn = this.getCurrentSubmitButton();
             const btnText = submitBtn?.querySelector('.btn-text');
             
-            if (!selectedType || !submitBtn || !btnText) return;
+            if (!requestType || !submitBtn || !btnText) return;
             
-            if (selectedType === 'order') {
+            if (requestType === 'order') {
                 btnText.textContent = 'Review Order';
                 submitBtn.style.background = 'linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%)';
             } else {
@@ -477,6 +550,19 @@ class MaterialManagementApp {
         } catch (error) {
             console.error('❌ Error handling request type change:', error);
         }
+    }
+
+    getSelectedRequestType() {
+        const mainRequestType = document.querySelector('input[name="requestType"]:checked')?.value;
+        const pdfRequestType = document.querySelector('input[name="pdfRequestType"]:checked')?.value;
+        return mainRequestType || pdfRequestType;
+    }
+
+    getCurrentSubmitButton() {
+        if (this.currentMethod === 'pdf') {
+            return document.getElementById('pdfSubmitBtn');
+        }
+        return document.getElementById('submitBtn');
     }
 
     handleCategoryChange() {
@@ -497,7 +583,7 @@ class MaterialManagementApp {
             this.hideSupplierInfo();
 
             if (!selectedCategory || !this.formData?.data) {
-                this.validateForm();
+                this.validateCurrentForm();
                 return;
             }
 
@@ -522,7 +608,7 @@ class MaterialManagementApp {
                 });
             }
 
-            this.validateForm();
+            this.validateCurrentForm();
         } catch (error) {
             console.error('❌ Error handling category change:', error);
         }
@@ -556,7 +642,7 @@ class MaterialManagementApp {
 
             if (!selectedSupplier) {
                 this.hideSupplierInfo();
-                this.validateForm();
+                this.validateCurrentForm();
                 return;
             }
 
@@ -564,7 +650,6 @@ class MaterialManagementApp {
             const selectedOption = supplierSelect.selectedOptions[0];
             if (selectedOption) {
                 this.showSupplierInfo(selectedOption);
-                console.log('🔍 Selected Supplier ID:', selectedOption.dataset.id);
             }
 
             // Populate subcategories and materials for selected category and supplier
@@ -573,7 +658,7 @@ class MaterialManagementApp {
                 this.populateMaterials(selectedCategory, '');
             }
 
-            this.validateForm();
+            this.validateCurrentForm();
         } catch (error) {
             console.error('❌ Error handling supplier change:', error);
         }
@@ -650,7 +735,7 @@ class MaterialManagementApp {
             const materialsContainer = document.getElementById('materialsContainer');
             const supplierSelect = document.getElementById('supplier');
             
-            if (!category || !supplierSelect.value) {
+            if (!category || !supplierSelect?.value) {
                 console.log('⚠️ Missing category or supplier');
                 return;
             }
@@ -878,7 +963,7 @@ class MaterialManagementApp {
             console.log(`✅ Added material: ${material.name} (${quantity} ${material.unit}) from supplier ${material.supplierId}`);
 
             this.renderSelectedMaterials();
-            this.validateForm();
+            this.validateCurrentForm();
             
         } catch (error) {
             console.error('❌ Error adding material:', error);
@@ -892,7 +977,7 @@ class MaterialManagementApp {
                 const removed = this.selectedMaterials.splice(index, 1)[0];
                 console.log('➖ Removed material:', removed.name);
                 this.renderSelectedMaterials();
-                this.validateForm();
+                this.validateCurrentForm();
             }
         } catch (error) {
             console.error('❌ Error removing material by ID:', error);
@@ -905,7 +990,7 @@ class MaterialManagementApp {
             if (!container) return;
             
             if (this.selectedMaterials.length === 0) {
-                container.innerHTML = '<div class="no-selection">No materials selected yet...</div>';
+                container.innerHTML = '<div class="no-selection">No materials added to your order yet...</div>';
                 return;
             }
 
@@ -956,7 +1041,7 @@ class MaterialManagementApp {
                     this.selectedMaterials[index].quantity = newQuantity;
                     console.log(`🔄 Updated quantity for ${this.selectedMaterials[index].name}: ${newQuantity}`);
                     this.renderSelectedMaterials();
-                    this.validateForm();
+                    this.validateCurrentForm();
                 }
             }
         } catch (error) {
@@ -983,7 +1068,7 @@ class MaterialManagementApp {
                 }
                 
                 this.renderSelectedMaterials();
-                this.validateForm();
+                this.validateCurrentForm();
             }
         } catch (error) {
             console.error('❌ Error removing material:', error);
@@ -1056,23 +1141,84 @@ class MaterialManagementApp {
         }
     }
 
-    validateForm() {
+    validateCurrentForm() {
         try {
-            const form = document.getElementById('materialForm');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if (!form || !submitBtn) return;
-
-            const requestMethod = document.querySelector('input[name="requestMethod"]:checked')?.value;
-            const requiredFields = ['requestorName', 'requestorEmail'];
+            const method = this.currentMethod;
             let isValid = true;
+            let submitBtn = null;
 
-            // Check basic required fields (always required)
+            if (method === 'pdf') {
+                isValid = this.validatePdfForm();
+                submitBtn = document.getElementById('pdfSubmitBtn');
+            } else if (method === 'system' || method === 'both') {
+                isValid = this.validateMainForm();
+                submitBtn = document.getElementById('submitBtn');
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = !isValid;
+            }
+
+            return isValid;
+            
+        } catch (error) {
+            console.error('❌ Error validating current form:', error);
+            return false;
+        }
+    }
+
+    validatePdfForm() {
+        try {
+            const form = document.getElementById('pdfMaterialForm');
+            if (!form) return false;
+
+            const requiredFields = ['pdfRequestorName', 'pdfRequestorEmail', 'pdfSupplierName', 'pdfSupplierEmail'];
+            
+            // Check required fields
             for (const fieldName of requiredFields) {
                 const field = form.querySelector(`[name="${fieldName}"]`);
                 if (!field || !field.value.trim()) {
-                    isValid = false;
-                    break;
+                    return false;
+                }
+            }
+
+            // Check email format
+            const emailField = form.querySelector('[name="pdfRequestorEmail"]');
+            const supplierEmailField = form.querySelector('[name="pdfSupplierEmail"]');
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailField && emailField.value && !emailRegex.test(emailField.value)) {
+                return false;
+            }
+            if (supplierEmailField && supplierEmailField.value && !emailRegex.test(supplierEmailField.value)) {
+                return false;
+            }
+
+            // Check PDF file
+            if (!this.uploadedFile) {
+                return false;
+            }
+
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Error validating PDF form:', error);
+            return false;
+        }
+    }
+
+    validateMainForm() {
+        try {
+            const form = document.getElementById('materialForm');
+            if (!form) return false;
+
+            const requiredFields = ['requestorName', 'requestorEmail'];
+            
+            // Check basic required fields
+            for (const fieldName of requiredFields) {
+                const field = form.querySelector(`[name="${fieldName}"]`);
+                if (!field || !field.value.trim()) {
+                    return false;
                 }
             }
 
@@ -1081,145 +1227,62 @@ class MaterialManagementApp {
             if (emailField && emailField.value) {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(emailField.value)) {
-                    isValid = false;
+                    return false;
                 }
             }
 
-            // Validate based on request method
-            switch (requestMethod) {
-                case 'pdf':
-                    // PDF only - require PDF file and PDF supplier (not regular supplier)
-                    if (!this.uploadedFile) {
-                        isValid = false;
-                        break;
-                    }
-                    const pdfSupplier = form.querySelector('[name="pdfSupplier"]');
-                    if (!pdfSupplier || !pdfSupplier.value.trim()) {
-                        isValid = false;
-                        break;
-                    }
-                    break;
-
-                case 'mixed':
-                    // PDF + System - require PDF, category, supplier, and at least one material
-                    if (!this.uploadedFile) {
-                        isValid = false;
-                        break;
-                    }
-                    const mixedCategory = form.querySelector('[name="category"]');
-                    const mixedSupplier = form.querySelector('[name="supplier"]');
-                    if (!mixedCategory || !mixedCategory.value.trim()) {
-                        isValid = false;
-                        break;
-                    }
-                    if (!mixedSupplier || !mixedSupplier.value.trim()) {
-                        isValid = false;
-                        break;
-                    }
-                    if (this.selectedMaterials.length === 0) {
-                        isValid = false;
-                        break;
-                    }
-                    break;
-
-                case 'system':
-                default:
-                    // System only - require category, supplier, and materials
-                    const systemCategory = form.querySelector('[name="category"]');
-                    const systemSupplier = form.querySelector('[name="supplier"]');
-                    if (!systemCategory || !systemCategory.value.trim()) {
-                        isValid = false;
-                        break;
-                    }
-                    if (!systemSupplier || !systemSupplier.value.trim()) {
-                        isValid = false;
-                        break;
-                    }
-                    if (this.selectedMaterials.length === 0) {
-                        isValid = false;
-                        break;
-                    }
-                    break;
-            }
-
-            // Update form field required attributes based on request method
-            this.updateFieldRequirements(requestMethod);
-
-            submitBtn.disabled = !isValid;
-            
-            // Debug log for validation
-            console.log('🔍 Form validation:', {
-                requestMethod,
-                hasUploadedFile: !!this.uploadedFile,
-                selectedMaterials: this.selectedMaterials.length,
-                isValid,
-                requiredFieldsCheck: {
-                    requestorName: !!form.querySelector('[name="requestorName"]')?.value.trim(),
-                    requestorEmail: !!form.querySelector('[name="requestorEmail"]')?.value.trim(),
-                    category: form.querySelector('[name="category"]')?.value.trim() || 'N/A (PDF only)',
-                    supplier: form.querySelector('[name="supplier"]')?.value.trim() || 'N/A',
-                    pdfSupplier: form.querySelector('[name="pdfSupplier"]')?.value.trim() || 'N/A'
+            // For system method, require category, supplier, and materials
+            if (this.currentMethod === 'system') {
+                const categoryField = form.querySelector('[name="category"]');
+                const supplierField = form.querySelector('[name="supplier"]');
+                
+                if (!categoryField || !categoryField.value.trim()) {
+                    return false;
                 }
-            });
+                if (!supplierField || !supplierField.value.trim()) {
+                    return false;
+                }
+                if (this.selectedMaterials.length === 0) {
+                    return false;
+                }
+            }
+
+            // For both method, require category, supplier, materials, AND check for PDF
+            if (this.currentMethod === 'both') {
+                const categoryField = form.querySelector('[name="category"]');
+                const supplierField = form.querySelector('[name="supplier"]');
+                
+                if (!categoryField || !categoryField.value.trim()) {
+                    return false;
+                }
+                if (!supplierField || !supplierField.value.trim()) {
+                    return false;
+                }
+                if (this.selectedMaterials.length === 0) {
+                    return false;
+                }
+                // Additional PDF is optional for both method
+            }
+
+            return true;
             
         } catch (error) {
-            console.error('❌ Error validating form:', error);
+            console.error('❌ Error validating main form:', error);
+            return false;
         }
     }
 
-    // NEW: Update field requirements based on request method
-    updateFieldRequirements(requestMethod) {
-        try {
-            const categoryField = document.getElementById('category');
-            const supplierField = document.getElementById('supplier');
-            const pdfSupplierField = document.getElementById('pdfSupplier');
-
-            // Remove all required attributes first
-            if (categoryField) categoryField.removeAttribute('required');
-            if (supplierField) supplierField.removeAttribute('required');
-            if (pdfSupplierField) pdfSupplierField.removeAttribute('required');
-
-            // Add required attributes based on request method
-            switch (requestMethod) {
-                case 'pdf':
-                    // PDF only - only PDF supplier is required
-                    if (pdfSupplierField) pdfSupplierField.setAttribute('required', '');
-                    break;
-                case 'mixed':
-                    // PDF + System - category and supplier required
-                    if (categoryField) categoryField.setAttribute('required', '');
-                    if (supplierField) supplierField.setAttribute('required', '');
-                    break;
-                case 'system':
-                default:
-                    // System only - category and supplier required
-                    if (categoryField) categoryField.setAttribute('required', '');
-                    if (supplierField) supplierField.setAttribute('required', '');
-                    break;
-            }
-        } catch (error) {
-            console.error('❌ Error updating field requirements:', error);
-        }
-    }
-
-    // Form submission now goes to confirmation page instead of directly submitting
-    async handleFormSubmit(e) {
+    handlePdfFormSubmit(e) {
         e.preventDefault();
         
         try {
-            const form = e.target;
+            console.log('📄 Handling PDF form submission');
             
-            // Prepare form data for confirmation
+            const form = e.target;
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            // Add selected materials with quantities
-            data.materials = this.selectedMaterials;
-            
-            // Add request method
-            data.requestMethod = document.querySelector('input[name="requestMethod"]:checked')?.value || 'system';
-            
-            // Add uploaded file info if present
+            // Add PDF file
             if (this.uploadedFile) {
                 data.uploadedFile = {
                     name: this.uploadedFile.name,
@@ -1228,54 +1291,85 @@ class MaterialManagementApp {
                 };
             }
             
-            // Get supplier details based on request method
-            if (data.requestMethod === 'pdf') {
-                const pdfSupplierSelect = document.getElementById('pdfSupplier');
-                const selectedOption = pdfSupplierSelect?.selectedOptions[0];
-                if (selectedOption) {
-                    data.supplier = selectedOption.value;
-                    data.supplierEmail = selectedOption.dataset.email || '';
-                    data.supplierPhone = selectedOption.dataset.phone || '';
-                    data.supplierId = selectedOption.dataset.id || '';
-                }
-            } else {
-                const supplierSelect = document.getElementById('supplier');
-                const selectedOption = supplierSelect?.selectedOptions[0];
-                if (selectedOption) {
-                    data.supplierEmail = selectedOption.dataset.email || '';
-                    data.supplierPhone = selectedOption.dataset.phone || '';
-                    data.supplierId = selectedOption.dataset.id || '';
-                }
-            }
+            data.requestMethod = 'pdf';
             
-            console.log('📋 Form data prepared for confirmation:', data);
+            console.log('📋 PDF form data prepared:', data);
             
-            // Store data for later submission
+            // Store data for submission
             this.pendingSubmissionData = data;
             
             // Show confirmation page
             this.showConfirmationPage(data);
             
         } catch (error) {
-            console.error('❌ Form preparation error:', error);
-            this.showError(`Error preparing form: ${error.message}`);
+            console.error('❌ PDF form submission error:', error);
+            this.showError(`Error preparing PDF form: ${error.message}`);
         }
     }
 
-    // Show confirmation page with all details
+    handleMainFormSubmit(e) {
+        e.preventDefault();
+        
+        try {
+            console.log('📋 Handling main form submission');
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Add selected materials
+            data.materials = this.selectedMaterials;
+            
+            // Add request method
+            data.requestMethod = this.currentMethod;
+            
+            // Add additional PDF file if present (for both method)
+            if (this.additionalFile) {
+                data.additionalFile = {
+                    name: this.additionalFile.name,
+                    size: this.additionalFile.size,
+                    type: this.additionalFile.type
+                };
+            }
+            
+            // Get supplier details
+            const supplierSelect = document.getElementById('supplier');
+            const selectedOption = supplierSelect?.selectedOptions[0];
+            if (selectedOption) {
+                data.supplierEmail = selectedOption.dataset.email || '';
+                data.supplierPhone = selectedOption.dataset.phone || '';
+                data.supplierId = selectedOption.dataset.id || '';
+            }
+            
+            console.log('📋 Main form data prepared:', data);
+            
+            // Store data for submission
+            this.pendingSubmissionData = data;
+            
+            // Show confirmation page
+            this.showConfirmationPage(data);
+            
+        } catch (error) {
+            console.error('❌ Main form submission error:', error);
+            this.showError(`Error preparing main form: ${error.message}`);
+        }
+    }
+
     showConfirmationPage(data) {
         try {
             console.log('📋 Displaying confirmation page');
             
-            // Hide main form and show confirmation page
+            // Hide current form and show confirmation page
+            const pdfForm = document.getElementById('pdfForm');
             const mainForm = document.getElementById('mainForm');
             const confirmationPage = document.getElementById('confirmationPage');
             
+            if (pdfForm) pdfForm.style.display = 'none';
             if (mainForm) mainForm.style.display = 'none';
             if (confirmationPage) confirmationPage.style.display = 'block';
             
-            // Update titles based on request type
-            const requestType = data.requestType;
+            // Update titles based on request type and method
+            const requestType = data.requestType || data.pdfRequestType;
             const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationSubtitle = document.getElementById('confirmationSubtitle');
             const confirmSubmitText = document.getElementById('confirmSubmitText');
@@ -1290,69 +1384,8 @@ class MaterialManagementApp {
                 if (confirmSubmitText) confirmSubmitText.textContent = 'Confirm & Send Quote Request';
             }
             
-            // Populate order summary
-            this.populateElement('confirmRequestType', requestType === 'order' ? 'Material Order' : 'Quote Request');
-            
-            // NEW: Show request method
-            const methodLabels = {
-                'system': '📋 Order System',
-                'pdf': '📄 PDF Upload',
-                'mixed': '📋📄 PDF + Order System'
-            };
-            this.populateElement('confirmRequestMethod', methodLabels[data.requestMethod] || data.requestMethod);
-            
-            // Show/hide category based on request method
-            const confirmCategoryItem = document.getElementById('confirmCategoryItem');
-            if (data.requestMethod === 'pdf') {
-                if (confirmCategoryItem) confirmCategoryItem.style.display = 'none';
-            } else {
-                if (confirmCategoryItem) confirmCategoryItem.style.display = 'block';
-                this.populateElement('confirmCategory', data.category);
-            }
-            
-            this.populateElement('confirmUrgency', data.urgency, 'Normal');
-            this.populateElement('confirmProjectRef', data.projectRef, 'Not specified');
-            
-            // NEW: Show PDF section if applicable
-            const pdfSection = document.getElementById('pdfSection');
-            if (data.requestMethod === 'pdf' || data.requestMethod === 'mixed') {
-                if (pdfSection && data.uploadedFile) {
-                    pdfSection.style.display = 'block';
-                    this.populateElement('confirmPdfName', data.uploadedFile.name);
-                    this.populateElement('confirmPdfSize', `${(data.uploadedFile.size / 1024 / 1024).toFixed(2)} MB`);
-                }
-            } else {
-                if (pdfSection) pdfSection.style.display = 'none';
-            }
-            
-            // Populate supplier information
-            this.populateElement('confirmSupplierName', data.supplier);
-            this.populateElement('confirmSupplierEmail', data.supplierEmail, 'Not available');
-            this.populateElement('confirmSupplierPhone', data.supplierPhone, 'Not available');
-            
-            // Populate requestor information
-            this.populateElement('confirmRequestorName', data.requestorName);
-            this.populateElement('confirmRequestorEmail', data.requestorEmail);
-            
-            // Populate materials (if applicable)
-            const materialsSection = document.getElementById('materialsSection');
-            if (data.requestMethod === 'pdf') {
-                // PDF only - hide materials section
-                if (materialsSection) materialsSection.style.display = 'none';
-            } else {
-                // System or Mixed - show materials
-                if (materialsSection) materialsSection.style.display = 'block';
-                this.populateConfirmationMaterials(data.materials);
-            }
-            
-            // Handle special instructions
-            const notesSection = document.getElementById('notesSection');
-            if (data.notes && data.notes.trim()) {
-                if (notesSection) notesSection.style.display = 'block';
-                this.populateElement('confirmNotes', data.notes);
-            } else {
-                if (notesSection) notesSection.style.display = 'none';
-            }
+            // Populate confirmation details
+            this.populateConfirmationDetails(data);
             
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1363,7 +1396,68 @@ class MaterialManagementApp {
         }
     }
 
-    // Populate confirmation materials list
+    populateConfirmationDetails(data) {
+        try {
+            const requestType = data.requestType || data.pdfRequestType;
+            
+            // Basic details
+            this.populateElement('confirmRequestType', requestType === 'order' ? 'Material Order' : 'Quote Request');
+            this.populateElement('confirmCategory', data.category || 'PDF Upload');
+            this.populateElement('confirmUrgency', data.urgency || data.pdfUrgency || 'Normal');
+            this.populateElement('confirmProjectRef', data.projectRef || data.pdfProjectRef || 'Not specified');
+            
+            // Supplier information
+            const supplierName = data.supplier || data.pdfSupplierName;
+            const supplierEmail = data.supplierEmail || data.pdfSupplierEmail;
+            this.populateElement('confirmSupplierName', supplierName);
+            this.populateElement('confirmSupplierEmail', supplierEmail);
+            this.populateElement('confirmSupplierPhone', data.supplierPhone || 'Not available');
+            
+            // Requestor information
+            const requestorName = data.requestorName || data.pdfRequestorName;
+            const requestorEmail = data.requestorEmail || data.pdfRequestorEmail;
+            this.populateElement('confirmRequestorName', requestorName);
+            this.populateElement('confirmRequestorEmail', requestorEmail);
+            
+            // Materials section
+            const materialsSection = document.getElementById('materialsSection');
+            if (data.requestMethod === 'pdf') {
+                if (materialsSection) materialsSection.style.display = 'none';
+            } else {
+                if (materialsSection) materialsSection.style.display = 'block';
+                this.populateConfirmationMaterials(data.materials);
+            }
+            
+            // PDF section
+            const confirmPdfSection = document.getElementById('confirmPdfSection');
+            if (data.requestMethod === 'pdf' || (data.requestMethod === 'both' && data.additionalFile)) {
+                if (confirmPdfSection) {
+                    confirmPdfSection.style.display = 'block';
+                    const file = data.uploadedFile || data.additionalFile;
+                    if (file) {
+                        this.populateElement('confirmPdfFileName', file.name);
+                        this.populateElement('confirmPdfFileSize', `${(file.size / 1024 / 1024).toFixed(2)} MB`);
+                    }
+                }
+            } else {
+                if (confirmPdfSection) confirmPdfSection.style.display = 'none';
+            }
+            
+            // Special instructions
+            const notes = data.notes || data.pdfNotes;
+            const notesSection = document.getElementById('notesSection');
+            if (notes && notes.trim()) {
+                if (notesSection) notesSection.style.display = 'block';
+                this.populateElement('confirmNotes', notes);
+            } else {
+                if (notesSection) notesSection.style.display = 'none';
+            }
+            
+        } catch (error) {
+            console.error('❌ Error populating confirmation details:', error);
+        }
+    }
+
     populateConfirmationMaterials(materials) {
         try {
             const materialsSummary = document.getElementById('confirmMaterialsSummary');
@@ -1390,7 +1484,7 @@ class MaterialManagementApp {
             
             // Materials list
             if (materialsList) {
-                materialsList.innerHTML = materials.map((material, index) => `
+                materialsList.innerHTML = materials.map(material => `
                     <div class="confirm-material-item">
                         <div class="material-details">
                             <div class="material-name">${material.name}</div>
@@ -1413,7 +1507,6 @@ class MaterialManagementApp {
         }
     }
 
-    // Helper function to populate elements safely
     populateElement(elementId, value, defaultValue = '') {
         try {
             const element = document.getElementById(elementId);
@@ -1425,16 +1518,21 @@ class MaterialManagementApp {
         }
     }
 
-    // Go back to edit form
     goBackToEdit() {
         try {
             console.log('🔄 Going back to edit form');
             
-            const mainForm = document.getElementById('mainForm');
             const confirmationPage = document.getElementById('confirmationPage');
-            
-            if (mainForm) mainForm.style.display = 'block';
             if (confirmationPage) confirmationPage.style.display = 'none';
+            
+            // Show appropriate form based on current method
+            if (this.currentMethod === 'pdf') {
+                const pdfForm = document.getElementById('pdfForm');
+                if (pdfForm) pdfForm.style.display = 'block';
+            } else {
+                const mainForm = document.getElementById('mainForm');
+                if (mainForm) mainForm.style.display = 'block';
+            }
             
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1444,7 +1542,6 @@ class MaterialManagementApp {
         }
     }
 
-    // Handle confirmed submission to supplier
     async handleConfirmedSubmission() {
         if (!this.pendingSubmissionData) {
             this.showError('No submission data found. Please go back and fill the form again.');
@@ -1462,108 +1559,74 @@ class MaterialManagementApp {
             if (btnLoading) btnLoading.style.display = 'flex';
 
             const data = this.pendingSubmissionData;
-            console.log('📤 Submitting confirmed request to supplier:', {
+            console.log('📤 Submitting confirmed request:', {
                 requestMethod: data.requestMethod,
-                hasUploadedFile: !!this.uploadedFile,
-                fileName: this.uploadedFile?.name,
-                fileSize: this.uploadedFile?.size,
-                supplier: data.supplier,
+                hasUploadedFile: !!(data.uploadedFile || data.additionalFile),
+                requestType: data.requestType || data.pdfRequestType,
                 materials: data.materials?.length || 0
             });
             
-            // Prepare FormData for file upload if needed
+            // Determine endpoint based on request type
+            const requestType = data.requestType || data.pdfRequestType;
+            let endpoint;
+            
+            if (data.requestMethod === 'pdf') {
+                // PDF upload method - needs special handling
+                endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
+            } else {
+                // System or both methods
+                endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
+            }
+            
+            // Prepare FormData for submission
             const formData = new FormData();
             
-            // Add all form fields (except materials and uploadedFile which are objects)
+            // Add all form fields
             Object.keys(data).forEach(key => {
-                if (key === 'materials' || key === 'uploadedFile') {
-                    formData.append(key, JSON.stringify(data[key]));
+                if (key === 'materials' || key === 'uploadedFile' || key === 'additionalFile') {
+                    if (data[key] && typeof data[key] === 'object') {
+                        formData.append(key, JSON.stringify(data[key]));
+                    }
                 } else if (data[key] !== null && data[key] !== undefined) {
                     formData.append(key, data[key]);
                 }
             });
             
-            // Add PDF file if present (CRITICAL: Only add if we have the file and right method)
-            let fileAdded = false;
-            if (this.uploadedFile && (data.requestMethod === 'pdf' || data.requestMethod === 'mixed')) {
-                // Double check the file is valid
-                if (this.uploadedFile instanceof File && this.uploadedFile.size > 0 && this.uploadedFile.type === 'application/pdf') {
-                    console.log('📄 Adding PDF file to FormData:', {
-                        name: this.uploadedFile.name,
-                        size: this.uploadedFile.size,
-                        type: this.uploadedFile.type,
-                        lastModified: this.uploadedFile.lastModified
-                    });
-                    formData.append('pdfFile', this.uploadedFile, this.uploadedFile.name);
-                    fileAdded = true;
-                } else {
-                    console.error('❌ Invalid file detected:', this.uploadedFile);
-                    throw new Error('Invalid PDF file. Please upload a valid PDF.');
-                }
-            } else {
-                console.log('📄 No PDF file to attach or not a PDF request method:', {
-                    hasUploadedFile: !!this.uploadedFile,
-                    requestMethod: data.requestMethod,
-                    shouldHaveFile: data.requestMethod === 'pdf' || data.requestMethod === 'mixed'
-                });
+            // Add PDF file if present
+            if (this.uploadedFile) {
+                console.log('📄 Adding main PDF file to submission');
+                formData.append('pdfFile', this.uploadedFile, this.uploadedFile.name);
+            } else if (this.additionalFile) {
+                console.log('📄 Adding additional PDF file to submission');
+                formData.append('pdfFile', this.additionalFile, this.additionalFile.name);
             }
-            
-            // Debug FormData contents
-            console.log('📦 FormData contents:');
-            let formDataEntries = [];
-            for (let [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    console.log(`  ${key}: [FILE] ${value.name} (${value.size} bytes, ${value.type})`);
-                    formDataEntries.push({ key, type: 'FILE', name: value.name, size: value.size });
-                } else {
-                    const displayValue = typeof value === 'string' ? value.substring(0, 50) + '...' : value;
-                    console.log(`  ${key}: ${displayValue}`);
-                    formDataEntries.push({ key, type: 'TEXT', value: displayValue });
-                }
-            }
-            
-            console.log('📊 FormData summary:', {
-                totalEntries: formDataEntries.length,
-                fileEntries: formDataEntries.filter(e => e.type === 'FILE').length,
-                textEntries: formDataEntries.filter(e => e.type === 'TEXT').length,
-                fileAdded: fileAdded
-            });
-            
-            // Determine endpoint
-            const requestType = data.requestType;
-            const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
             
             console.log(`🚀 Submitting to endpoint: ${endpoint}`);
             
-            // Submit form with proper content type for file upload
+            // Submit form
             const response = await fetch(endpoint, {
                 method: 'POST',
-                body: formData // Don't set Content-Type header for FormData
+                body: formData
             });
 
-            // Check if response is ok first
             if (!response.ok) {
-                // Try to get error details from response
                 let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                 try {
                     const errorResult = await response.json();
                     errorMessage = errorResult.error || errorResult.message || errorMessage;
                 } catch (e) {
-                    // If we can't parse JSON, use the default message
                     console.warn('Could not parse error response as JSON');
                 }
                 throw new Error(errorMessage);
             }
 
             const result = await response.json();
-            console.log('✅ Confirmed submission result:', result);
+            console.log('✅ Submission result:', result);
 
-            if (result.success === false) {
-                throw new Error(result.error || 'Submission failed');
-            }
+            if (result.success !== false) {
                 const type = requestType === 'order' ? 'order' : 'quote';
                 const id = result.orderId || result.quoteId || result.id || `${type.toUpperCase()}-${Date.now()}`;
-                this.showSuccess(type, id, data.supplier);
+                this.showSuccess(type, id, data.supplier || data.pdfSupplierName, result);
             } else {
                 throw new Error(result.error || 'Submission failed');
             }
@@ -1583,16 +1646,21 @@ class MaterialManagementApp {
         }
     }
 
-    showSuccess(type, id, supplier) {
+    showSuccess(type, id, supplier, result) {
         try {
-            // Hide both form and confirmation page, show success
+            // Hide all forms, show success
+            const pdfForm = document.getElementById('pdfForm');
             const mainForm = document.getElementById('mainForm');
             const confirmationPage = document.getElementById('confirmationPage');
             const successAlert = document.getElementById('successAlert');
             const successMessage = document.getElementById('successMessage');
             const referenceId = document.getElementById('referenceId');
             const successSupplier = document.getElementById('successSupplier');
+            const pdfSuccessInfo = document.getElementById('pdfSuccessInfo');
+            const successPdfFile = document.getElementById('successPdfFile');
+            const successDriveLink = document.getElementById('successDriveLink');
 
+            if (pdfForm) pdfForm.style.display = 'none';
             if (mainForm) mainForm.style.display = 'none';
             if (confirmationPage) confirmationPage.style.display = 'none';
             if (successAlert) successAlert.style.display = 'block';
@@ -1600,9 +1668,20 @@ class MaterialManagementApp {
             if (referenceId) referenceId.textContent = id;
             if (successSupplier) successSupplier.textContent = supplier;
 
-            // Clear pending data and uploaded file
+            // Show PDF info if available
+            if (result.pdfFileName && pdfSuccessInfo) {
+                pdfSuccessInfo.style.display = 'block';
+                if (successPdfFile) successPdfFile.textContent = result.pdfFileName;
+                if (successDriveLink) {
+                    successDriveLink.href = result.driveLink || '#';
+                    successDriveLink.textContent = 'View PDF Document';
+                }
+            }
+
+            // Clear pending data and files
             this.pendingSubmissionData = null;
             this.uploadedFile = null;
+            this.additionalFile = null;
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1611,14 +1690,45 @@ class MaterialManagementApp {
         }
     }
 
+    resetFormState() {
+        try {
+            console.log('🔄 Resetting form state');
+            
+            this.selectedMaterials = [];
+            this.filteredMaterials = [];
+            this.selectedSubcategory = '';
+            this.pendingSubmissionData = null;
+            this.uploadedFile = null;
+            this.additionalFile = null;
+            
+            // Reset material displays
+            this.renderSelectedMaterials();
+            this.resetMaterialSelection();
+            
+            // Reset file displays
+            this.removePdfFile();
+            this.removeAdditionalPdfFile();
+            
+        } catch (error) {
+            console.error('❌ Error resetting form state:', error);
+        }
+    }
+
     showLoading(show) {
         try {
             const loading = document.getElementById('loading');
+            const methodSelection = document.getElementById('methodSelection');
+            const pdfForm = document.getElementById('pdfForm');
             const mainForm = document.getElementById('mainForm');
             
-            if (loading && mainForm) {
+            if (loading) {
                 loading.style.display = show ? 'block' : 'none';
-                mainForm.style.display = show ? 'none' : 'block';
+            }
+            
+            if (show) {
+                if (methodSelection) methodSelection.style.display = 'none';
+                if (pdfForm) pdfForm.style.display = 'none';
+                if (mainForm) mainForm.style.display = 'none';
             }
         } catch (error) {
             console.error('❌ Error showing/hiding loading:', error);
@@ -1651,39 +1761,24 @@ class MaterialManagementApp {
 // Global function for resetting form
 function resetForm() {
     try {
-        const mainForm = document.getElementById('mainForm');
-        const confirmationPage = document.getElementById('confirmationPage');
         const successAlert = document.getElementById('successAlert');
         const errorAlert = document.getElementById('errorAlert');
         
-        if (mainForm) mainForm.style.display = 'block';
-        if (confirmationPage) confirmationPage.style.display = 'none';
         if (successAlert) successAlert.style.display = 'none';
         if (errorAlert) errorAlert.style.display = 'none';
         
-        // Reset form
-        const form = document.getElementById('materialForm');
-        if (form) form.reset();
-        
-        // Reset app state
+        // Reset app state and show method selection
         if (window.app) {
-            window.app.selectedMaterials = [];
-            window.app.filteredMaterials = [];
-            window.app.selectedSubcategory = '';
-            window.app.pendingSubmissionData = null;
-            window.app.uploadedFile = null;
-            window.app.renderSelectedMaterials();
-            window.app.resetMaterialSelection();
-            window.app.removeUploadedFile();
-            window.app.validateForm();
+            window.app.resetFormState();
+            window.app.showMethodSelection();
         }
         
-        // Reset request method to system
-        const systemRadio = document.querySelector('input[name="requestMethod"][value="system"]');
-        if (systemRadio) {
-            systemRadio.checked = true;
-            if (window.app) window.app.handleRequestMethodChange();
-        }
+        // Reset all forms
+        const pdfForm = document.getElementById('pdfMaterialForm');
+        const mainForm = document.getElementById('materialForm');
+        
+        if (pdfForm) pdfForm.reset();
+        if (mainForm) mainForm.reset();
         
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1692,10 +1787,10 @@ function resetForm() {
     }
 }
 
-// Initialize app
+// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App with PDF Upload');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced Material Management App');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
