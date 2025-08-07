@@ -1483,27 +1483,51 @@ class MaterialManagementApp {
                 }
             });
             
-            // Add PDF file if present (CRITICAL: Only add if we have the file)
+            // Add PDF file if present (CRITICAL: Only add if we have the file and right method)
+            let fileAdded = false;
             if (this.uploadedFile && (data.requestMethod === 'pdf' || data.requestMethod === 'mixed')) {
-                console.log('📄 Adding PDF file to FormData:', {
-                    name: this.uploadedFile.name,
-                    size: this.uploadedFile.size,
-                    type: this.uploadedFile.type
-                });
-                formData.append('pdfFile', this.uploadedFile, this.uploadedFile.name);
+                // Double check the file is valid
+                if (this.uploadedFile instanceof File && this.uploadedFile.size > 0 && this.uploadedFile.type === 'application/pdf') {
+                    console.log('📄 Adding PDF file to FormData:', {
+                        name: this.uploadedFile.name,
+                        size: this.uploadedFile.size,
+                        type: this.uploadedFile.type,
+                        lastModified: this.uploadedFile.lastModified
+                    });
+                    formData.append('pdfFile', this.uploadedFile, this.uploadedFile.name);
+                    fileAdded = true;
+                } else {
+                    console.error('❌ Invalid file detected:', this.uploadedFile);
+                    throw new Error('Invalid PDF file. Please upload a valid PDF.');
+                }
             } else {
-                console.log('📄 No PDF file to attach or not a PDF request method');
+                console.log('📄 No PDF file to attach or not a PDF request method:', {
+                    hasUploadedFile: !!this.uploadedFile,
+                    requestMethod: data.requestMethod,
+                    shouldHaveFile: data.requestMethod === 'pdf' || data.requestMethod === 'mixed'
+                });
             }
             
             // Debug FormData contents
             console.log('📦 FormData contents:');
+            let formDataEntries = [];
             for (let [key, value] of formData.entries()) {
                 if (value instanceof File) {
-                    console.log(`  ${key}: [FILE] ${value.name} (${value.size} bytes)`);
+                    console.log(`  ${key}: [FILE] ${value.name} (${value.size} bytes, ${value.type})`);
+                    formDataEntries.push({ key, type: 'FILE', name: value.name, size: value.size });
                 } else {
-                    console.log(`  ${key}: ${typeof value === 'string' ? value.substring(0, 50) + '...' : value}`);
+                    const displayValue = typeof value === 'string' ? value.substring(0, 50) + '...' : value;
+                    console.log(`  ${key}: ${displayValue}`);
+                    formDataEntries.push({ key, type: 'TEXT', value: displayValue });
                 }
             }
+            
+            console.log('📊 FormData summary:', {
+                totalEntries: formDataEntries.length,
+                fileEntries: formDataEntries.filter(e => e.type === 'FILE').length,
+                textEntries: formDataEntries.filter(e => e.type === 'TEXT').length,
+                fileAdded: fileAdded
+            });
             
             // Determine endpoint
             const requestType = data.requestType;
@@ -1517,10 +1541,26 @@ class MaterialManagementApp {
                 body: formData // Don't set Content-Type header for FormData
             });
 
+            // Check if response is ok first
+            if (!response.ok) {
+                // Try to get error details from response
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                try {
+                    const errorResult = await response.json();
+                    errorMessage = errorResult.error || errorResult.message || errorMessage;
+                } catch (e) {
+                    // If we can't parse JSON, use the default message
+                    console.warn('Could not parse error response as JSON');
+                }
+                throw new Error(errorMessage);
+            }
+
             const result = await response.json();
             console.log('✅ Confirmed submission result:', result);
 
-            if (result.success !== false) {
+            if (result.success === false) {
+                throw new Error(result.error || 'Submission failed');
+            }
                 const type = requestType === 'order' ? 'order' : 'quote';
                 const id = result.orderId || result.quoteId || result.id || `${type.toUpperCase()}-${Date.now()}`;
                 this.showSuccess(type, id, data.supplier);
