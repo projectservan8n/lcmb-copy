@@ -1,4 +1,4 @@
-/* style.css - Complete Enhanced LCMB Material Management System */
+/* style.css - Complete Enhanced LCMB Material Management System with PDF Upload */
 :root {
   /* LCMB Brand Colors */
   --primary-blue: #2a5298;
@@ -317,6 +317,144 @@ body {
   margin: 0;
 }
 
+/* NEW: PDF Upload Styles */
+.pdf-upload-container {
+  position: relative;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-area {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--gray-50);
+}
+
+.file-upload-area:hover,
+.file-upload-area.drag-over {
+  border-color: var(--primary-blue);
+  background-color: var(--accent-blue);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.upload-text strong {
+  display: block;
+  color: var(--primary-blue);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.upload-text p {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.file-preview {
+  background: var(--white);
+  border: 2px solid var(--primary-blue);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.file-icon {
+  font-size: 2rem;
+  color: var(--primary-blue);
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.file-size {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.remove-file {
+  background: var(--error-red);
+  color: var(--white);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.remove-file:hover {
+  background-color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* PDF Confirmation Styles */
+.pdf-summary {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  border: 2px solid var(--gray-200);
+}
+
+.pdf-file-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pdf-details {
+  flex: 1;
+}
+
+.pdf-filename {
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 0.25rem;
+}
+
+.pdf-filesize {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.pdf-status {
+  background: var(--success-green);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* Materials Selection */
 .materials-container {
   display: flex;
@@ -600,6 +738,26 @@ body {
     align-items: flex-start;
     gap: 0.5rem;
   }
+  
+  .file-upload-area {
+    padding: 2rem 1rem;
+  }
+  
+  .upload-icon {
+    font-size: 2rem;
+  }
+  
+  .file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .pdf-file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
 }
 
 /* Enhanced CSS for Material Search and Quantity Control */
@@ -632,454 +790,6 @@ body {
 }
 
 /* Materials List */
-.materials-list {
-  max-height: 400px;
-  overflow-y: auto;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  background: var(--white);
-}
-
-.material-option {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid var(--gray-100);
-  transition: var(--transition);
-}
-
-.material-option:last-child {
-  border-bottom: none;
-}
-
-.material-option:hover {
-  background: var(--accent-blue);
-}
-
-.material-info {
-  flex: 1;
-  margin-right: 1rem;
-}
-
-.material-name {
-  font-weight: 500;
-  color: var(--gray-800);
-  margin-bottom: 0.25rem;
-}
-
-.material-meta {
-  font-size: 0.85rem;
-  color: var(--gray-600);
-}
-
-.material-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.75rem;
-  min-width: 180px;
-}
-
-.quantity-section {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.quantity-label {
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  font-weight: 500;
-}
-
-.quantity-input {
-  width: 80px;
-  padding: 0.5rem;
-  border: 2px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.unit-label {
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  font-weight: 500;
-  min-width: 30px;
-}
-
-.add-to-order-btn {
-  background: var(--primary-blue);
-  color: var(--white);
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: var(--transition);
-  white-space: nowrap;
-}
-
-.add-to-order-btn:hover {
-  background: var(--primary-blue-dark);
-  transform: translateY(-1px);
-}
-
-.add-to-order-btn.disabled {
-  background: var(--gray-400);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.no-materials {
-  text-align: center;
-  padding: 2rem;
-  color: var(--gray-500);
-}
-
-/* Selected Materials Section */
-.selected-materials-section {
-  margin-top: 1.5rem;
-}
-
-.selected-materials-section h4 {
-  color: var(--primary-blue);
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
-}
-
-.materials-summary {
-  background: var(--accent-blue);
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 1rem;
-  text-align: center;
-  font-size: 0.95rem;
-  color: var(--primary-blue-dark);
-}
-
-.selected-materials {
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-  min-height: 120px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.no-selection {
-  text-align: center;
-  color: var(--gray-500);
-  font-style: italic;
-  padding: 2rem;
-}
-
-.selected-material-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--gray-50);
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 0.75rem;
-  border-left: 4px solid var(--primary-blue);
-  box-shadow: var(--shadow-sm);
-}
-
-.selected-material-item:last-child {
-  margin-bottom: 0;
-}
-
-.selected-material-item .material-info {
-  flex: 1;
-  margin-right: 1rem;
-}
-
-.material-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.quantity-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--white);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  padding: 0.25rem;
-}
-
-.qty-btn {
-  background: var(--primary-blue);
-  color: var(--white);
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-}
-
-.qty-btn:hover {
-  background: var(--primary-blue-dark);
-  transform: scale(1.05);
-}
-
-.qty-btn.minus {
-  background: var(--warning-orange);
-}
-
-.qty-btn:disabled {
-  background: var(--gray-300);
-  color: var(--gray-500);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.quantity-display {
-  min-width: 80px;
-  text-align: center;
-  font-weight: 500;
-  color: var(--gray-800);
-  font-size: 0.9rem;
-}
-
-.remove-material {
-  background: var(--error-red);
-  color: var(--white);
-  border: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: var(--transition);
-}
-
-.remove-material:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
-}
-
-/* Responsive Design for Enhanced Features */
-@media (max-width: 768px) {
-  .materials-selection-container {
-    padding: 1rem;
-  }
-  
-  .material-option {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .material-actions {
-    width: 100%;
-    align-items: stretch;
-    min-width: auto;
-  }
-  
-  .quantity-section {
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .add-to-order-btn {
-    width: 100%;
-    text-align: center;
-  }
-  
-  .selected-material-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-  
-  .material-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .quantity-controls {
-    flex: 1;
-    justify-content: center;
-  }
-  
-  .materials-list {
-    max-height: 300px;
-  }
-  
-  .selected-materials {
-    max-height: 250px;
-  }
-}
-
-@media (max-width: 480px) {
-  .material-actions {
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-  }
-  
-  .quantity-input {
-    width: 60px;
-  }
-  
-  .add-material-btn {
-    width: 100%;
-    text-align: center;
-  }
-  
-  .material-controls {
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-  }
-  
-  .quantity-controls {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* Improved Scrollbar Styling */
-.materials-list::-webkit-scrollbar,
-.selected-materials::-webkit-scrollbar {
-  width: 8px;
-}
-
-.materials-list::-webkit-scrollbar-track,
-.selected-materials::-webkit-scrollbar-track {
-  background: var(--gray-100);
-  border-radius: var(--radius-sm);
-}
-
-.materials-list::-webkit-scrollbar-thumb,
-.selected-materials::-webkit-scrollbar-thumb {
-  background: var(--gray-400);
-  border-radius: var(--radius-sm);
-}
-
-.materials-list::-webkit-scrollbar-thumb:hover,
-.selected-materials::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-500);
-}
-
-/* Enhanced Loading States */
-.materials-list.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100px;
-  color: var(--gray-500);
-}
-
-.materials-list.loading::before {
-  content: "Loading materials...";
-}
-
-/* Search Input Enhancement */
-.materials-search .form-input {
-  background: var(--white);
-  border: 2px solid var(--primary-blue);
-  box-shadow: var(--shadow-sm);
-}
-
-.materials-search .form-input:focus {
-  box-shadow: 0 0 0 3px var(--accent-blue), var(--shadow-md);
-}
-
-.materials-search .form-input:disabled {
-  background: var(--gray-100);
-  border-color: var(--gray-200);
-  color: var(--gray-500);
-  cursor: not-allowed;
-}
-
-/* Animation for Material Addition */
-@keyframes materialAdded {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-    background: var(--success-green);
-  }
-  50% {
-    transform: scale(1.02);
-    background: var(--accent-blue);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-    background: var(--gray-50);
-  }
-}
-
-.selected-material-item.just-added {
-  animation: materialAdded 0.6s ease-out;
-}
-
-/* Enhanced Form Section Spacing */
-.form-group:has(.materials-selection-container) {
-  margin-bottom: 2rem;
-}
-
-.selected-materials-section {
-  border-top: 2px solid var(--gray-200);
-  padding-top: 1.5rem;
-}
-
-/* Accessibility Improvements */
-.qty-btn:focus,
-.add-material-btn:focus,
-.remove-material:focus {
-  outline: 2px solid var(--primary-blue);
-  outline-offset: 2px;
-}
-
-.material-option:focus-within {
-  background: var(--accent-blue);
-  box-shadow: 0 0 0 2px var(--primary-blue);
-}
-
-/* Print Styles */
-@media print {
-  .materials-selection-container,
-  .material-actions,
-  .material-controls {
-    display: none !important;
-  }
-  
-  .selected-materials {
-    border: 1px solid #000;
-    box-shadow: none;
-  }
-  
-  .selected-material-item {
-    break-inside: avoid;
-    border-left: 2px solid #000;
-  }
-}
-
-/* Complete Material Selection CSS - Grid Layout + Enhanced Features */
-
-/* ===============================================
-   GRID LAYOUT FOR MATERIAL CARDS
-   =============================================== */
-
-/* Materials List Container */
 .materials-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1470,168 +1180,7 @@ body {
 }
 
 /* ===============================================
-   RESPONSIVE DESIGN
-   =============================================== */
-
-@media (max-width: 1200px) {
-  .materials-list {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .materials-list {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.75rem;
-    padding: 0.75rem;
-    max-height: 500px;
-  }
-  
-  .material-card {
-    padding: 0.75rem;
-    min-height: 110px;
-  }
-  
-  .material-name {
-    font-size: 0.9rem;
-    min-height: 2.4rem;
-  }
-  
-  .material-card-header {
-    margin-bottom: 0.5rem;
-  }
-  
-  .checkbox-custom {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .selected-material-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem;
-  }
-  
-  .material-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .quantity-controls {
-    flex: 1;
-    justify-content: center;
-    margin-right: 1rem;
-  }
-  
-  .quantity-display {
-    min-width: 80px;
-  }
-  
-  .selected-materials {
-    max-height: 350px;
-  }
-}
-
-@media (max-width: 480px) {
-  .materials-list {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    padding: 0.5rem;
-  }
-  
-  .material-card {
-    padding: 1rem;
-  }
-  
-  .material-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .material-status {
-    align-self: flex-end;
-  }
-  
-  .material-controls {
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-  }
-  
-  .quantity-controls {
-    width: 100%;
-    margin-right: 0;
-  }
-  
-  .remove-material {
-    width: 100%;
-    text-align: center;
-  }
-  
-  .qty-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
-  }
-  
-  .materials-summary {
-    font-size: 0.9rem;
-    padding: 0.75rem;
-  }
-}
-
-/* ===============================================
-   ANIMATIONS & INTERACTIONS
-   =============================================== */
-
-/* Animation for Card Selection */
-@keyframes cardSelect {
-  0% {
-    transform: translateY(-2px) scale(0.98);
-  }
-  50% {
-    transform: translateY(-4px) scale(1.02);
-  }
-  100% {
-    transform: translateY(-2px) scale(1);
-  }
-}
-
-.material-card.selected {
-  animation: cardSelect 0.3s ease-out;
-}
-
-/* Animation for Checkbox Selection */
-@keyframes checkboxSelect {
-  0% {
-    transform: scale(0.8);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.material-card.selected .checkbox-custom {
-  animation: checkboxSelect 0.2s ease-out;
-}
-
-/* Success State for Selected Items */
-.selected-material-item.just-added {
-  border-left-color: var(--success-green);
-  background: #f0fdf4;
-}
-
-.selected-material-item.just-added .material-name {
-  color: var(--success-green);
-}
-
-/* ===============================================
-   NEW: CONFIRMATION PAGE STYLES
+   CONFIRMATION PAGE STYLES
    =============================================== */
 
 /* Confirmation Content */
@@ -1942,8 +1491,88 @@ body {
   font-size: 1.1rem;
 }
 
-/* Responsive Design for Confirmation Page */
+/* Responsive Design for All Components */
+@media (max-width: 1200px) {
+  .materials-list {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .materials-list {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+    padding: 0.75rem;
+    max-height: 500px;
+  }
+  
+  .material-card {
+    padding: 0.75rem;
+    min-height: 110px;
+  }
+  
+  .material-name {
+    font-size: 0.9rem;
+    min-height: 2.4rem;
+  }
+  
+  .material-card-header {
+    margin-bottom: 0.5rem;
+  }
+  
+  .checkbox-custom {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .selected-material-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .material-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .quantity-controls {
+    flex: 1;
+    justify-content: center;
+    margin-right: 1rem;
+  }
+  
+  .quantity-display {
+    min-width: 80px;
+  }
+  
+  .selected-materials {
+    max-height: 350px;
+  }
+  
+  /* PDF Upload Mobile */
+  .file-upload-area {
+    padding: 2rem 1rem;
+  }
+  
+  .upload-icon {
+    font-size: 2rem;
+  }
+  
+  .file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .pdf-file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  /* Confirmation Page Mobile */
   .confirmation-section {
     padding: 1rem;
   }
@@ -2006,6 +1635,53 @@ body {
 }
 
 @media (max-width: 480px) {
+  .materials-list {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .material-card {
+    padding: 1rem;
+  }
+  
+  .material-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .material-status {
+    align-self: flex-end;
+  }
+  
+  .material-controls {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .quantity-controls {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .remove-material {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .qty-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  
+  .materials-summary {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+  }
+  
   .confirm-summary {
     flex-direction: column;
     gap: 1.5rem;
@@ -2019,6 +1695,70 @@ body {
   .info-tag {
     align-self: flex-start;
   }
+}
+
+/* ===============================================
+   ANIMATIONS & INTERACTIONS
+   =============================================== */
+
+/* Animation for Card Selection */
+@keyframes cardSelect {
+  0% {
+    transform: translateY(-2px) scale(0.98);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.02);
+  }
+  100% {
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+.material-card.selected {
+  animation: cardSelect 0.3s ease-out;
+}
+
+/* Animation for Checkbox Selection */
+@keyframes checkboxSelect {
+  0% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.material-card.selected .checkbox-custom {
+  animation: checkboxSelect 0.2s ease-out;
+}
+
+/* Success State for Selected Items */
+.selected-material-item.just-added {
+  border-left-color: var(--success-green);
+  background: #f0fdf4;
+}
+
+.selected-material-item.just-added .material-name {
+  color: var(--success-green);
+}
+
+/* File Upload Animation */
+@keyframes fileUpload {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.file-preview {
+  animation: fileUpload 0.3s ease-out;
 }
 
 /* ===============================================
@@ -2069,6 +1809,310 @@ body {
   outline-offset: 2px;
 }
 
+.file-upload-area:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* ===============================================
+   DRAG AND DROP VISUAL FEEDBACK
+   =============================================== */
+
+.file-upload-area.drag-over {
+  border-color: var(--primary-blue) !important;
+  background-color: var(--accent-blue) !important;
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.file-upload-area.drag-over .upload-icon {
+  transform: scale(1.1);
+  color: var(--primary-blue);
+}
+
+.file-upload-area.drag-over .upload-text strong {
+  color: var(--primary-blue-dark);
+}
+
+/* ===============================================
+   FORM VALIDATION STATES
+   =============================================== */
+
+.form-input.error,
+.form-select.error,
+.form-textarea.error {
+  border-color: var(--error-red);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-input.success,
+.form-select.success,
+.form-textarea.success {
+  border-color: var(--success-green);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-group.required .form-label::after {
+  content: ' *';
+  color: var(--error-red);
+  font-weight: normal;
+}
+
+/* ===============================================
+   LOADING STATES FOR COMPONENTS
+   =============================================== */
+
+.materials-list.loading {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: var(--gray-50);
+  border: 2px dashed var(--gray-300);
+  color: var(--gray-500);
+}
+
+.materials-list.loading::before {
+  content: "Loading materials...";
+  display: block;
+  text-align: center;
+}
+
+.file-upload-area.uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.file-upload-area.uploading .upload-icon {
+  animation: spin 1s linear infinite;
+}
+
+/* ===============================================
+   ENHANCED BUTTON STATES
+   =============================================== */
+
+.btn:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+.btn-primary.loading {
+  background: linear-gradient(135deg, var(--gray-400) 0%, var(--gray-500) 100%);
+  cursor: not-allowed;
+}
+
+.btn-secondary:focus {
+  box-shadow: 0 0 0 3px var(--accent-blue);
+}
+
+/* ===============================================
+   MOBILE ENHANCEMENTS
+   =============================================== */
+
+@media (max-width: 640px) {
+  .file-upload-area {
+    padding: 1.5rem 1rem;
+    min-height: 120px;
+  }
+  
+  .upload-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .upload-text strong {
+    font-size: 1rem;
+  }
+  
+  .upload-text p {
+    font-size: 0.8rem;
+  }
+  
+  .file-info {
+    padding: 0.75rem;
+  }
+  
+  .file-name {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+  
+  .pdf-file-info {
+    padding: 0.75rem;
+  }
+  
+  .pdf-filename {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+}
+
+/* ===============================================
+   ACCESSIBILITY IMPROVEMENTS
+   =============================================== */
+
+.material-card[tabindex]:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-md);
+}
+
+.file-upload-area[tabindex]:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .material-card {
+    border-width: 3px;
+  }
+  
+  .material-card.selected {
+    border-width: 4px;
+  }
+  
+  .file-upload-area {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .material-card,
+  .file-upload-area,
+  .file-preview,
+  .btn,
+  .spinner,
+  .spinner-small {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .material-card:hover {
+    transform: none;
+  }
+  
+  .file-upload-area.drag-over {
+    transform: none;
+  }
+}
+
+/* ===============================================
+   TOOLTIP STYLES
+   =============================================== */
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gray-800);
+  color: var(--white);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+  z-index: 1000;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 115%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--gray-800);
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+  z-index: 1000;
+}
+
+.tooltip:hover::before,
+.tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ===============================================
+   ERROR MESSAGE STYLING
+   =============================================== */
+
+.field-error {
+  color: var(--error-red);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-error::before {
+  content: '⚠️';
+  font-size: 0.8rem;
+}
+
+.field-success {
+  color: var(--success-green);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-success::before {
+  content: '✅';
+  font-size: 0.8rem;
+}
+
+/* ===============================================
+   PROGRESS INDICATORS
+   =============================================== */
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
+}
+
 /* ===============================================
    PRINT STYLES
    =============================================== */
@@ -2089,12 +2133,18 @@ body {
   
   .material-controls,
   .materials-selection-container,
-  .confirmation-actions {
+  .confirmation-actions,
+  .file-upload-area,
+  .remove-file,
+  .btn,
+  .tooltip::before,
+  .tooltip::after {
     display: none !important;
   }
   
   .selected-materials,
-  .confirm-materials-list {
+  .confirm-materials-list,
+  .file-preview {
     border: 1px solid #000;
     box-shadow: none;
     page-break-inside: avoid;
@@ -2111,5 +2161,27 @@ body {
     border: 1px solid #000;
     break-inside: avoid;
     margin-bottom: 1rem;
+  }
+  
+  .pdf-summary {
+    border: 1px solid #000;
+    background: transparent !important;
+  }
+  
+  .header {
+    background: transparent !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000;
+  }
+  
+  .footer {
+    background: transparent !important;
+    color: #000 !important;
+    border-top: 2px solid #000;
+  }
+  
+  .hero-section {
+    background: transparent !important;
+    color: #000 !important;
   }
 }
