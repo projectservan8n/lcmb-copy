@@ -1891,6 +1891,45 @@ class MaterialManagementApp {
             console.error('❌ Error showing success:', error);
         }
     }
+showBothMethodSuccess(type, id, supplier, pdfResult) {
+    try {
+        // Hide all sections, show success
+        this.hideAllSections();
+        const successAlert = document.getElementById('successAlert');
+        const successMessage = document.getElementById('successMessage');
+        const referenceId = document.getElementById('referenceId');
+        const successSupplier = document.getElementById('successSupplier');
+        const pdfSuccessInfo = document.getElementById('pdfSuccessInfo');
+        const successPdfFile = document.getElementById('successPdfFile');
+        const successDriveLink = document.getElementById('successDriveLink');
+
+        if (successAlert) successAlert.style.display = 'block';
+        if (successMessage) {
+            successMessage.textContent = `Your ${type} request with system materials and PDF specifications has been submitted successfully!`;
+        }
+        if (referenceId) referenceId.textContent = id;
+        if (successSupplier) successSupplier.textContent = supplier;
+        
+        // Show PDF info
+        if (pdfSuccessInfo) {
+            pdfSuccessInfo.style.display = 'block';
+            if (successPdfFile) successPdfFile.textContent = pdfResult.pdfFileName || 'Additional specifications';
+            if (successDriveLink && pdfResult.driveLink) {
+                successDriveLink.href = pdfResult.driveLink;
+                successDriveLink.style.display = 'inline';
+            }
+        }
+
+        // Clear pending data
+        this.pendingSubmissionData = null;
+        this.additionalPdfFile = null;
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+        console.error('❌ Error showing both method success:', error);
+    }
+}
 
     showLoading(show) {
         try {
