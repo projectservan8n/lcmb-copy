@@ -66,67 +66,140 @@ class MaterialManagementApp {
         }
     }
 
-    setupPdfFormListeners() {
-        // PDF supplier dropdown change
-        const pdfSupplier = document.getElementById('pdfSupplier');
-        if (pdfSupplier) {
-            pdfSupplier.addEventListener('change', () => this.handlePdfSupplierChange());
-        }
+   setupPdfFormListeners() {
+    // PDF supplier dropdown change
+    const pdfSupplier = document.getElementById('pdfSupplier');
+    if (pdfSupplier) {
+        pdfSupplier.addEventListener('change', () => this.handlePdfSupplierChange());
+    }
 
-        // PDF file upload
-        const pdfFile = document.getElementById('pdfFile');
-        const pdfUploadArea = document.getElementById('pdfUploadArea');
-        const removePdfBtn = document.getElementById('removePdfBtn');
+    // MAIN PDF file upload (for PDF-only method)
+    const pdfFile = document.getElementById('pdfFile');
+    const pdfUploadArea = document.getElementById('pdfUploadArea');
+    const removePdfBtn = document.getElementById('removePdfBtn');
+    
+    if (pdfFile && pdfUploadArea) {
+        // Remove any existing listeners first
+        const newPdfFile = pdfFile.cloneNode(true);
+        pdfFile.parentNode.replaceChild(newPdfFile, pdfFile);
         
-        if (pdfFile && pdfUploadArea) {
-            // File input change
-            pdfFile.addEventListener('change', (e) => this.handlePdfFileSelect(e));
-            
-            // Drag and drop
-            pdfUploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
-            pdfUploadArea.addEventListener('drop', (e) => this.handleDrop(e, 'main'));
-            pdfUploadArea.addEventListener('click', () => pdfFile.click());
-        }
+        // File input change - FIXED
+        newPdfFile.addEventListener('change', (e) => {
+            e.stopPropagation();
+            this.handlePdfFileSelect(e);
+        });
         
-        if (removePdfBtn) {
-            removePdfBtn.addEventListener('click', () => this.removePdfFile('main'));
-        }
-
-        // Additional PDF for "both" method
-        const additionalPdfFile = document.getElementById('additionalPdfFile');
-        const additionalPdfUploadArea = document.getElementById('additionalPdfUploadArea');
-        const removeAdditionalPdfBtn = document.getElementById('removeAdditionalPdfBtn');
+        // Drag and drop
+        pdfUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.handleDragOver(e);
+        });
         
-        if (additionalPdfFile && additionalPdfUploadArea) {
-            additionalPdfFile.addEventListener('change', (e) => this.handleAdditionalPdfFileSelect(e));
-            additionalPdfUploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
-            additionalPdfUploadArea.addEventListener('drop', (e) => this.handleDrop(e, 'additional'));
-            additionalPdfUploadArea.addEventListener('click', () => additionalPdfFile.click());
-        }
+        pdfUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.handleDrop(e, 'main');
+        });
         
-        if (removeAdditionalPdfBtn) {
-            removeAdditionalPdfBtn.addEventListener('click', () => this.removePdfFile('additional'));
-        }
-
-        // PDF form submission
-        const pdfForm = document.getElementById('pdfMaterialForm');
-        if (pdfForm) {
-            pdfForm.addEventListener('submit', (e) => this.handlePdfFormSubmit(e));
-            
-            // PDF form validation on input changes
-            const pdfInputs = pdfForm.querySelectorAll('input, select, textarea');
-            pdfInputs.forEach(input => {
-                input.addEventListener('change', () => this.validatePdfForm());
-                input.addEventListener('input', () => this.validatePdfForm());
-            });
-        }
-
-        // PDF request type change
-        const pdfRequestTypeInputs = document.querySelectorAll('input[name="pdfRequestType"]');
-        pdfRequestTypeInputs.forEach(input => {
-            input.addEventListener('change', () => this.handlePdfRequestTypeChange());
+        // Click handler - FIXED to prevent double triggering
+        pdfUploadArea.addEventListener('click', (e) => {
+            // Don't trigger if clicking on the file input itself or remove button
+            if (e.target === newPdfFile || e.target === removePdfBtn || e.target.closest('.remove-file-btn')) {
+                return;
+            }
+            // Don't trigger if file info is showing (file already selected)
+            const fileInfo = document.getElementById('pdfFileInfo');
+            if (fileInfo && fileInfo.style.display !== 'none') {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            newPdfFile.click();
         });
     }
+    
+    if (removePdfBtn) {
+        removePdfBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.removePdfFile('main');
+        });
+    }
+
+    // ADDITIONAL PDF file upload (for BOTH method)
+    const additionalPdfFile = document.getElementById('additionalPdfFile');
+    const additionalPdfUploadArea = document.getElementById('additionalPdfUploadArea');
+    const removeAdditionalPdfBtn = document.getElementById('removeAdditionalPdfBtn');
+    
+    if (additionalPdfFile && additionalPdfUploadArea) {
+        // Remove any existing listeners first
+        const newAdditionalPdfFile = additionalPdfFile.cloneNode(true);
+        additionalPdfFile.parentNode.replaceChild(newAdditionalPdfFile, additionalPdfFile);
+        
+        // File input change - FIXED
+        newAdditionalPdfFile.addEventListener('change', (e) => {
+            e.stopPropagation();
+            this.handleAdditionalPdfFileSelect(e);
+        });
+        
+        // Drag and drop
+        additionalPdfUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.handleDragOver(e);
+        });
+        
+        additionalPdfUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.handleDrop(e, 'additional');
+        });
+        
+        // Click handler - FIXED
+        additionalPdfUploadArea.addEventListener('click', (e) => {
+            // Don't trigger if clicking on the file input itself or remove button
+            if (e.target === newAdditionalPdfFile || e.target === removeAdditionalPdfBtn || e.target.closest('.remove-file-btn')) {
+                return;
+            }
+            // Don't trigger if file info is showing
+            const fileInfo = document.getElementById('additionalPdfFileInfo');
+            if (fileInfo && fileInfo.style.display !== 'none') {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            newAdditionalPdfFile.click();
+        });
+    }
+    
+    if (removeAdditionalPdfBtn) {
+        removeAdditionalPdfBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.removePdfFile('additional');
+        });
+    }
+
+    // Rest of the form listeners...
+    const pdfForm = document.getElementById('pdfMaterialForm');
+    if (pdfForm) {
+        pdfForm.addEventListener('submit', (e) => this.handlePdfFormSubmit(e));
+        
+        // PDF form validation on input changes
+        const pdfInputs = pdfForm.querySelectorAll('input, select, textarea');
+        pdfInputs.forEach(input => {
+            input.addEventListener('change', () => this.validatePdfForm());
+            input.addEventListener('input', () => this.validatePdfForm());
+        });
+    }
+
+    // PDF request type change
+    const pdfRequestTypeInputs = document.querySelectorAll('input[name="pdfRequestType"]');
+    pdfRequestTypeInputs.forEach(input => {
+        input.addEventListener('change', () => this.handlePdfRequestTypeChange());
+    });
+}
 
     setupMainFormListeners() {
         // Request type change
@@ -421,39 +494,53 @@ class MaterialManagementApp {
     }
 
     async showBothMethod() {
-        console.log('🔄 Showing both methods');
-        
-        // Load form data if not already loaded
-        if (!this.formData) {
-            await this.loadFormData();
-        }
-        
-        // Hide method selection, show main form
-        this.hideAllSections();
-        const mainForm = document.getElementById('mainForm');
-        if (mainForm) {
-            mainForm.style.display = 'block';
-        }
-        
-        // Update form titles
-        const mainFormTitle = document.getElementById('mainFormTitle');
-        const mainFormSubtitle = document.getElementById('mainFormSubtitle');
-        if (mainFormTitle) mainFormTitle.textContent = 'System + PDF Material Request';
-        if (mainFormSubtitle) mainFormSubtitle.textContent = 'Select materials from our catalog AND upload additional PDF specifications';
-        
-        // Show additional PDF section
-        const additionalPdfSection = document.getElementById('additionalPdfSection');
-        if (additionalPdfSection) {
-            additionalPdfSection.style.display = 'block';
-        }
-        
-        // Populate form if data is available
-        if (this.formData) {
-            this.populateForm(this.formData);
-        }
-        
-        this.validateForm();
+    console.log('🔄 Showing both methods');
+    
+    // Load form data if not already loaded
+    if (!this.formData) {
+        await this.loadFormData();
     }
+    
+    // Hide method selection, show main form
+    this.hideAllSections();
+    const mainForm = document.getElementById('mainForm');
+    if (mainForm) {
+        mainForm.style.display = 'block';
+    }
+    
+    // Update form titles
+    const mainFormTitle = document.getElementById('mainFormTitle');
+    const mainFormSubtitle = document.getElementById('mainFormSubtitle');
+    if (mainFormTitle) mainFormTitle.textContent = 'System + PDF Material Request';
+    if (mainFormSubtitle) mainFormSubtitle.textContent = 'Select materials from our catalog AND upload additional PDF specifications';
+    
+    // Show additional PDF section
+    const additionalPdfSection = document.getElementById('additionalPdfSection');
+    if (additionalPdfSection) {
+        additionalPdfSection.style.display = 'block';
+        
+        // Update the label to show it's required
+        const pdfLabel = additionalPdfSection.querySelector('.form-label');
+        if (pdfLabel && !pdfLabel.textContent.includes('*')) {
+            pdfLabel.innerHTML = 'Additional Specifications PDF <span style="color: red;">*</span>';
+        }
+        
+        // Update help text
+        const helpText = additionalPdfSection.querySelector('.form-help-text');
+        if (helpText) {
+            helpText.textContent = 'Required: Upload a PDF with additional material specifications beyond your system selection';
+            helpText.style.color = '#dc2626';
+            helpText.style.fontWeight = '500';
+        }
+    }
+    
+    // Populate form if data is available
+    if (this.formData) {
+        this.populateForm(this.formData);
+    }
+    
+    this.validateForm();
+}
 
     // ===============================================
     // PDF UPLOAD FUNCTIONALITY
@@ -1487,51 +1574,65 @@ class MaterialManagementApp {
         }
     }
 
-    validateForm() {
-        try {
-            const form = document.getElementById('materialForm');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if (!form || !submitBtn) return;
+   validateForm() {
+    try {
+        const form = document.getElementById('materialForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (!form || !submitBtn) return;
 
-            const requiredFields = ['category', 'supplier', 'requestorName', 'requestorEmail'];
-            let isValid = true;
+        const requiredFields = ['category', 'supplier', 'requestorName', 'requestorEmail'];
+        let isValid = true;
 
-            // Check required fields
-            for (const fieldName of requiredFields) {
-                const field = form.querySelector(`[name="${fieldName}"]`);
-                if (!field || !field.value.trim()) {
-                    isValid = false;
-                    break;
-                }
+        // Check required fields
+        for (const fieldName of requiredFields) {
+            const field = form.querySelector(`[name="${fieldName}"]`);
+            if (!field || !field.value.trim()) {
+                isValid = false;
+                break;
             }
+        }
 
-            // Check materials (only if using system method)
-            if (this.currentMethod === 'system' && this.selectedMaterials.length === 0) {
+        // Check materials (only if using system method)
+        if (this.currentMethod === 'system' && this.selectedMaterials.length === 0) {
+            isValid = false;
+        }
+
+        // FIXED: For "both" method, require BOTH materials AND PDF
+        if (this.currentMethod === 'both') {
+            if (this.selectedMaterials.length === 0) {
                 isValid = false;
             }
-
-            // For "both" method, require either materials OR additional PDF
-            if (this.currentMethod === 'both') {
-                if (this.selectedMaterials.length === 0 && !this.additionalPdfFile) {
-                    isValid = false;
-                }
+            // REQUIRE PDF for BOTH method
+            if (!this.additionalPdfFile) {
+                isValid = false;
             }
-
-            // Check email format
-            const emailField = form.querySelector('[name="requestorEmail"]');
-            if (emailField && emailField.value) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(emailField.value)) {
-                    isValid = false;
-                }
-            }
-
-            submitBtn.disabled = !isValid;
-        } catch (error) {
-            console.error('❌ Error validating form:', error);
         }
+
+        // Check email format
+        const emailField = form.querySelector('[name="requestorEmail"]');
+        if (emailField && emailField.value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailField.value)) {
+                isValid = false;
+            }
+        }
+
+        submitBtn.disabled = !isValid;
+        
+        // Update button text to indicate PDF is required for BOTH
+        const btnText = submitBtn?.querySelector('.btn-text');
+        if (btnText && this.currentMethod === 'both' && !this.additionalPdfFile) {
+            btnText.textContent = 'Add PDF to Continue';
+        } else if (btnText) {
+            const requestType = form.querySelector('input[name="requestType"]:checked')?.value;
+            btnText.textContent = requestType === 'order' ? 'Review Order' : 'Review Quote Request';
+        }
+        
+    } catch (error) {
+        console.error('❌ Error validating form:', error);
     }
+}
 
     // ===============================================
     // FORM SUBMISSION & CONFIRMATION
