@@ -171,19 +171,25 @@
 
                     <!-- Supplier Information -->
                     <div class="form-group">
-                        <label for="pdfSupplierName" class="form-label">Supplier Name *</label>
-                        <input type="text" id="pdfSupplierName" name="pdfSupplierName" class="form-input" required placeholder="Enter supplier company name">
+                        <label for="pdfSupplier" class="form-label">Supplier *</label>
+                        <select id="pdfSupplier" name="pdfSupplier" class="form-select" required>
+                            <option value="">Select a supplier...</option>
+                        </select>
+                        <div id="pdfSupplierInfo" class="supplier-info" style="display: none;">
+                            <div class="supplier-details">
+                                <span id="pdfSupplierEmail"></span>
+                                <span id="pdfSupplierPhone"></span>
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- Category Checkboxes -->
                     <div class="form-group">
-                        <label for="pdfSupplierEmail" class="form-label">Supplier Email *</label>
-                        <input type="email" id="pdfSupplierEmail" name="pdfSupplierEmail" class="form-input" required placeholder="supplier@company.com">
-                    </div>
-
-                    <!-- Category -->
-                    <div class="form-group">
-                        <label for="pdfCategory" class="form-label">Category</label>
-                        <input type="text" id="pdfCategory" name="pdfCategory" class="form-input" placeholder="e.g. Electrical, HVAC, Plumbing">
+                        <label class="form-label">Categories</label>
+                        <p class="form-help-text">Select all categories that apply to your PDF materials</p>
+                        <div id="pdfCategoriesContainer" class="checkbox-group">
+                            <div class="checkbox-loading">Loading categories...</div>
+                        </div>
                     </div>
 
                     <!-- Requestor Information -->
