@@ -142,61 +142,63 @@ setupEventListeners() {
         }
 
         // Event delegation for dynamic buttons (replaces onclick handlers)
-        document.addEventListener('click', (e) => {
-            // Handle toggle materials buttons
-            if (e.target.closest('.toggle-materials')) {
-                const button = e.target.closest('.toggle-materials');
-                const materialsSection = button.closest('.materials-section');
-                const materialsDiv = materialsSection?.querySelector('.materials-list-history');
-                
-                if (materialsDiv) {
-                    const orderId = materialsDiv.id.replace('materials-', '');
-                    this.toggleMaterials(orderId);
-                }
-                return;
-            }
-            
-            // Handle quantity buttons (+ and - buttons)
-            if (e.target.classList.contains('qty-btn')) {
-                const index = parseInt(e.target.dataset.index);
-                const change = parseInt(e.target.dataset.change);
-                if (!isNaN(index) && !isNaN(change)) {
-                    this.updateQuantity(index, change);
-                }
-                return;
-            }
-            
-            // Handle remove material buttons
-            if (e.target.classList.contains('remove-material')) {
-                const index = parseInt(e.target.dataset.index);
-                if (!isNaN(index)) {
-                    this.removeMaterial(index);
-                }
-                return;
-            }
-            
-            // Handle order action buttons (PDF, Duplicate, Contact)
-            if (e.target.closest('[data-action]')) {
-                const button = e.target.closest('[data-action]');
-                const action = button.dataset.action;
-                const orderId = button.dataset.orderId;
-                const email = button.dataset.email;
-                const pdfLink = button.dataset.pdfLink;
-                
-                switch (action) {
-                    case 'viewPDF':
-                        this.viewPDF(pdfLink);
-                        break;
-                    case 'duplicateOrder':
-                        this.duplicateOrder(orderId);
-                        break;
-                    case 'contactSupplier':
-                        this.contactSupplier(email, orderId);
-                        break;
-                }
-                return;
-            }
-        }.bind(this));
+// Event delegation for dynamic buttons (replaces onclick handlers)
+const self = this;
+document.addEventListener('click', function(e) {
+    // Handle toggle materials buttons
+    if (e.target.closest('.toggle-materials')) {
+        const button = e.target.closest('.toggle-materials');
+        const materialsSection = button.closest('.materials-section');
+        const materialsDiv = materialsSection?.querySelector('.materials-list-history');
+        
+        if (materialsDiv) {
+            const orderId = materialsDiv.id.replace('materials-', '');
+            self.toggleMaterials(orderId);
+        }
+        return;
+    }
+    
+    // Handle quantity buttons (+ and - buttons)
+    if (e.target.classList.contains('qty-btn')) {
+        const index = parseInt(e.target.dataset.index);
+        const change = parseInt(e.target.dataset.change);
+        if (!isNaN(index) && !isNaN(change)) {
+            self.updateQuantity(index, change);
+        }
+        return;
+    }
+    
+    // Handle remove material buttons
+    if (e.target.classList.contains('remove-material')) {
+        const index = parseInt(e.target.dataset.index);
+        if (!isNaN(index)) {
+            self.removeMaterial(index);
+        }
+        return;
+    }
+    
+    // Handle order action buttons (PDF, Duplicate, Contact)
+    if (e.target.closest('[data-action]')) {
+        const button = e.target.closest('[data-action]');
+        const action = button.dataset.action;
+        const orderId = button.dataset.orderId;
+        const email = button.dataset.email;
+        const pdfLink = button.dataset.pdfLink;
+        
+        switch (action) {
+            case 'viewPDF':
+                self.viewPDF(pdfLink);
+                break;
+            case 'duplicateOrder':
+                self.duplicateOrder(orderId);
+                break;
+            case 'contactSupplier':
+                self.contactSupplier(email, orderId);
+                break;
+        }
+        return;
+    }
+});
         
         console.log('✅ Enhanced event listeners setup complete');
     } catch (error) {
