@@ -27,7 +27,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Added unsafe-eval for dynamic functions
       connectSrc: ["'self'", "https://primary-s0q-production.up.railway.app"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
