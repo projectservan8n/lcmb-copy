@@ -823,8 +823,19 @@ body {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   padding: 2rem;
-  max-width: 800px;
+  max-width: 800px; /* Keep narrow for forms */
   margin: 0 auto;
+  transition: max-width 0.3s ease-in-out;
+}
+
+/* CONTAINER WIDTH FIX - Expand container when materials are displayed */
+.form-container.expanded-for-materials {
+  max-width: 1400px !important;
+}
+
+/* Alternative CSS :has() selector support for modern browsers */
+.form-container:has(#materialsContainer[style*="display: block"]) {
+  max-width: 1400px !important;
 }
 
 .form-header {
@@ -979,16 +990,31 @@ body {
   font-style: italic;
 }
 
-/* Materials Selection Container - Base */
+/* Materials Selection Container - FIXED FOR CONTAINER BREAKOUT */
 .materials-selection-container {
   background: var(--gray-50);
   border: 2px solid var(--gray-200);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  width: 100%;
-  min-width: 0;
+  margin: 1.5rem -2rem; /* Negative margin to break out of container */
+  width: calc(100% + 4rem); /* Compensate for negative margin */
+  max-width: none; /* Remove any width constraints */
   box-sizing: border-box;
+}
+
+/* Responsive container breakout adjustments */
+@media (max-width: 1200px) {
+  .materials-selection-container {
+    margin: 1.5rem -1rem;
+    width: calc(100% + 2rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .materials-selection-container {
+    margin: 1.5rem 0; /* No negative margin on mobile */
+    width: 100%;
+  }
 }
 
 /* Materials Search */
@@ -1018,17 +1044,17 @@ body {
   font-weight: 500;
 }
 
-/* MATERIALS GRID - FIXED FOR ALL SCREENS */
+/* MATERIALS GRID - OPTIMIZED FOR WIDER CONTAINER */
 .materials-list {
   /* FORCE GRID LAYOUT */
   display: grid !important;
   
-  /* RESPONSIVE GRID COLUMNS */
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+  /* OPTIMIZED RESPONSIVE GRID COLUMNS - Smaller minmax for better fit */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
   
   /* CONSISTENT SPACING */
-  gap: 1.25rem !important;
-  padding: 1.5rem !important;
+  gap: 1rem !important;
+  padding: 1.25rem !important;
   
   /* SCROLLABLE CONTAINER */
   max-height: 500px;
@@ -1049,17 +1075,17 @@ body {
   contain: layout style paint;
 }
 
-/* MATERIAL CARDS - ENHANCED FOR BETTER DISPLAY */
+/* MATERIAL CARDS - OPTIMIZED FOR CONTAINER WIDTH */
 .material-card {
   /* LAYOUT */
   background: var(--white) !important;
   border: 2px solid var(--gray-200) !important;
   border-radius: var(--radius-lg);
-  padding: 1.25rem !important;
+  padding: 1rem !important;
   
-  /* SIZING */
-  min-width: 280px !important;
-  min-height: 160px !important;
+  /* OPTIMIZED SIZING - Smaller to fit more cards */
+  min-width: 200px !important;
+  min-height: 140px !important;
   width: 100% !important;
   max-width: none !important;
   
@@ -1259,118 +1285,80 @@ body {
 }
 
 /* ===============================================
-   RESPONSIVE BREAKPOINTS - MATERIALS GRID
+   RESPONSIVE BREAKPOINTS - OPTIMIZED FOR CONTAINER WIDTH
    =============================================== */
 
-/* Large Screens (1400px+) */
-@media (min-width: 1400px) {
-  .materials-list {
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+/* Extra Large Screens (1600px+) - Expanded container */
+@media (min-width: 1600px) {
+  .form-container.expanded-for-materials .materials-list {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
     gap: 1.5rem !important;
   }
-  
-  .material-card {
-    min-width: 320px !important;
-    min-height: 180px !important;
-  }
 }
 
-/* Desktop (1200px - 1399px) */
-@media (min-width: 1200px) and (max-width: 1399px) {
-  .materials-list {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+/* Large Screens (1400px - 1599px) - Expanded container */
+@media (min-width: 1400px) and (max-width: 1599px) {
+  .form-container.expanded-for-materials .materials-list {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
     gap: 1.25rem !important;
   }
-  
-  .material-card {
-    min-width: 300px !important;
-    min-height: 170px !important;
-  }
 }
 
-/* Medium Desktop (992px - 1199px) */
-@media (min-width: 992px) and (max-width: 1199px) {
-  .materials-list {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+/* Desktop (1200px - 1399px) - Expanded container */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .form-container.expanded-for-materials .materials-list {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
     gap: 1rem !important;
   }
   
-  .material-card {
-    min-width: 260px !important;
-    min-height: 160px !important;
-    padding: 1rem !important;
+  .materials-selection-container {
+    margin: 1.5rem -1rem;
+    width: calc(100% + 2rem);
+  }
+}
+
+/* Medium Desktop (992px - 1199px) - Standard container */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .materials-list {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    gap: 1rem !important;
+  }
+  
+  .materials-selection-container {
+    margin: 1.5rem -1rem;
+    width: calc(100% + 2rem);
   }
 }
 
 /* Tablet (768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
   .materials-list {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
     gap: 1rem !important;
-    padding: 1.25rem !important;
-    max-height: 450px;
-  }
-  
-  .material-card {
-    min-width: 220px !important;
-    min-height: 150px !important;
     padding: 1rem !important;
   }
   
-  .material-card .material-name {
-    font-size: 0.95rem !important;
-    min-height: 2.25rem;
+  .materials-selection-container {
+    margin: 1.5rem 0;
+    width: 100%;
   }
 }
 
 /* Small Tablet (640px - 767px) */
 @media (min-width: 640px) and (max-width: 767px) {
   .materials-list {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-    gap: 0.875rem !important;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+    gap: 0.75rem !important;
     padding: 1rem !important;
-    max-height: 400px;
-  }
-  
-  .material-card {
-    min-width: 180px !important;
-    min-height: 140px !important;
-    padding: 0.875rem !important;
-  }
-  
-  .material-card .material-name {
-    font-size: 0.9rem !important;
-    min-height: 2rem;
-  }
-  
-  .checkbox-custom {
-    width: 18px;
-    height: 18px;
   }
 }
 
 /* Mobile (480px - 639px) */
 @media (min-width: 480px) and (max-width: 639px) {
   .materials-list {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
     gap: 0.75rem !important;
     padding: 1rem !important;
-    max-height: 350px;
-  }
-  
-  .material-card {
-    min-width: 160px !important;
-    min-height: 130px !important;
-    padding: 0.75rem !important;
-  }
-  
-  .material-card .material-name {
-    font-size: 0.85rem !important;
-    min-height: 1.75rem;
-  }
-  
-  .material-card-header {
-    margin-bottom: 0.5rem;
   }
 }
 
@@ -1386,24 +1374,6 @@ body {
   .material-card {
     min-width: auto !important;
     width: 100% !important;
-    min-height: 120px !important;
-    padding: 0.75rem !important;
-  }
-  
-  .material-card .material-name {
-    font-size: 0.9rem !important;
-    min-height: 1.5rem;
-  }
-  
-  .material-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .material-status {
-    align-self: flex-end;
   }
 }
 
