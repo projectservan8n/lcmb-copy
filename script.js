@@ -1,15 +1,16 @@
-// Enhanced script.js with Checkbox Material Selection, Confirmation Page, and Supplier_ID Filtering
+// Enhanced script.js with PDF Upload Feature
 class MaterialManagementApp {
     constructor() {
         this.formData = null;
         this.selectedMaterials = [];
         this.filteredMaterials = [];
         this.selectedSubcategory = '';
-        this.pendingSubmissionData = null; // Store form data for confirmation
+        this.pendingSubmissionData = null;
+        this.uploadedFile = null; // Store the uploaded PDF file
     }
 
     init() {
-        console.log('🚀 Initializing Enhanced LCMB Material Management App (Checkbox Mode + Confirmation + Supplier_ID Filter)');
+        console.log('🚀 Initializing Enhanced LCMB Material Management App with PDF Upload');
         
         // Check if server already loaded data
         if (window.INITIAL_FORM_DATA) {
@@ -42,6 +43,16 @@ class MaterialManagementApp {
                 });
             }
 
+            // NEW: Request method change
+            const requestMethodInputs = document.querySelectorAll('input[name="requestMethod"]');
+            if (requestMethodInputs && requestMethodInputs.length > 0) {
+                requestMethodInputs.forEach(input => {
+                    if (input) {
+                        input.addEventListener('change', () => this.handleRequestMethodChange());
+                    }
+                });
+            }
+
             // Category change
             const categorySelect = document.getElementById('category');
             if (categorySelect) {
@@ -52,6 +63,12 @@ class MaterialManagementApp {
             const supplierSelect = document.getElementById('supplier');
             if (supplierSelect) {
                 supplierSelect.addEventListener('change', () => this.handleSupplierChange());
+            }
+
+            // PDF Supplier change
+            const pdfSupplierSelect = document.getElementById('pdfSupplier');
+            if (pdfSupplierSelect) {
+                pdfSupplierSelect.addEventListener('change', () => this.handlePdfSupplierChange());
             }
 
             // Subcategory change
@@ -66,7 +83,25 @@ class MaterialManagementApp {
                 materialSearch.addEventListener('input', () => this.handleMaterialSearch());
             }
 
-            // Form submission (now goes to confirmation page)
+            // NEW: PDF file upload
+            const pdfFileInput = document.getElementById('pdfFile');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const removeFileBtn = document.getElementById('removeFile');
+
+            if (pdfFileInput && fileUploadArea) {
+                pdfFileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+                
+                // Drag and drop functionality
+                fileUploadArea.addEventListener('click', () => pdfFileInput.click());
+                fileUploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
+                fileUploadArea.addEventListener('drop', (e) => this.handleFileDrop(e));
+            }
+
+            if (removeFileBtn) {
+                removeFileBtn.addEventListener('click', () => this.removeUploadedFile());
+            }
+
+            // Form submission
             const form = document.getElementById('materialForm');
             if (form) {
                 form.addEventListener('submit', (e) => this.handleFormSubmit(e));
@@ -102,6 +137,255 @@ class MaterialManagementApp {
             console.log('✅ Enhanced event listeners setup complete');
         } catch (error) {
             console.error('❌ Error setting up event listeners:', error);
+        }
+    }
+
+    // NEW: Handle request method change
+    handleRequestMethodChange() {
+        try {
+            const selectedMethod = document.querySelector('input[name="requestMethod"]:checked')?.value;
+            console.log('📋 Request method changed to:', selectedMethod);
+
+            const pdfUploadGroup = document.getElementById('pdfUploadGroup');
+            const categoryGroup = document.getElementById('categoryGroup');
+            const supplierGroup = document.getElementById('supplierGroup');
+            const pdfSupplierGroup = document.getElementById('pdfSupplierGroup');
+            const materialsGroup = document.getElementById('materialsGroup');
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+
+            // Reset form state
+            this.resetMaterialSelection();
+            this.removeUploadedFile();
+
+            switch (selectedMethod) {
+                case 'pdf':
+                    // PDF only - show PDF upload and all suppliers
+                    if (pdfUploadGroup) pdfUploadGroup.style.display = 'block';
+                    if (pdfSupplierGroup) pdfSupplierGroup.style.display = 'block';
+                    if (categoryGroup) categoryGroup.style.display = 'none';
+                    if (supplierGroup) supplierGroup.style.display = 'none';
+                    if (materialsGroup) materialsGroup.style.display = 'none';
+                    if (subcategoryGroup) subcategoryGroup.style.display = 'none';
+                    
+                    // Populate all suppliers for PDF upload
+                    this.populateAllSuppliersForPDF();
+                    break;
+
+                case 'mixed':
+                    // PDF + System - show everything
+                    if (pdfUploadGroup) pdfUploadGroup.style.display = 'block';
+                    if (pdfSupplierGroup) pdfSupplierGroup.style.display = 'none';
+                    if (categoryGroup) categoryGroup.style.display = 'block';
+                    if (supplierGroup) supplierGroup.style.display = 'block';
+                    if (materialsGroup) materialsGroup.style.display = 'block';
+                    break;
+
+                case 'system':
+                default:
+                    // System only - hide PDF upload
+                    if (pdfUploadGroup) pdfUploadGroup.style.display = 'none';
+                    if (pdfSupplierGroup) pdfSupplierGroup.style.display = 'none';
+                    if (categoryGroup) categoryGroup.style.display = 'block';
+                    if (supplierGroup) supplierGroup.style.display = 'block';
+                    if (materialsGroup) materialsGroup.style.display = 'block';
+                    break;
+            }
+
+            this.validateForm();
+        } catch (error) {
+            console.error('❌ Error handling request method change:', error);
+        }
+    }
+
+    // NEW: Populate all suppliers for PDF upload
+    populateAllSuppliersForPDF() {
+        try {
+            const pdfSupplierSelect = document.getElementById('pdfSupplier');
+            if (!pdfSupplierSelect || !this.formData?.data?.suppliers) return;
+
+            pdfSupplierSelect.innerHTML = '<option value="">Select a supplier...</option>';
+            
+            this.formData.data.suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.name;
+                option.dataset.email = supplier.email || '';
+                option.dataset.phone = supplier.phone || '';
+                option.dataset.id = supplier.id || '';
+                option.textContent = supplier.name;
+                pdfSupplierSelect.appendChild(option);
+            });
+
+            console.log(`✅ Populated ${this.formData.data.suppliers.length} suppliers for PDF upload`);
+        } catch (error) {
+            console.error('❌ Error populating PDF suppliers:', error);
+        }
+    }
+
+    // NEW: Handle PDF supplier change
+    handlePdfSupplierChange() {
+        try {
+            const pdfSupplierSelect = document.getElementById('pdfSupplier');
+            if (!pdfSupplierSelect) return;
+            
+            const selectedSupplier = pdfSupplierSelect.value;
+            console.log('🏢 PDF Supplier changed to:', selectedSupplier);
+            
+            if (!selectedSupplier) {
+                this.hidePdfSupplierInfo();
+                this.validateForm();
+                return;
+            }
+
+            // Show supplier info
+            const selectedOption = pdfSupplierSelect.selectedOptions[0];
+            if (selectedOption) {
+                this.showPdfSupplierInfo(selectedOption);
+            }
+
+            this.validateForm();
+        } catch (error) {
+            console.error('❌ Error handling PDF supplier change:', error);
+        }
+    }
+
+    // NEW: Show PDF supplier info
+    showPdfSupplierInfo(supplierOption) {
+        try {
+            const supplierInfo = document.getElementById('pdfSupplierInfo');
+            const supplierEmail = document.getElementById('pdfSupplierEmail');
+            const supplierPhone = document.getElementById('pdfSupplierPhone');
+
+            if (supplierOption && supplierInfo && supplierEmail && supplierPhone) {
+                supplierEmail.textContent = `📧 ${supplierOption.dataset.email || 'N/A'}`;
+                supplierPhone.textContent = `📞 ${supplierOption.dataset.phone || 'N/A'}`;
+                supplierInfo.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('❌ Error showing PDF supplier info:', error);
+        }
+    }
+
+    // NEW: Hide PDF supplier info
+    hidePdfSupplierInfo() {
+        try {
+            const supplierInfo = document.getElementById('pdfSupplierInfo');
+            if (supplierInfo) {
+                supplierInfo.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('❌ Error hiding PDF supplier info:', error);
+        }
+    }
+
+    // NEW: Handle file upload
+    handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            this.processUploadedFile(file);
+        }
+    }
+
+    // NEW: Handle drag over
+    handleDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        if (fileUploadArea) {
+            fileUploadArea.classList.add('drag-over');
+        }
+    }
+
+    // NEW: Handle file drop
+    handleFileDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        if (fileUploadArea) {
+            fileUploadArea.classList.remove('drag-over');
+        }
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            this.processUploadedFile(files[0]);
+        }
+    }
+
+    // NEW: Process uploaded file
+    processUploadedFile(file) {
+        try {
+            console.log('📄 Processing uploaded file:', file.name);
+
+            // Validate file type
+            if (file.type !== 'application/pdf') {
+                this.showError('Please upload a PDF file only.');
+                return;
+            }
+
+            // Validate file size (10MB max)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                this.showError('File size must be less than 10MB.');
+                return;
+            }
+
+            // Store the file
+            this.uploadedFile = file;
+
+            // Show file preview
+            this.showFilePreview(file);
+            
+            // Validate form
+            this.validateForm();
+
+            console.log('✅ File processed successfully:', {
+                name: file.name,
+                size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+                type: file.type
+            });
+
+        } catch (error) {
+            console.error('❌ Error processing uploaded file:', error);
+            this.showError('Error processing uploaded file: ' + error.message);
+        }
+    }
+
+    // NEW: Show file preview
+    showFilePreview(file) {
+        try {
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const filePreview = document.getElementById('filePreview');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+
+            if (fileUploadArea) fileUploadArea.style.display = 'none';
+            if (filePreview) filePreview.style.display = 'block';
+            if (fileName) fileName.textContent = file.name;
+            if (fileSize) fileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+
+        } catch (error) {
+            console.error('❌ Error showing file preview:', error);
+        }
+    }
+
+    // NEW: Remove uploaded file
+    removeUploadedFile() {
+        try {
+            console.log('🗑️ Removing uploaded file');
+
+            this.uploadedFile = null;
+
+            const pdfFileInput = document.getElementById('pdfFile');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const filePreview = document.getElementById('filePreview');
+
+            if (pdfFileInput) pdfFileInput.value = '';
+            if (fileUploadArea) fileUploadArea.style.display = 'block';
+            if (filePreview) filePreview.style.display = 'none';
+
+            this.validateForm();
+        } catch (error) {
+            console.error('❌ Error removing uploaded file:', error);
         }
     }
 
@@ -162,6 +446,9 @@ class MaterialManagementApp {
                 });
                 console.log(`✅ Populated ${data.data.categories.length} categories`);
             }
+
+            // Populate all suppliers for PDF upload
+            this.populateAllSuppliersForPDF();
 
             this.showLoading(false);
         } catch (error) {
@@ -246,7 +533,7 @@ class MaterialManagementApp {
         option.value = supplier.name;
         option.dataset.email = supplier.email || '';
         option.dataset.phone = supplier.phone || '';
-        option.dataset.id = supplier.id || '';  // ✅ CRITICAL: Include supplier ID for filtering
+        option.dataset.id = supplier.id || '';
         option.textContent = supplier.name;
         supplierSelect.appendChild(option);
     }
@@ -355,7 +642,6 @@ class MaterialManagementApp {
         }
     }
 
-    // 🔥 ENHANCED: Materials population with proper Supplier_ID filtering
     populateMaterials(category, subcategory = '') {
         try {
             const materialSearch = document.getElementById('materialSearch');
@@ -775,7 +1061,8 @@ class MaterialManagementApp {
             
             if (!form || !submitBtn) return;
 
-            const requiredFields = ['category', 'supplier', 'requestorName', 'requestorEmail'];
+            const requestMethod = document.querySelector('input[name="requestMethod"]:checked')?.value;
+            const requiredFields = ['requestorName', 'requestorEmail'];
             let isValid = true;
 
             // Check required fields
@@ -787,11 +1074,6 @@ class MaterialManagementApp {
                 }
             }
 
-            // Check materials
-            if (this.selectedMaterials.length === 0) {
-                isValid = false;
-            }
-
             // Check email format
             const emailField = form.querySelector('[name="requestorEmail"]');
             if (emailField && emailField.value) {
@@ -799,6 +1081,63 @@ class MaterialManagementApp {
                 if (!emailRegex.test(emailField.value)) {
                     isValid = false;
                 }
+            }
+
+            // Validate based on request method
+            switch (requestMethod) {
+                case 'pdf':
+                    // PDF only - require PDF file and supplier
+                    if (!this.uploadedFile) {
+                        isValid = false;
+                        break;
+                    }
+                    const pdfSupplier = form.querySelector('[name="pdfSupplier"]');
+                    if (!pdfSupplier || !pdfSupplier.value.trim()) {
+                        isValid = false;
+                        break;
+                    }
+                    break;
+
+                case 'mixed':
+                    // PDF + System - require PDF, category, supplier, and at least one material
+                    if (!this.uploadedFile) {
+                        isValid = false;
+                        break;
+                    }
+                    const mixedCategory = form.querySelector('[name="category"]');
+                    const mixedSupplier = form.querySelector('[name="supplier"]');
+                    if (!mixedCategory || !mixedCategory.value.trim()) {
+                        isValid = false;
+                        break;
+                    }
+                    if (!mixedSupplier || !mixedSupplier.value.trim()) {
+                        isValid = false;
+                        break;
+                    }
+                    if (this.selectedMaterials.length === 0) {
+                        isValid = false;
+                        break;
+                    }
+                    break;
+
+                case 'system':
+                default:
+                    // System only - require category, supplier, and materials
+                    const systemCategory = form.querySelector('[name="category"]');
+                    const systemSupplier = form.querySelector('[name="supplier"]');
+                    if (!systemCategory || !systemCategory.value.trim()) {
+                        isValid = false;
+                        break;
+                    }
+                    if (!systemSupplier || !systemSupplier.value.trim()) {
+                        isValid = false;
+                        break;
+                    }
+                    if (this.selectedMaterials.length === 0) {
+                        isValid = false;
+                        break;
+                    }
+                    break;
             }
 
             submitBtn.disabled = !isValid;
@@ -821,13 +1160,36 @@ class MaterialManagementApp {
             // Add selected materials with quantities
             data.materials = this.selectedMaterials;
             
-            // Get supplier details
-            const supplierSelect = document.getElementById('supplier');
-            const selectedOption = supplierSelect.selectedOptions[0];
-            if (selectedOption) {
-                data.supplierEmail = selectedOption.dataset.email || '';
-                data.supplierPhone = selectedOption.dataset.phone || '';
-                data.supplierId = selectedOption.dataset.id || '';
+            // Add request method
+            data.requestMethod = document.querySelector('input[name="requestMethod"]:checked')?.value || 'system';
+            
+            // Add uploaded file info if present
+            if (this.uploadedFile) {
+                data.uploadedFile = {
+                    name: this.uploadedFile.name,
+                    size: this.uploadedFile.size,
+                    type: this.uploadedFile.type
+                };
+            }
+            
+            // Get supplier details based on request method
+            if (data.requestMethod === 'pdf') {
+                const pdfSupplierSelect = document.getElementById('pdfSupplier');
+                const selectedOption = pdfSupplierSelect?.selectedOptions[0];
+                if (selectedOption) {
+                    data.supplier = selectedOption.value;
+                    data.supplierEmail = selectedOption.dataset.email || '';
+                    data.supplierPhone = selectedOption.dataset.phone || '';
+                    data.supplierId = selectedOption.dataset.id || '';
+                }
+            } else {
+                const supplierSelect = document.getElementById('supplier');
+                const selectedOption = supplierSelect?.selectedOptions[0];
+                if (selectedOption) {
+                    data.supplierEmail = selectedOption.dataset.email || '';
+                    data.supplierPhone = selectedOption.dataset.phone || '';
+                    data.supplierId = selectedOption.dataset.id || '';
+                }
             }
             
             console.log('📋 Form data prepared for confirmation:', data);
@@ -874,9 +1236,38 @@ class MaterialManagementApp {
             
             // Populate order summary
             this.populateElement('confirmRequestType', requestType === 'order' ? 'Material Order' : 'Quote Request');
-            this.populateElement('confirmCategory', data.category);
+            
+            // NEW: Show request method
+            const methodLabels = {
+                'system': '📋 Order System',
+                'pdf': '📄 PDF Upload',
+                'mixed': '📋📄 PDF + Order System'
+            };
+            this.populateElement('confirmRequestMethod', methodLabels[data.requestMethod] || data.requestMethod);
+            
+            // Show/hide category based on request method
+            const confirmCategoryItem = document.getElementById('confirmCategoryItem');
+            if (data.requestMethod === 'pdf') {
+                if (confirmCategoryItem) confirmCategoryItem.style.display = 'none';
+            } else {
+                if (confirmCategoryItem) confirmCategoryItem.style.display = 'block';
+                this.populateElement('confirmCategory', data.category);
+            }
+            
             this.populateElement('confirmUrgency', data.urgency, 'Normal');
             this.populateElement('confirmProjectRef', data.projectRef, 'Not specified');
+            
+            // NEW: Show PDF section if applicable
+            const pdfSection = document.getElementById('pdfSection');
+            if (data.requestMethod === 'pdf' || data.requestMethod === 'mixed') {
+                if (pdfSection && data.uploadedFile) {
+                    pdfSection.style.display = 'block';
+                    this.populateElement('confirmPdfName', data.uploadedFile.name);
+                    this.populateElement('confirmPdfSize', `${(data.uploadedFile.size / 1024 / 1024).toFixed(2)} MB`);
+                }
+            } else {
+                if (pdfSection) pdfSection.style.display = 'none';
+            }
             
             // Populate supplier information
             this.populateElement('confirmSupplierName', data.supplier);
@@ -887,12 +1278,19 @@ class MaterialManagementApp {
             this.populateElement('confirmRequestorName', data.requestorName);
             this.populateElement('confirmRequestorEmail', data.requestorEmail);
             
-            // Populate materials
-            this.populateConfirmationMaterials(data.materials);
+            // Populate materials (if applicable)
+            const materialsSection = document.getElementById('materialsSection');
+            if (data.requestMethod === 'pdf') {
+                // PDF only - hide materials section
+                if (materialsSection) materialsSection.style.display = 'none';
+            } else {
+                // System or Mixed - show materials
+                if (materialsSection) materialsSection.style.display = 'block';
+                this.populateConfirmationMaterials(data.materials);
+            }
             
             // Handle special instructions
             const notesSection = document.getElementById('notesSection');
-            const confirmNotes = document.getElementById('confirmNotes');
             if (data.notes && data.notes.trim()) {
                 if (notesSection) notesSection.style.display = 'block';
                 this.populateElement('confirmNotes', data.notes);
@@ -1010,17 +1408,31 @@ class MaterialManagementApp {
             const data = this.pendingSubmissionData;
             console.log('📤 Submitting confirmed request to supplier:', data);
             
+            // Prepare FormData for file upload if needed
+            const formData = new FormData();
+            
+            // Add all form fields
+            Object.keys(data).forEach(key => {
+                if (key === 'materials' || key === 'uploadedFile') {
+                    formData.append(key, JSON.stringify(data[key]));
+                } else {
+                    formData.append(key, data[key]);
+                }
+            });
+            
+            // Add PDF file if present
+            if (this.uploadedFile) {
+                formData.append('pdfFile', this.uploadedFile);
+            }
+            
             // Determine endpoint
             const requestType = data.requestType;
             const endpoint = requestType === 'order' ? '/api/order/submit' : '/api/quote/submit';
             
-            // Submit form
+            // Submit form with proper content type for file upload
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
+                body: formData // Don't set Content-Type header for FormData
             });
 
             const result = await response.json();
@@ -1066,8 +1478,9 @@ class MaterialManagementApp {
             if (referenceId) referenceId.textContent = id;
             if (successSupplier) successSupplier.textContent = supplier;
 
-            // Clear pending data
+            // Clear pending data and uploaded file
             this.pendingSubmissionData = null;
+            this.uploadedFile = null;
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1136,9 +1549,18 @@ function resetForm() {
             window.app.filteredMaterials = [];
             window.app.selectedSubcategory = '';
             window.app.pendingSubmissionData = null;
+            window.app.uploadedFile = null;
             window.app.renderSelectedMaterials();
             window.app.resetMaterialSelection();
+            window.app.removeUploadedFile();
             window.app.validateForm();
+        }
+        
+        // Reset request method to system
+        const systemRadio = document.querySelector('input[name="requestMethod"][value="system"]');
+        if (systemRadio) {
+            systemRadio.checked = true;
+            if (window.app) window.app.handleRequestMethodChange();
         }
         
         // Scroll to top
@@ -1151,7 +1573,7 @@ function resetForm() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('🌐 DOM Content Loaded - Starting Enhanced App (Checkbox + Confirmation + Supplier_ID Filter)');
+        console.log('🌐 DOM Content Loaded - Starting Enhanced App with PDF Upload');
         window.app = new MaterialManagementApp();
         window.app.init();
     } catch (error) {
