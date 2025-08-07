@@ -1,4 +1,4 @@
-/* style.css - Complete Enhanced LCMB Material Management System with PDF Upload */
+/* Enhanced style.css - Complete LCMB Material Management System with Method Selection & PDF Upload */
 :root {
   /* LCMB Brand Colors */
   --primary-blue: #2a5298;
@@ -181,6 +181,7 @@ body {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid var(--gray-100);
+  position: relative;
 }
 
 .form-header h2 {
@@ -195,7 +196,258 @@ body {
   font-size: 1rem;
 }
 
-/* Form Elements */
+.back-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.back-btn:hover {
+  background: var(--gray-200);
+  transform: translateX(-2px);
+}
+
+/* ===============================================
+   METHOD SELECTION STYLES
+   =============================================== */
+
+.method-selection {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.method-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.method-card {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.method-card:hover {
+  border-color: var(--primary-blue);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  background: var(--accent-blue);
+}
+
+.method-card:active {
+  transform: translateY(-2px);
+}
+
+.method-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  display: block;
+  opacity: 0.8;
+}
+
+.method-card h3 {
+  color: var(--primary-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.method-card p {
+  color: var(--gray-600);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.method-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  padding: 0.25rem 0;
+}
+
+.method-btn {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.method-btn:hover {
+  background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--primary-blue) 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 768px) {
+  .method-options {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .method-card {
+    padding: 1.5rem;
+  }
+  
+  .method-icon {
+    font-size: 2.5rem;
+  }
+}
+
+/* ===============================================
+   PDF UPLOAD STYLES
+   =============================================== */
+
+.pdf-upload-area {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--gray-50);
+  position: relative;
+}
+
+.pdf-upload-area.small {
+  padding: 2rem 1rem;
+}
+
+.pdf-upload-area:hover,
+.pdf-upload-area.drag-over {
+  border-color: var(--primary-blue);
+  background-color: var(--accent-blue);
+  transform: scale(1.01);
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.7;
+  color: var(--gray-500);
+}
+
+.pdf-upload-area:hover .upload-icon {
+  color: var(--primary-blue);
+  transform: scale(1.1);
+}
+
+.upload-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+  margin-bottom: 0.5rem;
+}
+
+.upload-subtext {
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.pdf-upload-area input[type="file"] {
+  display: none;
+}
+
+/* File Info Display */
+.file-info {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--white);
+  border: 2px solid var(--primary-blue);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.file-size {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.remove-file-btn {
+  background: var(--error-red);
+  color: var(--white);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.remove-file-btn:hover {
+  background-color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* ===============================================
+   FORM ELEMENTS
+   =============================================== */
+
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -206,6 +458,13 @@ body {
   color: var(--gray-700);
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
+}
+
+.form-help-text {
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+  font-style: italic;
 }
 
 .form-input,
@@ -317,459 +576,10 @@ body {
   margin: 0;
 }
 
-/* NEW: PDF Upload Styles */
-.pdf-upload-container {
-  position: relative;
-}
+/* ===============================================
+   MATERIALS SELECTION
+   =============================================== */
 
-.file-input {
-  display: none;
-}
-
-.file-upload-area {
-  border: 2px dashed var(--gray-300);
-  border-radius: var(--radius-lg);
-  padding: 3rem 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: var(--transition);
-  background: var(--gray-50);
-}
-
-.file-upload-area:hover,
-.file-upload-area.drag-over {
-  border-color: var(--primary-blue);
-  background-color: var(--accent-blue);
-}
-
-.upload-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.7;
-}
-
-.upload-text strong {
-  display: block;
-  color: var(--primary-blue);
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-}
-
-.upload-text p {
-  color: var(--gray-600);
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-.file-preview {
-  background: var(--white);
-  border: 2px solid var(--primary-blue);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-}
-
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.file-icon {
-  font-size: 2rem;
-  color: var(--primary-blue);
-}
-
-.file-details {
-  flex: 1;
-}
-
-.file-name {
-  font-weight: 600;
-  color: var(--gray-800);
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
-}
-
-.file-size {
-  color: var(--gray-600);
-  font-size: 0.9rem;
-}
-
-.remove-file {
-  background: var(--error-red);
-  color: var(--white);
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-}
-
-.remove-file:hover {
-  background-color: #dc2626;
-  transform: scale(1.1);
-}
-
-/* PDF Confirmation Styles */
-.pdf-summary {
-  background: var(--gray-50);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-  border: 2px solid var(--gray-200);
-}
-
-.pdf-file-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.pdf-details {
-  flex: 1;
-}
-
-.pdf-filename {
-  font-weight: 600;
-  color: var(--gray-800);
-  margin-bottom: 0.25rem;
-}
-
-.pdf-filesize {
-  color: var(--gray-600);
-  font-size: 0.9rem;
-}
-
-.pdf-status {
-  background: var(--success-green);
-  color: var(--white);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-/* Materials Selection */
-.materials-container {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.materials-container .form-select {
-  flex: 1;
-}
-
-.selected-materials {
-  background: var(--gray-50);
-  border: 2px dashed var(--gray-200);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-  min-height: 100px;
-}
-
-.selected-materials:empty::before {
-  content: 'Selected materials will appear here...';
-  color: var(--gray-500);
-  font-style: italic;
-}
-
-.material-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--white);
-  padding: 0.75rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 0.5rem;
-  box-shadow: var(--shadow-sm);
-  border-left: 4px solid var(--primary-blue);
-}
-
-.material-info {
-  flex: 1;
-}
-
-.material-name {
-  font-weight: 500;
-  color: var(--gray-800);
-}
-
-.material-meta {
-  font-size: 0.85rem;
-  color: var(--gray-600);
-  margin-top: 0.25rem;
-}
-
-.remove-material {
-  background: var(--error-red);
-  color: var(--white);
-  border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: var(--transition);
-}
-
-.remove-material:hover {
-  background-color: #dc2626;
-}
-
-/* Supplier Info */
-.supplier-info {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
-  background: var(--accent-blue);
-  border-radius: var(--radius-md);
-}
-
-.supplier-details {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.9rem;
-  color: var(--gray-700);
-}
-
-@media (max-width: 768px) {
-  .supplier-details {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: var(--radius-lg);
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-  white-space: nowrap;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
-  color: var(--white);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-secondary {
-  background: var(--white);
-  color: var(--primary-blue);
-  border: 2px solid var(--primary-blue);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--primary-blue);
-  color: var(--white);
-}
-
-.btn-loading {
-  display: none;
-}
-
-.btn:disabled .btn-text {
-  display: none;
-}
-
-.btn:disabled .btn-loading {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Form Actions */
-.form-actions {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 2px solid var(--gray-100);
-  text-align: center;
-}
-
-#submitBtn {
-  min-width: 200px;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-}
-
-/* Alerts */
-.alert {
-  padding: 1rem;
-  border-radius: var(--radius-lg);
-  margin-bottom: 1.5rem;
-  border-left: 4px solid;
-}
-
-.alert-error {
-  background: #fef2f2;
-  border-color: var(--error-red);
-  color: #7f1d1d;
-}
-
-.alert-success {
-  background: #f0fdf4;
-  border-color: var(--success-green);
-  color: #14532d;
-}
-
-.success-details {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(16, 185, 129, 0.1);
-  border-radius: var(--radius-md);
-}
-
-.reference-id {
-  font-family: 'Courier New', monospace;
-  background: var(--primary-blue);
-  color: var(--white);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-}
-
-/* Loading States */
-.loading-state {
-  text-align: center;
-  padding: 3rem;
-  color: var(--gray-600);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--gray-200);
-  border-top: 4px solid var(--primary-blue);
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
-}
-
-.spinner-small {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Footer */
-.footer {
-  background: var(--gray-800);
-  color: var(--white);
-  padding: 2rem 0 1rem;
-  margin-top: auto;
-}
-
-.footer-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-}
-
-.footer-section h4 {
-  color: var(--primary-blue-light);
-  margin-bottom: 0.75rem;
-  font-weight: 600;
-}
-
-.footer-section ul {
-  list-style: none;
-}
-
-.footer-section ul li {
-  margin-bottom: 0.25rem;
-  color: var(--gray-300);
-}
-
-.footer-bottom {
-  text-align: center;
-  padding-top: 1rem;
-  border-top: 1px solid var(--gray-700);
-  color: var(--gray-400);
-  font-size: 0.9rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .form-container {
-    padding: 1.5rem;
-    margin: 0 1rem;
-  }
-  
-  .materials-container {
-    flex-direction: column;
-  }
-  
-  .material-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .file-upload-area {
-    padding: 2rem 1rem;
-  }
-  
-  .upload-icon {
-    font-size: 2rem;
-  }
-  
-  .file-info {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.75rem;
-  }
-  
-  .pdf-file-info {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.75rem;
-  }
-}
-
-/* Enhanced CSS for Material Search and Quantity Control */
-
-.form-help-text {
-  font-size: 0.9rem;
-  color: var(--gray-600);
-  margin-bottom: 1rem;
-  font-style: italic;
-}
-
-/* Materials Selection Container */
 .materials-selection-container {
   background: var(--gray-50);
   border: 2px solid var(--gray-200);
@@ -922,7 +732,7 @@ body {
   margin-bottom: 0.5rem;
   font-size: 1rem;
   line-height: 1.3;
-  min-height: 2.6rem; /* Ensures consistent height */
+  min-height: 2.6rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -964,19 +774,6 @@ body {
   border: 1px solid var(--gray-300);
 }
 
-/* Search Result Info */
-.search-result-info {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 0.75rem;
-  background: var(--white);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--gray-200);
-  color: var(--gray-600);
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
 /* No Materials State */
 .no-materials {
   grid-column: 1 / -1;
@@ -997,7 +794,7 @@ body {
 }
 
 /* ===============================================
-   ENHANCED SELECTED MATERIALS SECTION
+   SELECTED MATERIALS SECTION
    =============================================== */
 
 .selected-materials-section {
@@ -1179,11 +976,109 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* Supplier Info */
+.supplier-info {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: var(--accent-blue);
+  border-radius: var(--radius-md);
+}
+
+.supplier-details {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+}
+
+@media (max-width: 768px) {
+  .supplier-details {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+/* ===============================================
+   BUTTONS
+   =============================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+  color: var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--primary-blue);
+  border: 2px solid var(--primary-blue);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+.btn-loading {
+  display: none;
+}
+
+.btn:disabled .btn-text {
+  display: none;
+}
+
+.btn:disabled .btn-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Form Actions */
+.form-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--gray-100);
+  text-align: center;
+}
+
+#submitBtn,
+#pdfSubmitBtn {
+  min-width: 200px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
 /* ===============================================
    CONFIRMATION PAGE STYLES
    =============================================== */
 
-/* Confirmation Content */
 .confirmation-content {
   max-width: 100%;
 }
@@ -1474,6 +1369,48 @@ body {
   font-style: italic;
 }
 
+/* PDF Section for Confirmation */
+.pdf-info-card {
+  background: var(--white);
+  border: 2px solid var(--primary-blue);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pdf-details {
+  flex: 1;
+}
+
+.pdf-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+.pdf-size {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.pdf-status {
+  flex-shrink: 0;
+}
+
+.pdf-badge {
+  background: var(--success-green);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* Confirmation Actions */
 .confirmation-actions {
   display: flex;
@@ -1491,7 +1428,134 @@ body {
   font-size: 1.1rem;
 }
 
-/* Responsive Design for All Components */
+/* ===============================================
+   ALERTS
+   =============================================== */
+
+.alert {
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+  border-left: 4px solid;
+}
+
+.alert-error {
+  background: #fef2f2;
+  border-color: var(--error-red);
+  color: #7f1d1d;
+}
+
+.alert-success {
+  background: #f0fdf4;
+  border-color: var(--success-green);
+  color: #14532d;
+}
+
+.success-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: var(--radius-md);
+}
+
+.reference-id {
+  font-family: 'Courier New', monospace;
+  background: var(--primary-blue);
+  color: var(--white);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.drive-link {
+  color: var(--primary-blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.drive-link:hover {
+  text-decoration: underline;
+}
+
+/* ===============================================
+   LOADING STATES
+   =============================================== */
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--gray-600);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top: 4px solid var(--primary-blue);
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===============================================
+   FOOTER
+   =============================================== */
+
+.footer {
+  background: var(--gray-800);
+  color: var(--white);
+  padding: 2rem 0 1rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-section h4 {
+  color: var(--primary-blue-light);
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.footer-section ul {
+  list-style: none;
+}
+
+.footer-section ul li {
+  margin-bottom: 0.25rem;
+  color: var(--gray-300);
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-700);
+  color: var(--gray-400);
+  font-size: 0.9rem;
+}
+
+/* ===============================================
+   RESPONSIVE DESIGN
+   =============================================== */
+
 @media (max-width: 1200px) {
   .materials-list {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1499,6 +1563,11 @@ body {
 }
 
 @media (max-width: 768px) {
+  .form-container {
+    padding: 1.5rem;
+    margin: 0 1rem;
+  }
+  
   .materials-list {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 0.75rem;
@@ -1552,7 +1621,7 @@ body {
   }
   
   /* PDF Upload Mobile */
-  .file-upload-area {
+  .pdf-upload-area {
     padding: 2rem 1rem;
   }
   
@@ -1561,12 +1630,6 @@ body {
   }
   
   .file-info {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.75rem;
-  }
-  
-  .pdf-file-info {
     flex-direction: column;
     text-align: center;
     gap: 0.75rem;
@@ -1695,6 +1758,12 @@ body {
   .info-tag {
     align-self: flex-start;
   }
+  
+  .pdf-info-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
 }
 
 /* ===============================================
@@ -1718,31 +1787,18 @@ body {
   animation: cardSelect 0.3s ease-out;
 }
 
-/* Animation for Checkbox Selection */
-@keyframes checkboxSelect {
+/* Animation for Method Card Hover */
+@keyframes methodCardHover {
   0% {
-    transform: scale(0.8);
-  }
-  50% {
-    transform: scale(1.1);
+    transform: translateY(0);
   }
   100% {
-    transform: scale(1);
+    transform: translateY(-4px);
   }
 }
 
-.material-card.selected .checkbox-custom {
-  animation: checkboxSelect 0.2s ease-out;
-}
-
-/* Success State for Selected Items */
-.selected-material-item.just-added {
-  border-left-color: var(--success-green);
-  background: #f0fdf4;
-}
-
-.selected-material-item.just-added .material-name {
-  color: var(--success-green);
+.method-card:hover {
+  animation: methodCardHover 0.2s ease-out forwards;
 }
 
 /* File Upload Animation */
@@ -1757,15 +1813,25 @@ body {
   }
 }
 
-.file-preview {
+.file-info {
   animation: fileUpload 0.3s ease-out;
+}
+
+/* Success State for Selected Items */
+.selected-material-item.just-added {
+  border-left-color: var(--success-green);
+  background: #f0fdf4;
+}
+
+.selected-material-item.just-added .material-name {
+  color: var(--success-green);
 }
 
 /* ===============================================
    SCROLLBARS & ACCESSIBILITY
    =============================================== */
 
-/* Scrollbar for Grid */
+/* Scrollbar for components */
 .materials-list::-webkit-scrollbar,
 .selected-materials::-webkit-scrollbar,
 .confirm-materials-list::-webkit-scrollbar {
@@ -1794,12 +1860,9 @@ body {
 }
 
 /* Focus States for Accessibility */
-.material-card:focus {
-  outline: 2px solid var(--primary-blue);
-  outline-offset: 2px;
-}
-
-.material-card:focus-visible {
+.material-card:focus,
+.method-card:focus,
+.pdf-upload-area:focus {
   outline: 2px solid var(--primary-blue);
   outline-offset: 2px;
 }
@@ -1809,28 +1872,23 @@ body {
   outline-offset: 2px;
 }
 
-.file-upload-area:focus {
-  outline: 2px solid var(--primary-blue);
-  outline-offset: 2px;
-}
-
 /* ===============================================
    DRAG AND DROP VISUAL FEEDBACK
    =============================================== */
 
-.file-upload-area.drag-over {
+.pdf-upload-area.drag-over {
   border-color: var(--primary-blue) !important;
   background-color: var(--accent-blue) !important;
   transform: scale(1.02);
   box-shadow: var(--shadow-lg);
 }
 
-.file-upload-area.drag-over .upload-icon {
+.pdf-upload-area.drag-over .upload-icon {
   transform: scale(1.1);
   color: var(--primary-blue);
 }
 
-.file-upload-area.drag-over .upload-text strong {
+.pdf-upload-area.drag-over .upload-text {
   color: var(--primary-blue-dark);
 }
 
@@ -1859,35 +1917,6 @@ body {
 }
 
 /* ===============================================
-   LOADING STATES FOR COMPONENTS
-   =============================================== */
-
-.materials-list.loading {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  background: var(--gray-50);
-  border: 2px dashed var(--gray-300);
-  color: var(--gray-500);
-}
-
-.materials-list.loading::before {
-  content: "Loading materials...";
-  display: block;
-  text-align: center;
-}
-
-.file-upload-area.uploading {
-  pointer-events: none;
-  opacity: 0.7;
-}
-
-.file-upload-area.uploading .upload-icon {
-  animation: spin 1s linear infinite;
-}
-
-/* ===============================================
    ENHANCED BUTTON STATES
    =============================================== */
 
@@ -1910,7 +1939,7 @@ body {
    =============================================== */
 
 @media (max-width: 640px) {
-  .file-upload-area {
+  .pdf-upload-area {
     padding: 1.5rem 1rem;
     min-height: 120px;
   }
@@ -1920,28 +1949,15 @@ body {
     margin-bottom: 0.75rem;
   }
   
-  .upload-text strong {
+  .upload-text {
     font-size: 1rem;
   }
   
-  .upload-text p {
+  .upload-subtext {
     font-size: 0.8rem;
   }
   
-  .file-info {
-    padding: 0.75rem;
-  }
-  
   .file-name {
-    font-size: 0.9rem;
-    word-break: break-word;
-  }
-  
-  .pdf-file-info {
-    padding: 0.75rem;
-  }
-  
-  .pdf-filename {
     font-size: 0.9rem;
     word-break: break-word;
   }
@@ -1957,7 +1973,7 @@ body {
   box-shadow: var(--shadow-md);
 }
 
-.file-upload-area[tabindex]:focus {
+.pdf-upload-area[tabindex]:focus {
   outline: 2px solid var(--primary-blue);
   outline-offset: 2px;
 }
@@ -1985,7 +2001,11 @@ body {
     border-width: 4px;
   }
   
-  .file-upload-area {
+  .pdf-upload-area {
+    border-width: 3px;
+  }
+  
+  .method-card {
     border-width: 3px;
   }
 }
@@ -1993,8 +2013,9 @@ body {
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .material-card,
-  .file-upload-area,
-  .file-preview,
+  .method-card,
+  .pdf-upload-area,
+  .file-info,
   .btn,
   .spinner,
   .spinner-small {
@@ -2002,115 +2023,14 @@ body {
     transition: none !important;
   }
   
-  .material-card:hover {
+  .material-card:hover,
+  .method-card:hover {
     transform: none;
   }
   
-  .file-upload-area.drag-over {
+  .pdf-upload-area.drag-over {
     transform: none;
   }
-}
-
-/* ===============================================
-   TOOLTIP STYLES
-   =============================================== */
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip::before {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--gray-800);
-  color: var(--white);
-  padding: 0.5rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition);
-  z-index: 1000;
-}
-
-.tooltip::after {
-  content: '';
-  position: absolute;
-  bottom: 115%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid var(--gray-800);
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition);
-  z-index: 1000;
-}
-
-.tooltip:hover::before,
-.tooltip:hover::after {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* ===============================================
-   ERROR MESSAGE STYLING
-   =============================================== */
-
-.field-error {
-  color: var(--error-red);
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.field-error::before {
-  content: '⚠️';
-  font-size: 0.8rem;
-}
-
-.field-success {
-  color: var(--success-green);
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.field-success::before {
-  content: '✅';
-  font-size: 0.8rem;
-}
-
-/* ===============================================
-   PROGRESS INDICATORS
-   =============================================== */
-
-.progress-bar {
-  width: 100%;
-  height: 6px;
-  background: var(--gray-200);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  margin: 1rem 0;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
-  border-radius: var(--radius-sm);
-  transition: width 0.3s ease;
 }
 
 /* ===============================================
@@ -2134,17 +2054,17 @@ body {
   .material-controls,
   .materials-selection-container,
   .confirmation-actions,
-  .file-upload-area,
-  .remove-file,
+  .pdf-upload-area,
+  .remove-file-btn,
   .btn,
-  .tooltip::before,
-  .tooltip::after {
+  .method-selection,
+  .back-btn {
     display: none !important;
   }
   
   .selected-materials,
   .confirm-materials-list,
-  .file-preview {
+  .file-info {
     border: 1px solid #000;
     box-shadow: none;
     page-break-inside: avoid;
@@ -2163,7 +2083,7 @@ body {
     margin-bottom: 1rem;
   }
   
-  .pdf-summary {
+  .pdf-info-card {
     border: 1px solid #000;
     background: transparent !important;
   }
