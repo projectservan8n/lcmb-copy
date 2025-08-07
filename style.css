@@ -2854,5 +2854,28 @@ body {
 .tooltip {
   z-index: 1100;
 }
+/* FORCE FIX FOR MATERIALS GRID - Add at bottom of CSS file */
+.materials-selection-container .materials-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+  gap: 20px !important;
+  padding: 20px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
 
+.materials-selection-container .material-card {
+  min-width: 350px !important;
+  max-width: none !important;
+  width: auto !important;
+  min-height: 200px !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+}
+
+.materials-selection-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
 /* End of Enhanced LCMB Material Management System Styles */
