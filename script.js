@@ -667,7 +667,7 @@ class MaterialManagementApp {
             if (btnText) btnText.style.display = 'none';
             if (btnLoading) btnLoading.style.display = 'flex';
 
-            console.log('📤 Submitting PDF form...');
+            console.log('📤 Submitting PDF form with binary data...');
 
             // Prepare form data
             const formData = new FormData(form);
@@ -688,53 +688,51 @@ class MaterialManagementApp {
             const selectedCategories = this.getSelectedPdfCategories();
             const categoryString = selectedCategories.length > 0 ? selectedCategories.join(', ') : 'PDF Upload';
             
-            // Convert PDF to base64
-            const pdfData = await this.convertFileToBase64(this.pdfFile);
+            // Create FormData for binary upload
+            const uploadFormData = new FormData();
             
-            // Prepare payload for API
-            const payload = {
+            // Add PDF file as binary
+            uploadFormData.append('pdfFile', this.pdfFile, this.pdfFile.name);
+            
+            // Add other form data
+            uploadFormData.append('requestType', data.pdfRequestType);
+            uploadFormData.append('supplierName', supplierName);
+            uploadFormData.append('supplierEmail', supplierEmail);
+            uploadFormData.append('requestorName', data.pdfRequestorName);
+            uploadFormData.append('requestorEmail', data.pdfRequestorEmail);
+            uploadFormData.append('urgency', data.pdfUrgency || 'Normal');
+            uploadFormData.append('projectRef', data.pdfProjectRef || '');
+            uploadFormData.append('notes', data.pdfNotes || '');
+            uploadFormData.append('category', categoryString);
+            uploadFormData.append('categories', JSON.stringify(selectedCategories));
+            uploadFormData.append('filename', this.pdfFile.name);
+            
+            console.log('📦 PDF submission with binary data:', {
                 requestType: data.pdfRequestType,
                 supplierName: supplierName,
-                supplierEmail: supplierEmail,
-                requestorName: data.pdfRequestorName,
-                requestorEmail: data.pdfRequestorEmail,
-                urgency: data.pdfUrgency || 'Normal',
-                projectRef: data.pdfProjectRef || '',
-                notes: data.pdfNotes || '',
-                category: categoryString,
-                categories: selectedCategories, // Array of categories
                 filename: this.pdfFile.name,
-                pdfData: pdfData
-            };
-
-            console.log('📦 PDF submission payload:', {
-                requestType: payload.requestType,
-                supplierName: payload.supplierName,
-                filename: payload.filename,
                 pdfSize: this.formatFileSize(this.pdfFile.size),
-                categories: payload.categories
+                categories: selectedCategories,
+                uploadMethod: 'multipart/form-data binary'
             });
 
-            // Submit to PDF upload endpoint
+            // Submit to PDF upload endpoint with binary data
             const response = await fetch('/api/pdf/upload', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
+                body: uploadFormData // No Content-Type header - let browser set it for multipart
             });
 
             const result = await response.json();
-            console.log('✅ PDF submission result:', result);
+            console.log('✅ PDF binary submission result:', result);
 
             if (result.success !== false) {
-                this.showPdfSuccess(result, payload.requestType);
+                this.showPdfSuccess(result, data.pdfRequestType);
             } else {
                 throw new Error(result.error || 'PDF submission failed');
             }
 
         } catch (error) {
-            console.error('❌ PDF submission error:', error);
+            console.error('❌ PDF binary submission error:', error);
             this.showError(`PDF submission failed: ${error.message}`);
         } finally {
             // Re-enable form
