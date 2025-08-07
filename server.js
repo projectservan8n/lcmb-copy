@@ -1,4 +1,4 @@
-// server.js - Enhanced with Binary PDF Upload Support
+// server.js - Enhanced with Binary PDF Upload Support + ORDER HISTORY
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -14,7 +14,8 @@ const WEBHOOKS = {
   DATA_LOAD: 'https://primary-s0q-production.up.railway.app/webhook/dataload',
   ORDER_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/ordersubmit',
   QUOTE_SUBMIT: 'https://primary-s0q-production.up.railway.app/webhook/quotesubmit',
-  PDF_UPLOAD: 'https://primary-s0q-production.up.railway.app/webhook/pdfupload'  // Binary PDF Upload endpoint
+  PDF_UPLOAD: 'https://primary-s0q-production.up.railway.app/webhook/pdfupload',  // Binary PDF Upload endpoint
+  HISTORY_LOAD: 'https://primary-s0q-production.up.railway.app/webhook/historyload'  // NEW: Order History endpoint
 };
 
 // Configure multer for PDF file uploads
@@ -48,7 +49,7 @@ async function callWebhook(webhookUrl, method = 'GET', data = null, isFormData =
       method,
       url: webhookUrl,
       headers: {
-        'User-Agent': 'LCMB-Material-Management/2.0',
+        'User-Agent': 'LCMB-Material-Management/2.1',
       },
       timeout: 120000, // Increased timeout for binary uploads (120 seconds)
       validateStatus: function (status) {
@@ -104,6 +105,13 @@ async function callWebhook(webhookUrl, method = 'GET', data = null, isFormData =
         hasSuccess: 'success' in response.data,
         hasOrderId: 'orderId' in response.data || 'quoteId' in response.data,
         hasPdfInfo: 'pdfFileName' in response.data || 'driveLink' in response.data
+      });
+    } else if (webhookUrl.includes('historyload')) {
+      console.log(`📋 History load validation:`, {
+        hasSuccess: 'success' in response.data,
+        hasOrders: 'orders' in response.data,
+        orderCount: response.data?.orders?.length || 0,
+        hasSummary: 'summary' in response.data
       });
     }
     
@@ -190,7 +198,7 @@ app.get('/', async (req, res) => {
 });
 
 // ===============================================
-// API ROUTES - ENHANCED WITH PDF SUPPORT
+// API ROUTES - ENHANCED WITH PDF SUPPORT + ORDER HISTORY
 // ===============================================
 
 // Data Load API (existing)
@@ -206,6 +214,33 @@ app.get('/api/data/load', async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error(`❌ [${new Date().toISOString()}] API Error (data/load):`, error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// NEW: Order History API
+app.get('/api/history/load', async (req, res) => {
+  try {
+    console.log(`🔄 [${new Date().toISOString()}] API: Loading order history via webhook...`);
+    const startTime = Date.now();
+    
+    const data = await callWebhook(WEBHOOKS.HISTORY_LOAD);
+    const loadTime = Date.now() - startTime;
+    
+    console.log(`✅ [${loadTime}ms] Order history load successful:`, {
+      success: data?.success,
+      orderCount: data?.orders?.length || 0,
+      hasSummary: !!data?.summary,
+      totalOrders: data?.summary?.totalOrders || 0
+    });
+    
+    res.json(data);
+  } catch (error) {
+    console.error(`❌ [${new Date().toISOString()}] API Error (history/load):`, error.message);
     res.status(500).json({ 
       success: false, 
       error: error.message,
@@ -285,7 +320,8 @@ app.post('/api/quote/submit', async (req, res) => {
     });
   }
 });
-// NEW: Binary PDF Upload API - FIXED VERSION with correct property name
+
+// Binary PDF Upload API - FIXED VERSION with correct property name
 app.post('/api/pdf/upload', upload.single('pdfFile'), async (req, res) => {
   try {
     console.log(`🔄 [${new Date().toISOString()}] API: Processing binary PDF upload...`);
@@ -438,19 +474,21 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     uptime: process.uptime(),
-    version: '2.0.0-enhanced',
+    version: '2.1.0-enhanced-with-history',
     features: [
       'Method Selection',
       'PDF Upload Support', 
       'System Material Selection',
       'Confirmation Flow',
+      'Order History',
       'Enhanced Error Handling'
     ],
     webhooks: {
       dataLoad: WEBHOOKS.DATA_LOAD,
       orderSubmit: WEBHOOKS.ORDER_SUBMIT,
       quoteSubmit: WEBHOOKS.QUOTE_SUBMIT,
-      pdfUpload: WEBHOOKS.PDF_UPLOAD
+      pdfUpload: WEBHOOKS.PDF_UPLOAD,
+      historyLoad: WEBHOOKS.HISTORY_LOAD
     }
   });
 });
@@ -488,6 +526,30 @@ app.get('/debug/webhooks', async (req, res) => {
       console.log(`❌ Data load test failed: ${error.message}`);
     }
 
+    // Test order history webhook
+    try {
+      console.log('🧪 Testing order history webhook...');
+      const historyStart = Date.now();
+      const historyResult = await callWebhook(WEBHOOKS.HISTORY_LOAD);
+      const historyTime = Date.now() - historyStart;
+      
+      results.historyLoad = { 
+        status: 'success', 
+        loadTime: `${historyTime}ms`,
+        dataStructure: {
+          hasSuccess: 'success' in historyResult,
+          hasOrders: 'orders' in historyResult,
+          orderCount: historyResult?.orders?.length || 0,
+          hasSummary: 'summary' in historyResult,
+          totalOrders: historyResult?.summary?.totalOrders || 0
+        }
+      };
+      console.log(`✅ Order history test passed (${historyTime}ms)`);
+    } catch (error) {
+      results.historyLoad = { status: 'error', error: error.message };
+      console.log(`❌ Order history test failed: ${error.message}`);
+    }
+
     // Test PDF upload webhook (with minimal test data)
     try {
       console.log('🧪 Testing PDF upload webhook availability...');
@@ -508,13 +570,16 @@ app.get('/debug/webhooks', async (req, res) => {
     res.json({
       timestamp: new Date().toISOString(),
       totalTestTime: `${totalTime}ms`,
-      version: '2.0.0-enhanced',
+      version: '2.1.0-enhanced-with-history',
       webhookUrls: WEBHOOKS,
       testResults: results,
       recommendations: [
         results.dataLoad?.status === 'success' 
           ? '✅ Data loading is working correctly'
           : '❌ Check n8n workflow execution and Google Sheets access',
+        results.historyLoad?.status === 'success'
+          ? '✅ Order history loading is working correctly'
+          : '❌ Check n8n workflow and Orders sheet access',
         '📄 PDF upload endpoint is configured and ready (expects binary property: pdfFile0)',
         '🔧 All webhook URLs are properly configured',
         results.dataLoad?.dataStructure?.materialsByCategoryAndSupplier === 'Available'
@@ -579,7 +644,7 @@ app.get('/force-load', async (req, res) => {
       success: true,
       message: 'Data loaded successfully',
       loadTime: `${loadTime}ms`,
-      version: '2.0.0-enhanced',
+      version: '2.1.0-enhanced-with-history',
       dataStructure: {
         suppliers: data?.data?.suppliers?.length || 0,
         categories: data?.data?.categories?.length || 0,
@@ -616,6 +681,7 @@ app.use((req, res) => {
       'POST /api/order/submit',
       'POST /api/quote/submit',
       'POST /api/pdf/upload',
+      'GET /api/history/load',
       'GET /health',
       'GET /debug/webhooks',
       'GET /debug/pdf-test',
@@ -648,7 +714,7 @@ app.use((err, req, res, next) => {
     error: message,
     details: process.env.NODE_ENV === 'production' ? undefined : err.message,
     timestamp: new Date().toISOString(),
-    version: '2.0.0-enhanced'
+    version: '2.1.0-enhanced-with-history'
   });
 });
 
@@ -657,22 +723,24 @@ app.use((err, req, res, next) => {
 // ===============================================
 
 app.listen(PORT, () => {
-  console.log('🚀 LCMB Material Management Server Started (Enhanced Version)');
+  console.log('🚀 LCMB Material Management Server Started (Enhanced Version with Order History)');
   console.log(`📍 Server: http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📊 Version: 2.0.0-enhanced`);
+  console.log(`📊 Version: 2.1.0-enhanced-with-history`);
   console.log('');
   console.log('🔗 Webhook Endpoints:');
   console.log(`   📊 Data Load: ${WEBHOOKS.DATA_LOAD}`);
   console.log(`   📦 Order Submit: ${WEBHOOKS.ORDER_SUBMIT}`);
   console.log(`   💬 Quote Submit: ${WEBHOOKS.QUOTE_SUBMIT}`);
   console.log(`   📄 PDF Upload: ${WEBHOOKS.PDF_UPLOAD}`);
+  console.log(`   📋 History Load: ${WEBHOOKS.HISTORY_LOAD}`);
   console.log('');
   console.log('🎯 API Endpoints:');
   console.log(`   📊 GET /api/data/load - Load form data`);
   console.log(`   📦 POST /api/order/submit - Submit material order`);
   console.log(`   💬 POST /api/quote/submit - Submit quote request`);
   console.log(`   📄 POST /api/pdf/upload - Upload PDF request (binary: pdfFile -> pdfFile0)`);
+  console.log(`   📋 GET /api/history/load - Load order history`);
   console.log('');
   console.log('🔧 Debug Endpoints:');
   console.log(`   ✅ GET /health - Health check`);
@@ -684,5 +752,6 @@ app.listen(PORT, () => {
   console.log('💡 Visit / to load page with initial data');
   console.log('🔧 Visit /debug/webhooks to test all webhook connectivity');
   console.log('📄 Visit /debug/pdf-test for PDF upload documentation');
+  console.log('📋 Visit /api/history/load to test order history loading');
   console.log('📌 Binary PDF property mapping: pdfFile -> pdfFile0 (for n8n)');
 });
