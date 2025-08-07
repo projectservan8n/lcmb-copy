@@ -1592,133 +1592,144 @@ class MaterialManagementApp {
         }
     }
 
-    renderOrderCard(order) {
-        try {
-            const materials = this.parseMaterialsList(order.materialsList);
-            const hasPdf = order.pdfLink && order.pdfLink !== 'N/A';
-            
-            return `
-                <div class="order-card">
-                    <div class="order-header">
-                        <div class="order-id-section">
-                            <h4 class="order-id">${order.orderId || 'N/A'}</h4>
-                            <span class="order-status ${order.status?.toLowerCase()}">${order.status}</span>
-                        </div>
-                        <div class="order-date">
-                            ${this.formatDate(order.date)} at ${order.time}
-                        </div>
+renderOrderCard(order) {
+    try {
+        const materials = this.parseMaterialsList(order.materialsList);
+        const hasPdf = order.pdfLink && order.pdfLink !== 'N/A';
+        
+        // Calculate total quantity correctly
+        const totalQuantity = materials.reduce((sum, material) => {
+            return sum + (material.quantity || 1);
+        }, 0);
+        
+        return `
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-id-section">
+                        <h4 class="order-id">${order.orderId || 'N/A'}</h4>
+                        <span class="order-status ${order.status?.toLowerCase()}">${order.status}</span>
                     </div>
-                    
-                    <div class="order-details">
-                        <div class="order-info-grid">
-                            <div class="info-item">
-                                <label>Supplier:</label>
-                                <span>${order.supplierName || 'N/A'}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Category:</label>
-                                <span>${order.category || 'N/A'}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Requestor:</label>
-                                <span>${order.requestorName || 'N/A'}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Priority:</label>
-                                <span class="priority ${order.urgency?.toLowerCase()}">${order.urgency || 'Normal'}</span>
-                            </div>
-                            ${order.projectRef ? `
-                            <div class="info-item">
-                                <label>Job #:</label>
-                                <span>${order.projectRef}</span>
-                            </div>
-                            ` : ''}
-                        </div>
-                        
-                        ${materials.length > 0 ? `
-                        <div class="materials-section">
-                            <div class="materials-header">
-                                <h5>Materials (${materials.length} items)</h5>
-                                <button type="button" class="toggle-materials" onclick="window.app.toggleMaterials('${order.orderId}')">
-                                    <span class="toggle-icon">▼</span>
-                                    <span class="toggle-text">Show Details</span>
-                                </button>
-                            </div>
-                            <div class="materials-list-history" id="materials-${order.orderId}" style="display: none;">
-                                ${materials.map(material => `
-                                    <div class="material-item-history">
-                                        <div class="material-name">${material.name}</div>
-                                        <div class="material-details">
-                                            ${material.code ? `Code: ${material.code} • ` : ''}
-                                            Qty: ${material.quantity} ${material.unit}
-                                            ${material.subcategory ? ` • ${material.subcategory}` : ''}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
-                        
-                        ${order.notes ? `
-                        <div class="notes-section">
-                            <h5>Special Instructions</h5>
-                            <p class="order-notes">${order.notes}</p>
-                        </div>
-                        ` : ''}
-                    </div>
-                    
-                    <div class="order-actions">
-                        ${hasPdf ? `
-                        <button type="button" class="btn btn-secondary" onclick="window.app.viewPDF('${order.pdfLink}')">
-                            📄 View PDF
-                        </button>
-                        ` : ''}
-                        <button type="button" class="btn btn-secondary" onclick="window.app.duplicateOrder('${order.orderId}')">
-                            📋 Duplicate Order
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="window.app.contactSupplier('${order.supplierEmail}', '${order.orderId}')">
-                            📧 Contact Supplier
-                        </button>
+                    <div class="order-date">
+                        ${this.formatDate(order.date)} at ${order.time}
                     </div>
                 </div>
-            `;
-            
-        } catch (error) {
-            console.error('❌ Error rendering order card:', error);
-            return '<div class="order-card error">Error displaying order</div>';
-        }
+                
+                <div class="order-details">
+                    <div class="order-info-grid">
+                        <div class="info-item">
+                            <label>Supplier:</label>
+                            <span>${order.supplierName || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Category:</label>
+                            <span>${order.category || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Requestor:</label>
+                            <span>${order.requestorName || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Priority:</label>
+                            <span class="priority ${order.urgency?.toLowerCase()}">${order.urgency || 'Normal'}</span>
+                        </div>
+                        ${order.projectRef ? `
+                        <div class="info-item">
+                            <label>Job #:</label>
+                            <span>${order.projectRef}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${materials.length > 0 ? `
+                    <div class="materials-section">
+                        <div class="materials-header">
+                            <h5>Materials (${materials.length} items, ${totalQuantity} total qty)</h5>
+                            <button type="button" class="toggle-materials" onclick="window.app.toggleMaterials('${order.orderId}')">
+                                <span class="toggle-icon">▼</span>
+                                <span class="toggle-text">Show Details</span>
+                            </button>
+                        </div>
+                        <div class="materials-list-history" id="materials-${order.orderId}" style="display: none;">
+                            ${materials.map(material => `
+                                <div class="material-item-history">
+                                    <div class="material-name">${material.name}</div>
+                                    <div class="material-details">
+                                        ${material.code ? `Code: ${material.code} • ` : ''}
+                                        Qty: ${material.quantity || 1} ${material.unit || 'pcs'}
+                                        ${material.subcategory ? ` • ${material.subcategory}` : ''}
+                                        ${material.supplierName ? ` • Supplier: ${material.supplierName}` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${order.notes ? `
+                    <div class="notes-section">
+                        <h5>Special Instructions</h5>
+                        <p class="order-notes">${order.notes}</p>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div class="order-actions">
+                    ${hasPdf ? `
+                    <button type="button" class="btn btn-secondary" onclick="window.app.viewPDF('${order.pdfLink}')">
+                        📄 View PDF
+                    </button>
+                    ` : ''}
+                    <button type="button" class="btn btn-secondary" onclick="window.app.duplicateOrder('${order.orderId}')">
+                        📋 Duplicate Order
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="window.app.contactSupplier('${order.supplierEmail}', '${order.orderId}')">
+                        📧 Contact Supplier
+                    </button>
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('❌ Error rendering order card:', error);
+        return '<div class="order-card error">Error displaying order</div>';
     }
+}
 
-    parseMaterialsList(materialsList) {
-        try {
-            if (!materialsList) return [];
-            
-            if (typeof materialsList === 'string') {
-                try {
-                    return JSON.parse(materialsList);
-                } catch {
-                    // If not JSON, try to parse as comma-separated list
-                    return materialsList.split(',').map(item => ({
-                        name: item.trim(),
-                        quantity: 1,
-                        unit: 'pcs',
-                        code: '',
-                        subcategory: ''
-                    }));
+parseMaterialsList(materialsList) {
+    try {
+        if (!materialsList) return [];
+        
+        if (typeof materialsList === 'string') {
+            try {
+                // Parse the JSON string from Google Sheets
+                const parsed = JSON.parse(materialsList);
+                if (Array.isArray(parsed)) {
+                    return parsed;
                 }
+            } catch (e) {
+                console.log('⚠️ Could not parse JSON materials list, trying comma-separated:', e);
+                // Fallback: try to parse as comma-separated list
+                return materialsList.split(',').map(item => ({
+                    name: item.trim(),
+                    quantity: 1,
+                    unit: 'pcs',
+                    code: '',
+                    subcategory: ''
+                }));
             }
-            
-            if (Array.isArray(materialsList)) {
-                return materialsList;
-            }
-            
-            return [];
-            
-        } catch (error) {
-            console.error('❌ Error parsing materials list:', error);
-            return [];
         }
+        
+        if (Array.isArray(materialsList)) {
+            return materialsList;
+        }
+        
+        return [];
+        
+    } catch (error) {
+        console.error('❌ Error parsing materials list:', error);
+        return [];
     }
+}
 
     formatDate(dateString) {
         try {
