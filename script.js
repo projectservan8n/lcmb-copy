@@ -668,6 +668,13 @@ class MaterialManagementApp {
             // Setup dynamic event listeners for order cards
             this.setupHistoryEventListeners();
             
+            // Fix notes display after rendering
+            setTimeout(() => {
+                if (window.fixNotesDisplay) {
+                    window.fixNotesDisplay();
+                }
+            }, 100);
+            
         } catch (error) {
             console.error('❌ Error rendering order history:', error);
         }
@@ -832,6 +839,21 @@ class MaterialManagementApp {
         `;
         
         this.setupHistoryEventListeners();
+        
+        // Fix notes display after rendering
+        setTimeout(() => {
+            if (window.fixNotesDisplay) {
+                window.fixNotesDisplay();
+            }
+        }, 100);
+    }
+
+    // Helper function to safely escape HTML
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     createOrderHistoryCard(order) {
@@ -923,8 +945,8 @@ class MaterialManagementApp {
                     
                     ${order.notes ? `
                         <div class="order-notes">
-                            <span class="notes-label">📝 Notes:</span>
-                            <span class="notes-content">${order.notes}</span>
+                            <span class="notes-label">📝 NOTES:</span>
+                            <div class="notes-content" data-notes="${this.escapeHtml(order.notes)}"></div>
                         </div>
                     ` : ''}
                 </div>
@@ -1197,7 +1219,7 @@ class MaterialManagementApp {
                     ${order.notes ? `
                         <div class="detail-section">
                             <h4>📝 Notes</h4>
-                            <div class="notes-content">${order.notes}</div>
+                            <div class="notes-content" data-modal-notes="${this.escapeHtml(order.notes)}"></div>
                         </div>
                     ` : ''}
                 </div>
@@ -1207,6 +1229,18 @@ class MaterialManagementApp {
                 </div>
             </div>
         `;
+        
+        // Fix notes display in modal
+        setTimeout(() => {
+            const modalNotesElement = modal.querySelector('.notes-content[data-modal-notes]');
+            if (modalNotesElement) {
+                const notesText = modalNotesElement.getAttribute('data-modal-notes');
+                if (notesText && window.renderSafeNotesContent) {
+                    window.renderSafeNotesContent(modalNotesElement, notesText);
+                    modalNotesElement.removeAttribute('data-modal-notes');
+                }
+            }
+        }, 10);
         
         return modal;
     }
@@ -1283,7 +1317,7 @@ class MaterialManagementApp {
                 order.totalQuantity || 0,
                 `"${order.urgency}"`,
                 `"${order.projectRef || ''}"`,
-                `"${order.notes || ''}"`,
+                `"${(order.notes || '').replace(/"/g, '""')}"`,
                 order.hasPdf ? 'Yes' : 'No'
             ];
             csvRows.push(row.join(','));
