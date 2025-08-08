@@ -3268,48 +3268,7 @@ body {
   }
 }
 
-/* ===============================================
-   DARK MODE SUPPORT (FUTURE)
-   =============================================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --white: #1a1a1a;
-    --gray-50: #2a2a2a;
-    --gray-100: #3a3a3a;
-    --gray-200: #4a4a4a;
-    --gray-300: #5a5a5a;
-    --gray-400: #6a6a6a;
-    --gray-500: #8a8a8a;
-    --gray-600: #aaaaaa;
-    --gray-700: #cccccc;
-    --gray-800: #eeeeee;
-    --gray-900: #ffffff;
-    --accent-blue: rgba(42, 82, 152, 0.2);
-  }
-  
-  body {
-    background-color: #1a1a1a;
-    color: var(--gray-800);
-  }
-  
-  .form-container,
-  .history-container,
-  .material-card,
-  .order-card,
-  .method-card {
-    background: var(--gray-50);
-    border-color: var(--gray-300);
-  }
-  
-  .form-input,
-  .form-select,
-  .form-textarea {
-    background: var(--gray-50);
-    color: var(--gray-800);
-    border-color: var(--gray-300);
-  }
-}
 
 /* ===============================================
    UTILITIES & HELPER CLASSES
