@@ -767,8 +767,40 @@ body {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   border: 1px solid rgba(243, 208, 120, 0.3);
-  white-space: pre-wrap;
+  white-space: pre-line;
   word-wrap: break-word;
+  text-decoration: none !important;
+}
+
+/* Remove any strikethrough or text decoration from notes */
+.notes-content *,
+.notes-content del,
+.notes-content s,
+.notes-content strike {
+  text-decoration: none !important;
+  font-style: normal !important;
+}
+
+/* Ensure clean text formatting in notes */
+.order-notes p,
+.order-notes div,
+.order-notes span {
+  text-decoration: none !important;
+  font-style: normal !important;
+  color: var(--gray-800) !important;
+}
+
+/* Clean list formatting in notes */
+.order-notes ul,
+.order-notes ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.order-notes li {
+  margin-bottom: 0.25rem;
+  text-decoration: none !important;
+  color: var(--gray-800) !important;
 }
 
 /* Order Actions */
