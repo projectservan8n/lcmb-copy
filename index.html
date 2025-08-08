@@ -597,6 +597,14 @@
 
     <!-- JavaScript Functions -->
     <script>
+        // Helper function to safely escape HTML content
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Tab switching function to work with the enhanced script.js
         function switchTab(tabName) {
             // Hide all content sections
@@ -634,6 +642,82 @@
                 window.app.refreshOrderHistory();
             }
         }
+
+        // Global function to safely render notes content
+        function renderSafeNotesContent(container, notesText) {
+            if (!container || !notesText) return;
+            
+            // Clear existing content
+            container.innerHTML = '';
+            
+            // Create text node to prevent HTML injection
+            const textNode = document.createTextNode(notesText);
+            container.appendChild(textNode);
+        }
+
+        // Enhanced function to handle notes rendering in order history
+        function createSafeOrderNotes(order) {
+            if (!order.notes) return '';
+            
+            return `
+                <div class="order-notes">
+                    <span class="notes-label">📝 NOTES:</span>
+                    <div class="notes-content" data-notes="${escapeHtml(order.notes)}"></div>
+                </div>
+            `;
+        }
+
+        // Function to fix notes content after DOM insertion
+        function fixNotesDisplay() {
+            const notesContainers = document.querySelectorAll('.notes-content[data-notes]');
+            notesContainers.forEach(container => {
+                const notesText = container.getAttribute('data-notes');
+                if (notesText) {
+                    renderSafeNotesContent(container, notesText);
+                    container.removeAttribute('data-notes');
+                }
+            });
+        }
+
+        // Override the createOrderHistoryCard function to fix notes display
+        if (window.app && window.app.createOrderHistoryCard) {
+            const originalCreateOrderHistoryCard = window.app.createOrderHistoryCard.bind(window.app);
+            window.app.createOrderHistoryCard = function(order) {
+                // Get the original card HTML
+                let cardHtml = originalCreateOrderHistoryCard(order);
+                
+                // Replace notes section with safe version if notes exist
+                if (order.notes) {
+                    const notesRegex = /<div class="order-notes">[\s\S]*?<\/div>/;
+                    const safeNotesHtml = createSafeOrderNotes(order);
+                    cardHtml = cardHtml.replace(notesRegex, safeNotesHtml);
+                }
+                
+                return cardHtml;
+            };
+        }
+
+        // Fix notes after any DOM updates
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up mutation observer to fix notes whenever they're added
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        // Check if any added nodes contain order cards
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1 && (node.classList?.contains('order-card') || node.querySelector?.('.order-card'))) {
+                                setTimeout(fixNotesDisplay, 10);
+                            }
+                        });
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
     </script>
 
     <!-- Load the enhanced script.js -->
