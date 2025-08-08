@@ -738,10 +738,12 @@ body {
 /* Order Notes */
 .order-notes {
   margin-top: 1rem;
-  padding: 1rem;
-  background: #fef3c7;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #fef7e6 0%, #fff8dc 100%);
   border-left: 4px solid var(--warning-orange);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #f3d078;
 }
 
 .notes-label {
@@ -750,13 +752,23 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .notes-content {
-  color: var(--gray-700);
-  font-style: italic;
-  line-height: 1.5;
+  color: var(--gray-800);
+  font-style: normal;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(243, 208, 120, 0.3);
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* Order Actions */
