@@ -3,724 +3,825 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCMB Group Material Management System</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="https://lcmbgroup.com.au/wp-content/uploads/2025/04/logo-lcmb-for-header.png">
-    <link rel="shortcut icon" type="image/x-icon" href="https://lcmbgroup.com.au/wp-content/uploads/2025/04/logo-lcmb-for-header.png">
-    <link rel="apple-touch-icon" href="https://lcmbgroup.com.au/wp-content/uploads/2025/04/logo-lcmb-for-header.png">
-    
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>LCMB Material Management - Demo</title>
+    <style>
+        :root {
+            /* OpusAutomation-inspired color scheme */
+            --primary-purple: #8b5cf6;
+            --primary-blue: #3b82f6;
+            --secondary-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --dark-bg: #0f0f23;
+            --darker-bg: #0a0a1a;
+            --card-bg: #1a1a2e;
+            --border-color: #2d2d4a;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            --gradient-secondary: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+            --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--darker-bg);
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: "⚡";
+            font-size: 1.8rem;
+            -webkit-text-fill-color: var(--primary-purple);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-purple);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Left Content */
+        .content-area {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-purple);
+            border: 2px solid var(--primary-purple);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-purple);
+            color: white;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: var(--darker-bg);
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab-button.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Form Styles */
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--darker-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-purple);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        /* Database Panel */
+        .database-panel {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+
+        .database-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .database-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            background: var(--gradient-secondary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .database-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            background: var(--darker-bg);
+            padding: 0.3rem;
+            border-radius: 8px;
+        }
+
+        .db-tab {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .db-tab.active {
+            background: var(--primary-purple);
+            color: white;
+        }
+
+        .database-content {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .database-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .database-table th,
+        .database-table td {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .database-table th {
+            background: var(--darker-bg);
+            color: var(--text-primary);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .database-table td {
+            color: var(--text-secondary);
+        }
+
+        .database-table tr:hover {
+            background: var(--darker-bg);
+        }
+
+        .editable-cell {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            width: 100%;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .editable-cell:focus {
+            outline: none;
+            background: var(--darker-bg);
+            border: 1px solid var(--primary-purple);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+        }
+
+        .add-record-btn {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: var(--gradient-secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-record-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Status indicators */
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .database-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Scrollbar */
+        .database-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .database-content::-webkit-scrollbar-track {
+            background: var(--darker-bg);
+            border-radius: 3px;
+        }
+
+        .database-content::-webkit-scrollbar-thumb {
+            background: var(--primary-purple);
+            border-radius: 3px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="https://lcmbgroup.com.au/wp-content/uploads/2025/04/logo-lcmb-for-header.png" alt="LCMB Group" class="logo-img">
-                </div>
-                <div class="header-info">
-                    <div class="contact-info">
-                        <span class="phone">📞 0447 563 718</span>
-                        <span class="tagline">Gold Coast's Premium Electrical & HVAC Specialists</span>
-                    </div>
-                </div>
+        <div class="header-content">
+            <div class="logo">
+                LCMB Material Management
             </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#orders">Orders</a></li>
+                    <li><a href="#quotes">Quotes</a></li>
+                    <li><a href="#materials">Materials</a></li>
+                    <li><a href="#suppliers">Suppliers</a></li>
+                    <li><a href="#reports">Reports</a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <div class="hero-content">
-                <h1 class="hero-title">LCMB Group Material Management System</h1>
-                <p class="hero-subtitle">Streamline your material orders and quote requests</p>
+    <div class="main-container">
+        <!-- Left Content Area -->
+        <div class="content-area">
+            <div class="hero-section">
+                <h1 class="hero-title">AI-Powered Material Management</h1>
+                <p class="hero-subtitle">Streamline your electrical and HVAC material ordering with intelligent automation</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary">Start New Order</a>
+                    <a href="#" class="btn btn-secondary">Request Quote</a>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Tab Navigation -->
-            <div class="tabs-container" id="tabsContainer">
+            <!-- Tabs -->
+            <div class="tabs-container">
                 <div class="tabs">
-                    <button class="tab-button active" id="newRequestTab" onclick="switchTab('newRequest')">
-                        ➕ New Request
-                    </button>
-                    <button class="tab-button" id="orderHistoryTab" onclick="switchTab('orderHistory')">
-                        📋 Order History
-                    </button>
+                    <button class="tab-button active" onclick="switchTab('orders')">📦 New Order</button>
+                    <button class="tab-button" onclick="switchTab('quotes')">💬 Quote Request</button>
+                    <button class="tab-button" onclick="switchTab('history')">📋 Order History</button>
                 </div>
             </div>
 
-            <!-- Loading State -->
-            <div id="loading" class="loading-state" style="display: none;">
-                <div class="spinner"></div>
-                <p>Loading form data...</p>
-            </div>
-
-            <!-- Error Display -->
-            <div id="errorAlert" class="alert alert-error" style="display: none;">
-                <strong>⚠️ Error:</strong> <span id="errorMessage"></span>
-            </div>
-
-            <!-- Success Display -->
-            <div id="successAlert" class="alert alert-success" style="display: none;">
-                <strong>✅ Success:</strong> <span id="successMessage"></span>
-                <div class="success-details">
-                    <p><strong>Reference ID:</strong> <span id="referenceId" class="reference-id"></span></p>
-                    <p><strong>Supplier:</strong> <span id="successSupplier"></span></p>
-                    <div id="pdfSuccessInfo" style="display: none;">
-                        <p><strong>PDF File:</strong> <span id="successPdfFile"></span></p>
-                        <p><strong>Drive Link:</strong> <a id="successDriveLink" target="_blank" class="drive-link">View PDF Document</a></p>
-                    </div>
-                </div>
-                <button onclick="resetForm()" class="btn btn-secondary">Submit Another Request</button>
-            </div>
-
-            <!-- New Request Content Wrapper -->
-            <div id="newRequestContent">
-                <!-- Request Method Selection -->
-                <div class="method-selection" id="methodSelection">
-                    <div class="form-header">
-                        <h2>Choose Your Request Method</h2>
-                        <p>Select how you'd like to submit your material request</p>
+            <!-- Order Form -->
+            <div id="orders" class="form-section active">
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Create New Material Order</h3>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" id="orderCategory">
+                            <option value="">Select category...</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="HVAC">HVAC</option>
+                            <option value="Solar">Solar</option>
+                            <option value="Tools">Tools</option>
+                        </select>
                     </div>
                     
-                    <div class="method-options">
-                        <div class="method-card" id="systemMethodCard" onclick="selectMethod('system')">
-                            <div class="method-icon">🖥️</div>
-                            <h3>Order System</h3>
-                            <p>Use our interactive system to select materials and suppliers</p>
-                            <div class="method-features">
-                                <span class="feature">✓ Browse materials catalog</span>
-                                <span class="feature">✓ Automatic supplier matching</span>
-                                <span class="feature">✓ Quantity controls</span>
-                            </div>
-                            <button class="method-btn">Use Order System</button>
-                        </div>
-                        
-                        <div class="method-card" id="pdfMethodCard" onclick="selectMethod('pdf')">
-                            <div class="method-icon">📄</div>
-                            <h3>PDF Upload</h3>
-                            <p>Upload a PDF document with your material specifications</p>
-                            <div class="method-features">
-                                <span class="feature">✓ Quick PDF upload</span>
-                                <span class="feature">✓ Manual supplier selection</span>
-                                <span class="feature">✓ Supports complex lists</span>
-                            </div>
-                            <button class="method-btn">Upload PDF</button>
-                        </div>
-                        
-                        <div class="method-card" id="bothMethodCard" onclick="selectMethod('both')">
-                            <div class="method-icon">🔄</div>
-                            <h3>Both Methods</h3>
-                            <p>Combine system selection with additional PDF specifications</p>
-                            <div class="method-features">
-                                <span class="feature">✓ System + PDF materials</span>
-                                <span class="feature">✓ Comprehensive requests</span>
-                                <span class="feature">✓ Maximum flexibility</span>
-                            </div>
-                            <button class="method-btn">Use Both</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PDF Upload Form -->
-                <div class="form-container" id="pdfForm" style="display: none;">
-                    <div class="form-header">
-                        <h2>📄 PDF Material Request</h2>
-                        <p>Upload your material specification document and supplier details</p>
-                        <button type="button" id="backToMethodsBtn" class="back-btn">← Choose Different Method</button>
+                    <div class="form-group">
+                        <label class="form-label">Supplier *</label>
+                        <select class="form-select" id="orderSupplier">
+                            <option value="">Select supplier...</option>
+                            <option value="Rexel">Rexel Australia</option>
+                            <option value="HVAC_Depot">HVAC Depot</option>
+                            <option value="Solar_World">Solar World</option>
+                        </select>
                     </div>
 
-                    <form id="pdfMaterialForm" class="material-form">
-                        <!-- Request Type for PDF -->
-                        <div class="form-group">
-                            <label class="form-label">Request Type *</label>
-                            <div class="radio-group">
-                                <label class="radio-option">
-                                    <input type="radio" name="pdfRequestType" value="order" checked>
-                                    <span class="radio-custom"></span>
-                                    <div class="radio-content">
-                                        <strong>Material Order</strong>
-                                        <p>Send PDF for immediate material ordering</p>
-                                    </div>
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="pdfRequestType" value="quote">
-                                    <span class="radio-custom"></span>
-                                    <div class="radio-content">
-                                        <strong>Quote Request</strong>
-                                        <p>Send PDF to request pricing information</p>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- PDF File Upload -->
-                        <div class="form-group">
-                            <label for="pdfFile" class="form-label">Material Specifications PDF *</label>
-                            <div class="pdf-upload-area" id="pdfUploadArea">
-                                <div class="upload-content">
-                                    <div class="upload-icon">📄</div>
-                                    <p class="upload-text">Click to upload or drag & drop your PDF</p>
-                                    <p class="upload-subtext">Supports PDF files up to 10MB</p>
-                                    <input type="file" id="pdfFile" name="pdfFile" accept=".pdf" required>
-                                </div>
-                                <div id="pdfFileInfo" class="file-info" style="display: none;">
-                                    <div class="file-details">
-                                        <span class="file-name" id="pdfFileName"></span>
-                                        <span class="file-size" id="pdfFileSize"></span>
-                                    </div>
-                                    <button type="button" class="remove-file-btn" id="removePdfBtn">✕</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Supplier Information -->
-                        <div class="form-group">
-                            <label for="pdfSupplier" class="form-label">Supplier *</label>
-                            <select id="pdfSupplier" name="pdfSupplier" class="form-select" required>
-                                <option value="">Select a supplier...</option>
-                            </select>
-                            <div id="pdfSupplierInfo" class="supplier-info" style="display: none;">
-                                <div class="supplier-details">
-                                    <span id="pdfSupplierEmail"></span>
-                                    <span id="pdfSupplierPhone"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Category Checkboxes -->
-                        <div class="form-group">
-                            <label class="form-label">Categories</label>
-                            <p class="form-help-text">Select all categories that apply to your PDF materials</p>
-                            <div id="pdfCategoriesContainer" class="checkbox-group">
-                                <div class="checkbox-loading">Loading categories...</div>
-                            </div>
-                        </div>
-
-                        <!-- Requestor Information -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="pdfRequestorName" class="form-label">Your Name *</label>
-                                <input type="text" id="pdfRequestorName" name="pdfRequestorName" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="pdfRequestorEmail" class="form-label">Your Email *</label>
-                                <input type="email" id="pdfRequestorEmail" name="pdfRequestorEmail" class="form-input" required>
-                            </div>
-                        </div>
-
-                        <!-- Additional Details -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="pdfUrgency" class="form-label">Priority Level</label>
-                                <select id="pdfUrgency" name="pdfUrgency" class="form-select">
-                                    <option value="Normal">Normal</option>
-                                    <option value="High">High</option>
-                                    <option value="Urgent">Urgent</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="pdfProjectRef" class="form-label">ServiceM8 Job #</label>
-                                <input type="text" id="pdfProjectRef" name="pdfProjectRef" class="form-input" placeholder="Optional">
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="form-group">
-                            <label for="pdfNotes" class="form-label">Special Instructions</label>
-                            <textarea id="pdfNotes" name="pdfNotes" class="form-textarea" rows="3" placeholder="Any additional requirements or instructions for the supplier..."></textarea>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="form-actions">
-                            <button type="submit" id="pdfSubmitBtn" class="btn btn-primary" disabled>
-                                <span class="btn-text">Upload PDF & Send Request</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <span class="spinner-small"></span>
-                                    Uploading...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Original Main Form (System Method) -->
-                <div class="form-container" id="mainForm" style="display: none;">
-                    <div class="form-header">
-                        <h2 id="mainFormTitle">Submit Material Request</h2>
-                        <p id="mainFormSubtitle">Select your request type and fill in the details below</p>
-                        <button type="button" id="backToMethodsFromMain" class="back-btn">← Choose Different Method</button>
+                    <div class="form-group">
+                        <label class="form-label">Materials Required *</label>
+                        <select class="form-select" multiple style="height: 120px;">
+                            <option value="cable_tps">TPS Cable 2.5mm</option>
+                            <option value="outlets">GPO Outlets</option>
+                            <option value="switches">Light Switches</option>
+                            <option value="conduit">Electrical Conduit</option>
+                        </select>
                     </div>
 
-                    <form id="materialForm" class="material-form">
-                        <!-- Request Type -->
-                        <div class="form-group">
-                            <label class="form-label">Request Type *</label>
-                            <div class="radio-group">
-                                <label class="radio-option">
-                                    <input type="radio" name="requestType" value="order" checked>
-                                    <span class="radio-custom"></span>
-                                    <div class="radio-content">
-                                        <strong>Material Order</strong>
-                                        <p>Place an order for immediate delivery</p>
-                                    </div>
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="requestType" value="quote">
-                                    <span class="radio-custom"></span>
-                                    <div class="radio-content">
-                                        <strong>Quote Request</strong>
-                                        <p>Request pricing information</p>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- PDF Upload for Both Methods -->
-                        <div class="form-group" id="additionalPdfSection" style="display: none;">
-                            <label for="additionalPdfFile" class="form-label">Additional Specifications PDF (Optional)</label>
-                            <p class="form-help-text">Upload a PDF with additional material specifications beyond your system selection</p>
-                            <div class="pdf-upload-area small" id="additionalPdfUploadArea">
-                                <div class="upload-content">
-                                    <div class="upload-icon">📎</div>
-                                    <p class="upload-text">Click to add PDF specifications</p>
-                                    <input type="file" id="additionalPdfFile" name="additionalPdfFile" accept=".pdf">
-                                </div>
-                                <div id="additionalPdfFileInfo" class="file-info" style="display: none;">
-                                    <div class="file-details">
-                                        <span class="file-name" id="additionalPdfFileName"></span>
-                                        <span class="file-size" id="additionalPdfFileSize"></span>
-                                    </div>
-                                    <button type="button" class="remove-file-btn" id="removeAdditionalPdfBtn">✕</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Category -->
-                        <div class="form-group">
-                            <label for="category" class="form-label">Category *</label>
-                            <select id="category" name="category" class="form-select" required>
-                                <option value="">Select a category...</option>
-                            </select>
-                        </div>
-
-                        <!-- Supplier -->
-                        <div class="form-group">
-                            <label for="supplier" class="form-label">Supplier *</label>
-                            <select id="supplier" name="supplier" class="form-select" required>
-                                <option value="">First select a category...</option>
-                            </select>
-                            <div id="supplierInfo" class="supplier-info" style="display: none;">
-                                <div class="supplier-details">
-                                    <span id="supplierEmail"></span>
-                                    <span id="supplierPhone"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Subcategory (Hidden initially) -->
-                        <div class="form-group" id="subcategoryGroup" style="display: none;">
-                            <label for="subcategory" class="form-label">Subcategory</label>
-                            <select id="subcategory" name="subcategory" class="form-select">
-                                <option value="">All subcategories</option>
-                            </select>
-                        </div>
-
-                        <!-- Enhanced Materials Selection -->
-                        <div class="form-group">
-                            <label class="form-label">Materials Required *</label>
-                            <p class="form-help-text">Browse materials and specify the quantities you need for your order.</p>
-                            
-                            <!-- Materials Search and List Container -->
-                            <div id="materialsContainer" class="materials-selection-container" style="display: none;">
-                                <!-- Search Bar -->
-                                <div class="materials-search">
-                                    <input type="text" 
-                                           id="materialSearch" 
-                                           class="form-input" 
-                                           placeholder="Select category and supplier first..."
-                                           disabled>
-                                    <div id="materialsResultInfo" class="search-result-info"></div>
-                                </div>
-
-                                <!-- Materials List -->
-                                <div id="materialsList" class="materials-list">
-                                    <!-- Materials will be populated here -->
-                                </div>
-                            </div>
-
-                            <!-- Selected Materials -->
-                            <div class="selected-materials-section">
-                                <h4>Your Order</h4>
-                                <div id="materialsSummary" class="materials-summary"></div>
-                                <div id="selectedMaterials" class="selected-materials">
-                                    <div class="no-selection">No materials added to your order yet...</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Requestor Information -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="requestorName" class="form-label">Your Name *</label>
-                                <input type="text" id="requestorName" name="requestorName" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="requestorEmail" class="form-label">Your Email *</label>
-                                <input type="email" id="requestorEmail" name="requestorEmail" class="form-input" required>
-                            </div>
-                        </div>
-
-                        <!-- Additional Details -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="urgency" class="form-label">Priority Level</label>
-                                <select id="urgency" name="urgency" class="form-select">
-                                    <option value="Normal">Normal</option>
-                                    <option value="High">High</option>
-                                    <option value="Urgent">Urgent</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="projectRef" class="form-label">ServiceM8 Job #</label>
-                                <input type="text" id="projectRef" name="projectRef" class="form-input" placeholder="Optional">
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="form-group">
-                            <label for="notes" class="form-label">Special Instructions</label>
-                            <textarea id="notes" name="notes" class="form-textarea" rows="3" placeholder="Any special requirements or instructions..."></textarea>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="form-actions">
-                            <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
-                                <span class="btn-text">Review Order</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <span class="spinner-small"></span>
-                                    Processing...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Confirmation Page -->
-                <div class="form-container" id="confirmationPage" style="display: none;">
-                    <div class="form-header">
-                        <h2 id="confirmationTitle">Review Your Order</h2>
-                        <p id="confirmationSubtitle">Please review all details before sending to supplier</p>
+                    <div class="form-group">
+                        <label class="form-label">Requestor Name *</label>
+                        <input type="text" class="form-input" placeholder="Your name">
                     </div>
 
-                    <div class="confirmation-content">
-                        <!-- Order Summary Section -->
-                        <div class="confirmation-section">
-                            <h3 class="section-title">📋 Order Summary</h3>
-                            <div class="summary-grid">
-                                <div class="summary-item">
-                                    <label>Request Type:</label>
-                                    <span id="confirmRequestType" class="summary-value"></span>
-                                </div>
-                                <div class="summary-item">
-                                    <label>Category:</label>
-                                    <span id="confirmCategory" class="summary-value"></span>
-                                </div>
-                                <div class="summary-item">
-                                    <label>Priority Level:</label>
-                                    <span id="confirmUrgency" class="summary-value"></span>
-                                </div>
-                                <div class="summary-item">
-                                    <label>ServiceM8 Job #:</label>
-                                    <span id="confirmProjectRef" class="summary-value"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Supplier Information Section -->
-                        <div class="confirmation-section">
-                            <h3 class="section-title">🏢 Supplier Information</h3>
-                            <div class="supplier-card">
-                                <div class="supplier-header">
-                                    <h4 id="confirmSupplierName"></h4>
-                                    <span class="supplier-badge">Selected Supplier</span>
-                                </div>
-                                <div class="supplier-contact">
-                                    <div class="contact-item">
-                                        <span class="contact-icon">📧</span>
-                                        <span id="confirmSupplierEmail"></span>
-                                    </div>
-                                    <div class="contact-item">
-                                        <span class="contact-icon">📞</span>
-                                        <span id="confirmSupplierPhone"></span>
-                                    </div>
-                                </div>
-                                <div class="email-notice">
-                                    <span class="notice-icon">ℹ️</span>
-                                    <span>This request will be sent directly to the supplier's email</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Materials List Section -->
-                        <div class="confirmation-section">
-                            <h3 class="section-title">📦 Materials List</h3>
-                            <div class="materials-summary-card">
-                                <div id="confirmMaterialsSummary" class="confirm-summary"></div>
-                            </div>
-                            <div id="confirmMaterialsList" class="confirm-materials-list">
-                                <!-- Materials will be populated here -->
-                            </div>
-                            <div class="add-more-section">
-                                <button type="button" id="addMoreMaterialsBtn" class="btn btn-secondary">
-                                    <span>➕ Add More Materials</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- PDF Section (for BOTH method) -->
-                        <div class="confirmation-section" id="confirmPdfSection" style="display: none;">
-                            <h3 class="section-title">📄 Additional PDF Specifications</h3>
-                            <div class="pdf-info-card">
-                                <div class="pdf-details">
-                                    <span id="confirmPdfFileName" class="pdf-name"></span>
-                                    <span id="confirmPdfFileSize" class="pdf-size"></span>
-                                </div>
-                                <div class="pdf-status">
-                                    <span class="pdf-badge">✓ Attached</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Requestor Information Section -->
-                        <div class="confirmation-section">
-                            <h3 class="section-title">👤 Requestor Information</h3>
-                            <div class="requestor-grid">
-                                <div class="requestor-item">
-                                    <label>Name:</label>
-                                    <span id="confirmRequestorName" class="summary-value"></span>
-                                </div>
-                                <div class="requestor-item">
-                                    <label>Email:</label>
-                                    <span id="confirmRequestorEmail" class="summary-value"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Special Instructions Section -->
-                        <div class="confirmation-section" id="notesSection" style="display: none;">
-                            <h3 class="section-title">📝 Special Instructions</h3>
-                            <div class="notes-card">
-                                <p id="confirmNotes"></p>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="confirmation-actions">
-                            <button type="button" id="backToEditBtn" class="btn btn-secondary">
-                                <span>← Back to Edit</span>
-                            </button>
-                            <button type="button" id="confirmSubmitBtn" class="btn btn-primary">
-                                <span class="btn-text" id="confirmSubmitText">Confirm & Send to Supplier</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <span class="spinner-small"></span>
-                                    Submitting...
-                                </span>
-                            </button>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Requestor Email *</label>
+                        <input type="email" class="form-input" placeholder="your.email@lcmbelectrical.com.au">
                     </div>
-                </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Priority Level</label>
+                        <select class="form-select">
+                            <option value="Normal">Normal</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">ServiceM8 Job #</label>
+                        <input type="text" class="form-input" placeholder="Optional">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Order</button>
+                </form>
             </div>
 
-            <!-- Order History Section - UPDATED FOR SCRIPT.JS -->
-            <div class="history-container" id="orderHistorySection" style="display: none;">
-                <div class="history-header">
-                    <h2>📋 Order History</h2>
-                    <p>View all past orders and quote requests</p>
-                </div>
+            <!-- Quote Form -->
+            <div id="quotes" class="form-section">
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Request Material Quote</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Get pricing information from suppliers before placing orders</p>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Quote Description</label>
+                        <textarea class="form-input" rows="4" placeholder="Describe the materials you need quotes for..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Preferred Suppliers</label>
+                        <select class="form-select" multiple style="height: 100px;">
+                            <option value="rexel">Rexel Australia</option>
+                            <option value="hvac">HVAC Depot</option>
+                            <option value="solar">Solar World</option>
+                            <option value="tools">Tools Direct</option>
+                        </select>
+                    </div>
 
-                <!-- History Stats (script.js will populate this) -->
-                <div id="historyStats" class="history-stats">
-                    <!-- Stats will be populated by script.js -->
-                </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Request Quotes</button>
+                </form>
+            </div>
 
-                <!-- History Filters (script.js will populate this) -->
-                <div id="historyFilters" class="history-filters">
-                    <!-- Filters will be populated by script.js -->
-                </div>
-
-                <!-- History Container (script.js will populate this) -->
-                <div id="historyContainer" class="history-content">
-                    <!-- Order cards will be populated by script.js -->
+            <!-- History -->
+            <div id="history" class="form-section">
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Order History</h3>
+                <div style="background: var(--darker-bg); padding: 2rem; border-radius: 8px; text-align: center;">
+                    <p style="color: var(--text-secondary);">📋 Recent orders and quotes will appear here</p>
+                    <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.9rem;">Connect to your order system to view history</p>
                 </div>
             </div>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>LCMB Group Pty Ltd</h4>
-                    <p>15+ Years Experience | Licensed & Insured</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Services</h4>
-                    <ul>
-                        <li>AirCon Installation</li>
-                        <li>AirCon Service & Repair</li>
-                        <li>Electrical</li>
-                        <li>Solar Services</li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Contact</h4>
-                    <p>📞 0447 563 718</p>
-                    <p>✉️ office@lcmbelectrical.com.au</p>
-                    <p>📍 1/11 Dover Drive, Burleigh Heads, QLD 4220</p>
-                </div>
+        <!-- Right Database Panel -->
+        <div class="database-panel">
+            <div class="database-header">
+                <h3 class="database-title">🗄️ System Database</h3>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 LCMB Group. All rights reserved.</p>
+
+            <div class="database-tabs">
+                <button class="db-tab active" onclick="switchDbTab('suppliers')">Suppliers</button>
+                <button class="db-tab" onclick="switchDbTab('materials')">Materials</button>
+                <button class="db-tab" onclick="switchDbTab('categories')">Categories</button>
+                <button class="db-tab" onclick="switchDbTab('orders')">Orders</button>
+            </div>
+
+            <div class="database-content">
+                <!-- Suppliers Table -->
+                <div id="db-suppliers" class="db-table-container">
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>Supplier Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliers-table">
+                            <tr>
+                                <td><input class="editable-cell" value="Rexel Australia" /></td>
+                                <td><input class="editable-cell" value="orders@rexel.com.au" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="HVAC Depot" /></td>
+                                <td><input class="editable-cell" value="sales@hvacdepot.com.au" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Solar World" /></td>
+                                <td><input class="editable-cell" value="info@solarworld.com.au" /></td>
+                                <td><span class="status-badge status-inactive">Inactive</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-record-btn" onclick="addSupplier()">➕ Add New Supplier</button>
+                </div>
+
+                <!-- Materials Table -->
+                <div id="db-materials" class="db-table-container" style="display: none;">
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>Material Name</th>
+                                <th>Code</th>
+                                <th>Unit</th>
+                                <th>Category</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input class="editable-cell" value="TPS Cable 2.5mm" /></td>
+                                <td><input class="editable-cell" value="TPS-2.5" /></td>
+                                <td><input class="editable-cell" value="Meters" /></td>
+                                <td><input class="editable-cell" value="Electrical" /></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="GPO Outlets" /></td>
+                                <td><input class="editable-cell" value="GPO-STD" /></td>
+                                <td><input class="editable-cell" value="Each" /></td>
+                                <td><input class="editable-cell" value="Electrical" /></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Split System 2.5kW" /></td>
+                                <td><input class="editable-cell" value="AC-2.5" /></td>
+                                <td><input class="editable-cell" value="Each" /></td>
+                                <td><input class="editable-cell" value="HVAC" /></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-record-btn" onclick="addMaterial()">➕ Add New Material</button>
+                </div>
+
+                <!-- Categories Table -->
+                <div id="db-categories" class="db-table-container" style="display: none;">
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input class="editable-cell" value="Electrical" /></td>
+                                <td><input class="editable-cell" value="Electrical components and cables" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="HVAC" /></td>
+                                <td><input class="editable-cell" value="Heating, ventilation and cooling" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Solar" /></td>
+                                <td><input class="editable-cell" value="Solar panels and equipment" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-record-btn" onclick="addCategory()">➕ Add New Category</button>
+                </div>
+
+                <!-- Orders Table -->
+                <div id="db-orders" class="db-table-container" style="display: none;">
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Supplier</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input class="editable-cell" value="ORD-001" /></td>
+                                <td><input class="editable-cell" value="2024-01-15" /></td>
+                                <td><input class="editable-cell" value="Rexel Australia" /></td>
+                                <td><span class="status-badge status-active">Completed</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">View</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="ORD-002" /></td>
+                                <td><input class="editable-cell" value="2024-01-16" /></td>
+                                <td><input class="editable-cell" value="HVAC Depot" /></td>
+                                <td><span class="status-badge status-inactive">Pending</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">View</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-record-btn" onclick="addOrder()">➕ Add New Order</button>
+                </div>
             </div>
         </div>
-    </footer>
+    </div>
 
-    <!-- JavaScript Functions -->
     <script>
-        // Helper function to safely escape HTML content
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Tab switching function to work with the enhanced script.js
+        // Tab switching for main content
         function switchTab(tabName) {
-            // Hide all content sections
-            document.getElementById('newRequestContent').style.display = 'none';
-            document.getElementById('orderHistorySection').style.display = 'none';
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
-            
-            if (tabName === 'newRequest') {
-                document.getElementById('newRequestContent').style.display = 'block';
-                document.getElementById('newRequestTab').classList.add('active');
-                // Reset to method selection
-                if (window.app) {
-                    window.app.showMethodSelection();
-                }
-            } else if (tabName === 'orderHistory') {
-                document.getElementById('orderHistorySection').style.display = 'block';
-                document.getElementById('orderHistoryTab').classList.add('active');
-                // Load order history
-                if (window.app) {
-                    window.app.showOrderHistory();
-                }
-            }
-        }
-
-        // Alternative function name for backward compatibility
-        function showOrderHistory() {
-            switchTab('orderHistory');
-        }
-
-        // Global function to refresh order history (called from script.js)
-        function refreshOrderHistory() {
-            if (window.app) {
-                window.app.refreshOrderHistory();
-            }
-        }
-
-        // Global function to safely render notes content
-        function renderSafeNotesContent(container, notesText) {
-            if (!container || !notesText) return;
-            
-            // Clear existing content
-            container.innerHTML = '';
-            
-            // Create text node to prevent HTML injection
-            const textNode = document.createTextNode(notesText);
-            container.appendChild(textNode);
-        }
-
-        // Enhanced function to handle notes rendering in order history
-        function createSafeOrderNotes(order) {
-            if (!order.notes) return '';
-            
-            return `
-                <div class="order-notes">
-                    <span class="notes-label">📝 NOTES:</span>
-                    <div class="notes-content" data-notes="${escapeHtml(order.notes)}"></div>
-                </div>
-            `;
-        }
-
-        // Function to fix notes content after DOM insertion
-        function fixNotesDisplay() {
-            const notesContainers = document.querySelectorAll('.notes-content[data-notes]');
-            notesContainers.forEach(container => {
-                const notesText = container.getAttribute('data-notes');
-                if (notesText) {
-                    renderSafeNotesContent(container, notesText);
-                    container.removeAttribute('data-notes');
-                }
-            });
-        }
-
-        // Override the createOrderHistoryCard function to fix notes display
-        if (window.app && window.app.createOrderHistoryCard) {
-            const originalCreateOrderHistoryCard = window.app.createOrderHistoryCard.bind(window.app);
-            window.app.createOrderHistoryCard = function(order) {
-                // Get the original card HTML
-                let cardHtml = originalCreateOrderHistoryCard(order);
-                
-                // Replace notes section with safe version if notes exist
-                if (order.notes) {
-                    const notesRegex = /<div class="order-notes">[\s\S]*?<\/div>/;
-                    const safeNotesHtml = createSafeOrderNotes(order);
-                    cardHtml = cardHtml.replace(notesRegex, safeNotesHtml);
-                }
-                
-                return cardHtml;
-            };
-        }
-
-        // Fix notes after any DOM updates
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up mutation observer to fix notes whenever they're added
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                        // Check if any added nodes contain order cards
-                        mutation.addedNodes.forEach(function(node) {
-                            if (node.nodeType === 1 && (node.classList?.contains('order-card') || node.querySelector?.('.order-card'))) {
-                                setTimeout(fixNotesDisplay, 10);
-                            }
-                        });
-                    }
-                });
+            // Hide all form sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
             });
             
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        });
-    </script>
-
-    <!-- Load the enhanced script.js -->
-    <script src="script.js"></script>
-</body>
-</html>
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
