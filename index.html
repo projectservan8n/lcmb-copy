@@ -551,16 +551,104 @@
             color: #ef4444;
         }
 
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .main-container {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-            
-            .database-panel {
-                position: static;
-            }
+        /* Database table styles - ensure proper visibility */
+        .db-table-container {
+            display: none;
+        }
+
+        .db-table-container.active {
+            display: block;
+        }
+
+        /* Form section improvements */
+        .form-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        /* Quote form specific styles */
+        .quote-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quote-form-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Order history empty state */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--darker-bg);
+            border-radius: 12px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        /* Supplier selection styles */
+        .supplier-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .supplier-option {
+            background: var(--darker-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .supplier-option:hover {
+            border-color: var(--primary-purple);
+            background: var(--card-bg);
+        }
+
+        .supplier-option.selected {
+            border-color: var(--primary-purple);
+            background: var(--card-bg);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .supplier-option input {
+            display: none;
+        }
+
+        .fadeIn {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 768px) {
@@ -702,34 +790,131 @@
 
             <!-- Quote Form -->
             <div id="quotes" class="form-section">
-                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Request Material Quote</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Get pricing information from suppliers before placing orders</p>
-                <form>
-                    <div class="form-group">
-                        <label class="form-label">Quote Description</label>
-                        <textarea class="form-input" rows="4" placeholder="Describe the materials you need quotes for..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Preferred Suppliers</label>
-                        <select class="form-select" multiple style="height: 100px;">
-                            <option value="rexel">Rexel Australia</option>
-                            <option value="hvac">HVAC Depot</option>
-                            <option value="solar">Solar World</option>
-                            <option value="tools">Tools Direct</option>
-                        </select>
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">💬 Request Material Quote</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Get competitive pricing from multiple suppliers before placing your order</p>
+                
+                <form id="quoteForm">
+                    <div class="quote-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Project Name *</label>
+                            <input type="text" class="form-input" placeholder="Enter project name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Timeline Required *</label>
+                            <select class="form-select" required>
+                                <option value="">Select timeline...</option>
+                                <option value="urgent">Urgent (1-2 days)</option>
+                                <option value="standard">Standard (1 week)</option>
+                                <option value="flexible">Flexible (2-4 weeks)</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Request Quotes</button>
+                    <div class="quote-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Primary Category *</label>
+                            <select class="form-select" id="quoteCategory" required>
+                                <option value="">Select category...</option>
+                                <option value="electrical">Electrical</option>
+                                <option value="hvac">HVAC</option>
+                                <option value="solar">Solar</option>
+                                <option value="lighting">Lighting</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Estimated Budget Range</label>
+                            <select class="form-select">
+                                <option value="">Budget range...</option>
+                                <option value="under-500">Under $500</option>
+                                <option value="500-2000">$500 - $2,000</option>
+                                <option value="2000-5000">$2,000 - $5,000</option>
+                                <option value="5000-10000">$5,000 - $10,000</option>
+                                <option value="over-10000">Over $10,000</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group quote-form-full">
+                        <label class="form-label">Material Requirements *</label>
+                        <textarea class="form-input" rows="4" placeholder="Describe the materials you need quotes for... Include quantities, specifications, brands if preferred, etc." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Preferred Suppliers (Select multiple)</label>
+                        <div class="supplier-grid" id="supplierSelection">
+                            <div class="supplier-option" onclick="toggleSupplier(this)">
+                                <input type="checkbox" name="suppliers" value="rexel">
+                                <strong>Rexel Australia</strong>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Electrical & Automation</p>
+                            </div>
+                            <div class="supplier-option" onclick="toggleSupplier(this)">
+                                <input type="checkbox" name="suppliers" value="hvac">
+                                <strong>HVAC Depot</strong>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">HVAC & Refrigeration</p>
+                            </div>
+                            <div class="supplier-option" onclick="toggleSupplier(this)">
+                                <input type="checkbox" name="suppliers" value="solar">
+                                <strong>Solar Depot</strong>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Solar & Battery Storage</p>
+                            </div>
+                            <div class="supplier-option" onclick="toggleSupplier(this)">
+                                <input type="checkbox" name="suppliers" value="climate">
+                                <strong>Climate Technologies</strong>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">HVAC & Heat Pumps</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quote-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Your Name *</label>
+                            <input type="text" class="form-input" placeholder="Your full name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Your Email *</label>
+                            <input type="email" class="form-input" placeholder="your.email@lcmbelectrical.com.au" required>
+                        </div>
+                    </div>
+
+                    <div class="quote-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-input" placeholder="0447 563 718">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">ServiceM8 Job #</label>
+                            <input type="text" class="form-input" placeholder="Optional job reference">
+                        </div>
+                    </div>
+
+                    <div class="form-group quote-form-full">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea class="form-input" rows="3" placeholder="Any special requirements, delivery instructions, or additional information..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                        📨 Send Quote Request to Selected Suppliers
+                    </button>
                 </form>
             </div>
 
             <!-- History -->
             <div id="history" class="form-section">
-                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Order History</h3>
-                <div style="background: var(--darker-bg); padding: 2rem; border-radius: 8px; text-align: center;">
-                    <p style="color: var(--text-secondary);">📋 Recent orders and quotes will appear here</p>
-                    <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.9rem;">Connect to your order system to view history</p>
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">📋 Order History</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Track and manage your material orders and quotes</p>
+                
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>No Order History Yet</h3>
+                    <p>You haven't submitted any orders or quote requests through the system.</p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Start by creating your first material order to see it tracked here.</p>
+                    <button class="btn btn-primary" onclick="switchToNewOrder()">
+                        ➕ Create Your First Order
+                    </button>
                 </div>
             </div>
         </div>
