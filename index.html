@@ -494,31 +494,30 @@
 
             
         }
-        /* Database content: allow horizontal scrolling */
+      /* --- FIX: keep System Database table inside the card when wide --- */
+.database-panel { 
+  overflow: hidden;                  /* hide any bleed from shadows/borders */
+}
+
 .database-content {
-    max-height: 500px;
-    overflow-y: auto;
-    overflow-x: auto;       /* NEW */
+  max-height: 500px;                 /* keep your original height */
+  overflow-y: auto;                  /* keep vertical scroll */
+  overflow-x: auto;                  /* NEW: add horizontal scroll when needed */
 }
 
-/* Table: ensure it can scroll horizontally when there are many columns */
 .database-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 0;
-    min-width: 1100px;      /* NEW: force horizontal scroll when needed */
-    table-layout: auto;     /* keep natural column sizing */
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+  min-width: 1100px;                 /* NEW: forces horizontal scroll if columns exceed panel */
+  table-layout: auto;                /* natural column sizing */
 }
 
-/* Prevent header/data text from wrapping into multiple lines */
 .database-table th,
 .database-table td {
-    padding: 0.75rem 0.5rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.9rem;
-    white-space: nowrap;    /* NEW */
+  white-space: nowrap;               /* NEW: keep header/data on one line */
 }
+
 
     </style>
 </head>
