@@ -1,137 +1,4 @@
-<!-- Orders Table -->
-                <div id="db-orders" class="db-table-container" style="display: none;">
-                    <table class="database-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Date</th>
-                                <th>Requestor</th>
-                                <th>Supplier</th>
-                                <th>Category</th>
-                                <th>Total Items</th>
-                                <th>Value</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input class="editable-cell" value="ELECTRICAL-ORD-001" /></td>
-                                <td><input class="editable-cell" value="2024-01-15" /></td>
-                                <td><input class="editable-cell" value="John Smith" /></td>
-                                <td><input class="editable-cell" value="Rexel Australia" /></td>
-                                <td><input class="editable-cell" value="Electrical Cable" /></td>
-                                <td><input class="editable-cell" value="5" /></td>
-                                <td><input class="editable-cell" value="$1,285.50" /></td>
-                                <td><span class="status-badge status-active">Completed</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">View</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="HVAC-ORD-002" /></td>
-                                <td><input class="editable-cell" value="2024-01-16" /></td>
-                                <td><input class="editable-cell" value="Sarah Wilson" /></td>
-                                <td><input class="editable-cell" value="HVAC Depot" /></td>
-                                <td><input class="editable-cell" value="HVAC Systems" /></td>
-                                <td><input class="editable-cell" value="2" /></td>
-                                <td><input class="editable-cell" value="$1,798.00" /></td>
-                                <td><span class="status-badge status-inactive">Pending</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">View</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="SOLAR-QUO-003" /></td>
-                                <td><input class="editable-cell" value="2024-01-17" /></td>
-                                <td><input class="editable-cell" value="Mike Johnson" /></td>
-                                <td><input class="editable-cell" value="Solar Depot" /></td>
-                                <td><input class="editable-cell" value="Solar Equipment" /></td>
-                                <td><input class="editable-cell" value="12" /></td>
-                                <td><input class="editable-cell" value="$4,250.00" /></td>
-                                <td><span class="status-badge status-active">Quote Sent</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">View</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="LIGHTING-ORD-004" /></td>
-                                <td><input class="editable-cell" value="2024-01-18" /></td>
-                                <td><input class="editable-cell" value="Emma Davis" /></td>
-                                <td><input class="editable-cell" value="Rexel Australia" /></td>
-                                <td><input class="editable-cell" value="Lighting" /></td>
-                                <td><input class="editable-cell" value="8" /></td>
-                                <td><input class="editable-cell" value="$486.75" /></td>
-                                <td><span class="status-badge status-active">Shipped</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">View</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="HVAC-QUO-005" /></td>
-                                <td><input class="editable-cell" value="2024-01-19" /></td>
-                                <td><input class="editable-cell" value="David Brown" /></td>
-                                <td><input class="editable-cell" value="Climate Technologies" /></td>
-                                <td><input class="editable-cell" value="HVAC Systems" /></td>
-                                <td><input class="editable-cell" value="1" /></td>
-                                <td><input class="editable-cell" value="$2,850.00" /></td>
-                                <td><span class="status-badge status-inactive">Pending</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">View</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="ELECTRICAL-ORD-006" /></td>
-                                <td><input class="editable-cell" value="2024-01-20" /></td>
-                                <td><input class="editable-cell" value="Lisa Anderson" /></td>
-                                <td><input class="editable-cell" value="Rexel Australia" /></td>
-                                <td><input class="editable-cell" value="Electrical Protection" /></td>
-                                <td><input class="editable-cell" value="3" /></td>
-                                <td><input class="editable-cell" value="$195.60" /></td>
-                                <td><span class="status-badge status-active">Completed</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">View</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="CONDUIT-ORD-007" /></td>
-                                <td><input class="editable-cell" value="2024-01-21" /></td>
-                                <td><input class="editable-cell" value="Chris Taylor" /></td>
-                                <td><input class="editable-cell" value="Middy's Electrical" /></td>
-                                <td><input class="editable-cell" value="Electrical Conduit" /></td>
-                                <td><input class="editable-cell" value="6" /></td>
-                                <td><input class="editable-cell" value="$352.80" /></td>
-                                <td><span class="status-badge status-inactive">Cancelled</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">View</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button class="add-record-btn" onclick="addOrder()">➕ Add New Order</button>
-                </div>
-                <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -380,6 +247,33 @@
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
         }
 
+        /* Order History Styles */
+        .history-content {
+            text-align: center;
+            background: var(--darker-bg);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .history-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        .history-title {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .history-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
         /* Database Panel */
         .database-panel {
             background: var(--card-bg);
@@ -440,6 +334,14 @@
         .database-content {
             max-height: 500px;
             overflow-y: auto;
+        }
+
+        .db-table-container {
+            display: none;
+        }
+
+        .db-table-container.active {
+            display: block;
         }
 
         .database-table {
@@ -551,104 +453,16 @@
             color: #ef4444;
         }
 
-        /* Database table styles - ensure proper visibility */
-        .db-table-container {
-            display: none;
-        }
-
-        .db-table-container.active {
-            display: block;
-        }
-
-        /* Form section improvements */
-        .form-section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .form-section.active {
-            display: block;
-        }
-
-        /* Quote form specific styles */
-        .quote-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .quote-form-full {
-            grid-column: 1 / -1;
-        }
-
-        /* Order history empty state */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: var(--darker-bg);
-            border-radius: 12px;
-            border: 2px dashed var(--border-color);
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        .empty-state h3 {
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .empty-state p {
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            font-size: 1rem;
-        }
-
-        /* Supplier selection styles */
-        .supplier-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .supplier-option {
-            background: var(--darker-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .supplier-option:hover {
-            border-color: var(--primary-purple);
-            background: var(--card-bg);
-        }
-
-        .supplier-option.selected {
-            border-color: var(--primary-purple);
-            background: var(--card-bg);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-
-        .supplier-option input {
-            display: none;
-        }
-
-        .fadeIn {
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .database-panel {
+                position: static;
+            }
         }
 
         @media (max-width: 768px) {
@@ -711,8 +525,8 @@
                 <h1 class="hero-title">AI-Powered Material Management</h1>
                 <p class="hero-subtitle">Streamline your electrical and HVAC material ordering with intelligent automation</p>
                 <div class="cta-buttons">
-                    <a href="#" class="btn btn-primary">Start New Order</a>
-                    <a href="#" class="btn btn-secondary">Request Quote</a>
+                    <a href="#" class="btn btn-primary" onclick="switchTab('orders')">Start New Order</a>
+                    <a href="#" class="btn btn-secondary" onclick="switchTab('quotes')">Request Quote</a>
                 </div>
             </div>
 
@@ -728,46 +542,51 @@
             <!-- Order Form -->
             <div id="orders" class="form-section active">
                 <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Create New Material Order</h3>
-                <form>
+                <form onsubmit="submitOrder(event)">
                     <div class="form-group">
                         <label class="form-label">Category *</label>
-                        <select class="form-select" id="orderCategory">
+                        <select class="form-select" id="orderCategory" required>
                             <option value="">Select category...</option>
-                            <option value="Electrical">Electrical</option>
-                            <option value="HVAC">HVAC</option>
-                            <option value="Solar">Solar</option>
-                            <option value="Tools">Tools</option>
+                            <option value="Electrical Cable">Electrical Cable</option>
+                            <option value="Electrical Outlets">Electrical Outlets</option>
+                            <option value="HVAC Systems">HVAC Systems</option>
+                            <option value="Lighting">Lighting</option>
+                            <option value="Solar Equipment">Solar Equipment</option>
+                            <option value="Electrical Protection">Electrical Protection</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Supplier *</label>
-                        <select class="form-select" id="orderSupplier">
+                        <select class="form-select" id="orderSupplier" required>
                             <option value="">Select supplier...</option>
-                            <option value="Rexel">Rexel Australia</option>
-                            <option value="HVAC_Depot">HVAC Depot</option>
-                            <option value="Solar_World">Solar World</option>
+                            <option value="Rexel Australia">Rexel Australia</option>
+                            <option value="HVAC Depot">HVAC Depot</option>
+                            <option value="Solar Depot">Solar Depot</option>
+                            <option value="Climate Technologies">Climate Technologies</option>
+                            <option value="Middy's Electrical">Middy's Electrical</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Materials Required *</label>
-                        <select class="form-select" multiple style="height: 120px;">
-                            <option value="cable_tps">TPS Cable 2.5mm</option>
-                            <option value="outlets">GPO Outlets</option>
-                            <option value="switches">Light Switches</option>
-                            <option value="conduit">Electrical Conduit</option>
+                        <select class="form-select" multiple style="height: 120px;" required>
+                            <option value="TPS Cable 2.5mm">TPS Cable 2.5mm Twin & Earth</option>
+                            <option value="GPO Outlets">GPO Power Outlet 10A</option>
+                            <option value="LED Downlights">LED Downlight 10W Dimmable</option>
+                            <option value="Circuit Breakers">Circuit Breaker 32A Single Pole</option>
+                            <option value="Solar Panels">Solar Panel 400W Monocrystalline</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Requestor Name *</label>
-                        <input type="text" class="form-input" placeholder="Your name">
+                        <input type="text" class="form-input" placeholder="Your name" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Requestor Email *</label>
-                        <input type="email" class="form-input" placeholder="your.email@lcmbelectrical.com.au">
+                        <input type="email" class="form-input" placeholder="your.email@lcmbelectrical.com.au" required>
                     </div>
 
                     <div class="form-group">
@@ -790,131 +609,71 @@
 
             <!-- Quote Form -->
             <div id="quotes" class="form-section">
-                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">💬 Request Material Quote</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Get competitive pricing from multiple suppliers before placing your order</p>
-                
-                <form id="quoteForm">
-                    <div class="quote-form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Project Name *</label>
-                            <input type="text" class="form-input" placeholder="Enter project name" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Timeline Required *</label>
-                            <select class="form-select" required>
-                                <option value="">Select timeline...</option>
-                                <option value="urgent">Urgent (1-2 days)</option>
-                                <option value="standard">Standard (1 week)</option>
-                                <option value="flexible">Flexible (2-4 weeks)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="quote-form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Primary Category *</label>
-                            <select class="form-select" id="quoteCategory" required>
-                                <option value="">Select category...</option>
-                                <option value="electrical">Electrical</option>
-                                <option value="hvac">HVAC</option>
-                                <option value="solar">Solar</option>
-                                <option value="lighting">Lighting</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Estimated Budget Range</label>
-                            <select class="form-select">
-                                <option value="">Budget range...</option>
-                                <option value="under-500">Under $500</option>
-                                <option value="500-2000">$500 - $2,000</option>
-                                <option value="2000-5000">$2,000 - $5,000</option>
-                                <option value="5000-10000">$5,000 - $10,000</option>
-                                <option value="over-10000">Over $10,000</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group quote-form-full">
-                        <label class="form-label">Material Requirements *</label>
-                        <textarea class="form-input" rows="4" placeholder="Describe the materials you need quotes for... Include quantities, specifications, brands if preferred, etc." required></textarea>
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Request Material Quote</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Get pricing information from suppliers before placing orders</p>
+                <form onsubmit="submitQuote(event)">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" required>
+                            <option value="">Select category...</option>
+                            <option value="Electrical Cable">Electrical Cable</option>
+                            <option value="Electrical Outlets">Electrical Outlets</option>
+                            <option value="HVAC Systems">HVAC Systems</option>
+                            <option value="Lighting">Lighting</option>
+                            <option value="Solar Equipment">Solar Equipment</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Preferred Suppliers (Select multiple)</label>
-                        <div class="supplier-grid" id="supplierSelection">
-                            <div class="supplier-option" onclick="toggleSupplier(this)">
-                                <input type="checkbox" name="suppliers" value="rexel">
-                                <strong>Rexel Australia</strong>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Electrical & Automation</p>
-                            </div>
-                            <div class="supplier-option" onclick="toggleSupplier(this)">
-                                <input type="checkbox" name="suppliers" value="hvac">
-                                <strong>HVAC Depot</strong>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">HVAC & Refrigeration</p>
-                            </div>
-                            <div class="supplier-option" onclick="toggleSupplier(this)">
-                                <input type="checkbox" name="suppliers" value="solar">
-                                <strong>Solar Depot</strong>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">Solar & Battery Storage</p>
-                            </div>
-                            <div class="supplier-option" onclick="toggleSupplier(this)">
-                                <input type="checkbox" name="suppliers" value="climate">
-                                <strong>Climate Technologies</strong>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--text-muted);">HVAC & Heat Pumps</p>
-                            </div>
-                        </div>
+                        <label class="form-label">Quote Description *</label>
+                        <textarea class="form-input" rows="4" placeholder="Describe the materials you need quotes for..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Preferred Suppliers</label>
+                        <select class="form-select" multiple style="height: 100px;">
+                            <option value="Rexel Australia">Rexel Australia</option>
+                            <option value="HVAC Depot">HVAC Depot</option>
+                            <option value="Solar Depot">Solar Depot</option>
+                            <option value="Climate Technologies">Climate Technologies</option>
+                            <option value="Trade Tools Direct">Trade Tools Direct</option>
+                        </select>
                     </div>
 
-                    <div class="quote-form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Your Name *</label>
-                            <input type="text" class="form-input" placeholder="Your full name" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Your Email *</label>
-                            <input type="email" class="form-input" placeholder="your.email@lcmbelectrical.com.au" required>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Requestor Name *</label>
+                        <input type="text" class="form-input" placeholder="Your name" required>
                     </div>
 
-                    <div class="quote-form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" class="form-input" placeholder="0447 563 718">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">ServiceM8 Job #</label>
-                            <input type="text" class="form-input" placeholder="Optional job reference">
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Requestor Email *</label>
+                        <input type="email" class="form-input" placeholder="your.email@lcmbelectrical.com.au" required>
                     </div>
 
-                    <div class="form-group quote-form-full">
-                        <label class="form-label">Additional Notes</label>
-                        <textarea class="form-input" rows="3" placeholder="Any special requirements, delivery instructions, or additional information..."></textarea>
+                    <div class="form-group">
+                        <label class="form-label">Estimated Budget Range</label>
+                        <select class="form-select">
+                            <option value="">Select budget range...</option>
+                            <option value="Under $500">Under $500</option>
+                            <option value="$500 - $1,000">$500 - $1,000</option>
+                            <option value="$1,000 - $5,000">$1,000 - $5,000</option>
+                            <option value="$5,000 - $10,000">$5,000 - $10,000</option>
+                            <option value="Over $10,000">Over $10,000</option>
+                        </select>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
-                        📨 Send Quote Request to Selected Suppliers
-                    </button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Request Quotes</button>
                 </form>
             </div>
 
             <!-- History -->
             <div id="history" class="form-section">
-                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">📋 Order History</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Track and manage your material orders and quotes</p>
-                
-                <div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
-                    <h3>No Order History Yet</h3>
-                    <p>You haven't submitted any orders or quote requests through the system.</p>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Start by creating your first material order to see it tracked here.</p>
-                    <button class="btn btn-primary" onclick="switchToNewOrder()">
-                        ➕ Create Your First Order
-                    </button>
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Order History</h3>
+                <div class="history-content">
+                    <div class="history-icon">📋</div>
+                    <h4 class="history-title">No Recent Orders</h4>
+                    <p class="history-subtitle">You haven't placed any orders yet. Start by creating your first material order.</p>
+                    <button class="btn btn-primary" onclick="switchTab('orders')">Create an Order</button>
                 </div>
             </div>
         </div>
@@ -934,7 +693,7 @@
 
             <div class="database-content">
                 <!-- Suppliers Table -->
-                <div id="db-suppliers" class="db-table-container">
+                <div id="db-suppliers" class="db-table-container active">
                     <table class="database-table">
                         <thead>
                             <tr>
@@ -951,105 +710,6 @@
                                 <td><input class="editable-cell" value="Rexel Australia" /></td>
                                 <td><input class="editable-cell" value="orders@rexel.com.au" /></td>
                                 <td><input class="editable-cell" value="1800 739 350" /></td>
-                                <td><input class="editable-cell" value="Electrical, Automation" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="HVAC Depot" /></td>
-                                <td><input class="editable-cell" value="sales@hvacdepot.com.au" /></td>
-                                <td><input class="editable-cell" value="07 3205 1300" /></td>
-                                <td><input class="editable-cell" value="HVAC, Refrigeration" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Solar Depot" /></td>
-                                <td><input class="editable-cell" value="info@solardepot.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 765 273" /></td>
-                                <td><input class="editable-cell" value="Solar, Battery Storage" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Climate Technologies" /></td>
-                                <td><input class="editable-cell" value="orders@climatetechnologies.com.au" /></td>
-                                <td><input class="editable-cell" value="1800 234 567" /></td>
-                                <td><input class="editable-cell" value="HVAC, Heat Pumps" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Trade Tools Direct" /></td>
-                                <td><input class="editable-cell" value="sales@tradetoolsdirect.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 872 332" /></td>
-                                <td><input class="editable-cell" value="Tools, Safety Equipment" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Middy's Electrical" /></td>
-                                <td><input class="editable-cell" value="wholesale@middys.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 643 397" /></td>
-                                <td><input class="editable-cell" value="Electrical, Lighting" /></td>
-                                <td><span class="status-badge status-inactive">Inactive</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button class="add-record-btn" onclick="addSupplier()">➕ Add New Supplier</button>
-                </div>
-
-                <!-- Materials Table -->
-                <div id="db-materials" class="db-table-container" style="display: none;">
-                    <table class="database-table">
-                        <thead>
-                            <tr>
-                                <th>Material Name</th>
-                                <th>Code</th>
-                                <th>Unit</th>
-                                <th>Category</th>
-                                <th>Supplier</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input class="editable-cell" value="TPS Cable 2.5mm Twin & Earth" /></td>
-                                <td><input class="editable-cell" value="TPS-2.5-TE" /></td>
-                                <td><input class="editable-cell" value="Meters" /></td>
                                 <td><input class="editable-cell" value="Electrical Cable" /></td>
                                 <td><input class="editable-cell" value="Rexel Australia" /></td>
                                 <td><input class="editable-cell" value="$2.85/m" /></td>
@@ -1172,7 +832,7 @@
                 </div>
 
                 <!-- Categories Table -->
-                <div id="db-categories" class="db-table-container" style="display: none;">
+                <div id="db-categories" class="db-table-container">
                     <table class="database-table">
                         <thead>
                             <tr>
@@ -1286,22 +946,30 @@
                 </div>
 
                 <!-- Orders Table -->
-                <div id="db-orders" class="db-table-container" style="display: none;">
+                <div id="db-orders" class="db-table-container">
                     <table class="database-table">
                         <thead>
                             <tr>
                                 <th>Order ID</th>
                                 <th>Date</th>
+                                <th>Requestor</th>
                                 <th>Supplier</th>
+                                <th>Category</th>
+                                <th>Total Items</th>
+                                <th>Value</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><input class="editable-cell" value="ORD-001" /></td>
+                                <td><input class="editable-cell" value="ELECTRICAL-ORD-001" /></td>
                                 <td><input class="editable-cell" value="2024-01-15" /></td>
+                                <td><input class="editable-cell" value="John Smith" /></td>
                                 <td><input class="editable-cell" value="Rexel Australia" /></td>
+                                <td><input class="editable-cell" value="Electrical Cable" /></td>
+                                <td><input class="editable-cell" value="5" /></td>
+                                <td><input class="editable-cell" value="$1,285.50" /></td>
                                 <td><span class="status-badge status-active">Completed</span></td>
                                 <td>
                                     <div class="action-buttons">
@@ -1311,10 +979,94 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td><input class="editable-cell" value="ORD-002" /></td>
+                                <td><input class="editable-cell" value="HVAC-ORD-002" /></td>
                                 <td><input class="editable-cell" value="2024-01-16" /></td>
+                                <td><input class="editable-cell" value="Sarah Wilson" /></td>
                                 <td><input class="editable-cell" value="HVAC Depot" /></td>
+                                <td><input class="editable-cell" value="HVAC Systems" /></td>
+                                <td><input class="editable-cell" value="2" /></td>
+                                <td><input class="editable-cell" value="$1,798.00" /></td>
                                 <td><span class="status-badge status-inactive">Pending</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">View</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="SOLAR-QUO-003" /></td>
+                                <td><input class="editable-cell" value="2024-01-17" /></td>
+                                <td><input class="editable-cell" value="Mike Johnson" /></td>
+                                <td><input class="editable-cell" value="Solar Depot" /></td>
+                                <td><input class="editable-cell" value="Solar Equipment" /></td>
+                                <td><input class="editable-cell" value="12" /></td>
+                                <td><input class="editable-cell" value="$4,250.00" /></td>
+                                <td><span class="status-badge status-active">Quote Sent</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">View</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="LIGHTING-ORD-004" /></td>
+                                <td><input class="editable-cell" value="2024-01-18" /></td>
+                                <td><input class="editable-cell" value="Emma Davis" /></td>
+                                <td><input class="editable-cell" value="Rexel Australia" /></td>
+                                <td><input class="editable-cell" value="Lighting" /></td>
+                                <td><input class="editable-cell" value="8" /></td>
+                                <td><input class="editable-cell" value="$486.75" /></td>
+                                <td><span class="status-badge status-active">Shipped</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">View</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="HVAC-QUO-005" /></td>
+                                <td><input class="editable-cell" value="2024-01-19" /></td>
+                                <td><input class="editable-cell" value="David Brown" /></td>
+                                <td><input class="editable-cell" value="Climate Technologies" /></td>
+                                <td><input class="editable-cell" value="HVAC Systems" /></td>
+                                <td><input class="editable-cell" value="1" /></td>
+                                <td><input class="editable-cell" value="$2,850.00" /></td>
+                                <td><span class="status-badge status-inactive">Pending</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">View</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="ELECTRICAL-ORD-006" /></td>
+                                <td><input class="editable-cell" value="2024-01-20" /></td>
+                                <td><input class="editable-cell" value="Lisa Anderson" /></td>
+                                <td><input class="editable-cell" value="Rexel Australia" /></td>
+                                <td><input class="editable-cell" value="Electrical Protection" /></td>
+                                <td><input class="editable-cell" value="3" /></td>
+                                <td><input class="editable-cell" value="$195.60" /></td>
+                                <td><span class="status-badge status-active">Completed</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">View</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="CONDUIT-ORD-007" /></td>
+                                <td><input class="editable-cell" value="2024-01-21" /></td>
+                                <td><input class="editable-cell" value="Chris Taylor" /></td>
+                                <td><input class="editable-cell" value="Middy's Electrical" /></td>
+                                <td><input class="editable-cell" value="Electrical Conduit" /></td>
+                                <td><input class="editable-cell" value="6" /></td>
+                                <td><input class="editable-cell" value="$352.80" /></td>
+                                <td><span class="status-badge status-inactive">Cancelled</span></td>
                                 <td>
                                     <div class="action-buttons">
                                         <button class="btn-small btn-edit">View</button>
@@ -1341,3 +1093,327 @@
             // Remove active class from all tab buttons
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
+            });
+            
+            // Show selected section and activate button
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Database tab switching
+        function switchDbTab(tabName) {
+            // Hide all database table containers
+            document.querySelectorAll('.db-table-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            // Remove active class from all database tab buttons
+            document.querySelectorAll('.db-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected database table and activate button
+            document.getElementById('db-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Form submission handlers
+        function submitOrder(event) {
+            event.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(event.target);
+            const orderData = Object.fromEntries(formData.entries());
+            
+            // Generate order ID
+            const orderId = 'ORD-' + Date.now().toString().slice(-6);
+            
+            // Show success message
+            alert(`Order ${orderId} submitted successfully!\n\nCategory: ${orderData.orderCategory || 'N/A'}\nSupplier: ${orderData.orderSupplier || 'N/A'}\nRequestor: ${orderData.requestorName || 'N/A'}`);
+            
+            // Reset form
+            event.target.reset();
+            
+            // Add to orders database (simulation)
+            addOrderToDatabase(orderId, orderData);
+        }
+
+        function submitQuote(event) {
+            event.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(event.target);
+            const quoteData = Object.fromEntries(formData.entries());
+            
+            // Generate quote ID
+            const quoteId = 'QUO-' + Date.now().toString().slice(-6);
+            
+            // Show success message
+            alert(`Quote request ${quoteId} submitted successfully!\n\nCategory: ${quoteData.category || 'N/A'}\nRequestor: ${quoteData.requestorName || 'N/A'}\n\nSuppliers will be contacted for pricing.`);
+            
+            // Reset form
+            event.target.reset();
+        }
+
+        // Add record functions
+        function addSupplier() {
+            const name = prompt('Enter supplier name:');
+            if (name) {
+                const email = prompt('Enter supplier email:') || '';
+                const phone = prompt('Enter supplier phone:') || '';
+                const specialties = prompt('Enter specialties:') || '';
+                
+                const tbody = document.getElementById('suppliers-table');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><input class="editable-cell" value="${name}" /></td>
+                    <td><input class="editable-cell" value="${email}" /></td>
+                    <td><input class="editable-cell" value="${phone}" /></td>
+                    <td><input class="editable-cell" value="${specialties}" /></td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-small btn-edit">Edit</button>
+                            <button class="btn-small btn-delete">Del</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+            }
+        }
+
+        function addMaterial() {
+            const name = prompt('Enter material name:');
+            if (name) {
+                const code = prompt('Enter material code:') || '';
+                const unit = prompt('Enter unit (Each/Meters/etc):') || 'Each';
+                const category = prompt('Enter category:') || '';
+                const supplier = prompt('Enter supplier:') || '';
+                const price = prompt('Enter price:') || '';
+                
+                const tbody = document.querySelector('#db-materials tbody');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><input class="editable-cell" value="${name}" /></td>
+                    <td><input class="editable-cell" value="${code}" /></td>
+                    <td><input class="editable-cell" value="${unit}" /></td>
+                    <td><input class="editable-cell" value="${category}" /></td>
+                    <td><input class="editable-cell" value="${supplier}" /></td>
+                    <td><input class="editable-cell" value="${price}" /></td>
+                    <td><input class="editable-cell" value="0" /></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-small btn-edit">Edit</button>
+                            <button class="btn-small btn-delete">Del</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+            }
+        }
+
+        function addCategory() {
+            const name = prompt('Enter category name:');
+            if (name) {
+                const description = prompt('Enter category description:') || '';
+                
+                const tbody = document.querySelector('#db-categories tbody');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><input class="editable-cell" value="${name}" /></td>
+                    <td><input class="editable-cell" value="${description}" /></td>
+                    <td><input class="editable-cell" value="0" /></td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-small btn-edit">Edit</button>
+                            <button class="btn-small btn-delete">Del</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+            }
+        }
+
+        function addOrder() {
+            const orderId = prompt('Enter order ID:');
+            if (orderId) {
+                const supplier = prompt('Enter supplier:') || '';
+                const status = prompt('Enter status (Pending/Completed/etc):') || 'Pending';
+                
+                const tbody = document.querySelector('#db-orders tbody');
+                const newRow = document.createElement('tr');
+                const today = new Date().toISOString().split('T')[0];
+                newRow.innerHTML = `
+                    <td><input class="editable-cell" value="${orderId}" /></td>
+                    <td><input class="editable-cell" value="${today}" /></td>
+                    <td><input class="editable-cell" value="New User" /></td>
+                    <td><input class="editable-cell" value="${supplier}" /></td>
+                    <td><input class="editable-cell" value="General" /></td>
+                    <td><input class="editable-cell" value="1" /></td>
+                    <td><input class="editable-cell" value="$0.00" /></td>
+                    <td><span class="status-badge status-inactive">${status}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-small btn-edit">View</button>
+                            <button class="btn-small btn-delete">Del</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+            }
+        }
+
+        function addOrderToDatabase(orderId, orderData) {
+            const tbody = document.querySelector('#db-orders tbody');
+            const newRow = document.createElement('tr');
+            const today = new Date().toISOString().split('T')[0];
+            newRow.innerHTML = `
+                <td><input class="editable-cell" value="${orderId}" /></td>
+                <td><input class="editable-cell" value="${today}" /></td>
+                <td><input class="editable-cell" value="${orderData.requestorName || 'N/A'}" /></td>
+                <td><input class="editable-cell" value="${orderData.orderSupplier || 'N/A'}" /></td>
+                <td><input class="editable-cell" value="${orderData.orderCategory || 'N/A'}" /></td>
+                <td><input class="editable-cell" value="1" /></td>
+                <td><input class="editable-cell" value="TBD" /></td>
+                <td><span class="status-badge status-inactive">Pending</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-small btn-edit">View</button>
+                        <button class="btn-small btn-delete">Del</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('LCMB Material Management Demo Loaded');
+            
+            // Add delete functionality to existing records
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('btn-delete')) {
+                    if (confirm('Are you sure you want to delete this record?')) {
+                        e.target.closest('tr').remove();
+                    }
+                }
+                
+                if (e.target.classList.contains('btn-edit')) {
+                    alert('Edit functionality would open a detailed form in a real application.');
+                }
+            });
+            
+            // Add hover effects and interactions
+            document.querySelectorAll('.database-table tr').forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = 'var(--darker-bg)';
+                });
+                
+                row.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                });
+            });
+        });
+    </script>
+</body>
+</html>, Automation" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="HVAC Depot" /></td>
+                                <td><input class="editable-cell" value="sales@hvacdepot.com.au" /></td>
+                                <td><input class="editable-cell" value="07 3205 1300" /></td>
+                                <td><input class="editable-cell" value="HVAC, Refrigeration" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Solar Depot" /></td>
+                                <td><input class="editable-cell" value="info@solardepot.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 765 273" /></td>
+                                <td><input class="editable-cell" value="Solar, Battery Storage" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Climate Technologies" /></td>
+                                <td><input class="editable-cell" value="orders@climatetechnologies.com.au" /></td>
+                                <td><input class="editable-cell" value="1800 234 567" /></td>
+                                <td><input class="editable-cell" value="HVAC, Heat Pumps" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Trade Tools Direct" /></td>
+                                <td><input class="editable-cell" value="sales@tradetoolsdirect.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 872 332" /></td>
+                                <td><input class="editable-cell" value="Tools, Safety Equipment" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Middy's Electrical" /></td>
+                                <td><input class="editable-cell" value="wholesale@middys.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 643 397" /></td>
+                                <td><input class="editable-cell" value="Electrical, Lighting" /></td>
+                                <td><span class="status-badge status-inactive">Inactive</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-record-btn" onclick="addSupplier()">➕ Add New Supplier</button>
+                </div>
+
+                <!-- Materials Table -->
+                <div id="db-materials" class="db-table-container">
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>Material Name</th>
+                                <th>Code</th>
+                                <th>Unit</th>
+                                <th>Category</th>
+                                <th>Supplier</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input class="editable-cell" value="TPS Cable 2.5mm Twin & Earth" /></td>
+                                <td><input class="editable-cell" value="TPS-2.5-TE" /></td>
+                                <td><input class="editable-cell" value="Meters" /></td>
+                                <td><input class="editable-cell" value="Electrical
