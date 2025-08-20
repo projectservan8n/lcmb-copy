@@ -347,6 +347,7 @@
         .database-table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 0;
         }
 
         .database-table th,
@@ -710,6 +711,105 @@
                                 <td><input class="editable-cell" value="Rexel Australia" /></td>
                                 <td><input class="editable-cell" value="orders@rexel.com.au" /></td>
                                 <td><input class="editable-cell" value="1800 739 350" /></td>
+                                <td><input class="editable-cell" value="Electrical, Automation" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="HVAC Depot" /></td>
+                                <td><input class="editable-cell" value="sales@hvacdepot.com.au" /></td>
+                                <td><input class="editable-cell" value="07 3205 1300" /></td>
+                                <td><input class="editable-cell" value="HVAC, Refrigeration" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Solar Depot" /></td>
+                                <td><input class="editable-cell" value="info@solardepot.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 765 273" /></td>
+                                <td><input class="editable-cell" value="Solar, Battery Storage" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Climate Technologies" /></td>
+                                <td><input class="editable-cell" value="orders@climatetechnologies.com.au" /></td>
+                                <td><input class="editable-cell" value="1800 234 567" /></td>
+                                <td><input class="editable-cell" value="HVAC, Heat Pumps" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Trade Tools Direct" /></td>
+                                <td><input class="editable-cell" value="sales@tradetoolsdirect.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 872 332" /></td>
+                                <td><input class="editable-cell" value="Tools, Safety Equipment" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Middy's Electrical" /></td>
+                                <td><input class="editable-cell" value="wholesale@middys.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 643 397" /></td>
+                                <td><input class="editable-cell" value="Electrical, Lighting" /></td>
+                                <td><span class="status-badge status-inactive">Inactive</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-record-btn" onclick="addSupplier()">➕ Add New Supplier</button>
+                </div>
+
+                <!-- Materials Table -->
+                <div id="db-materials" class="db-table-container">
+                    <table class="database-table">
+                        <thead>
+                            <tr>
+                                <th>Material Name</th>
+                                <th>Code</th>
+                                <th>Unit</th>
+                                <th>Category</th>
+                                <th>Supplier</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input class="editable-cell" value="TPS Cable 2.5mm Twin & Earth" /></td>
+                                <td><input class="editable-cell" value="TPS-2.5-TE" /></td>
+                                <td><input class="editable-cell" value="Meters" /></td>
                                 <td><input class="editable-cell" value="Electrical Cable" /></td>
                                 <td><input class="editable-cell" value="Rexel Australia" /></td>
                                 <td><input class="editable-cell" value="$2.85/m" /></td>
@@ -1317,103 +1417,4 @@
         });
     </script>
 </body>
-</html>, Automation" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="HVAC Depot" /></td>
-                                <td><input class="editable-cell" value="sales@hvacdepot.com.au" /></td>
-                                <td><input class="editable-cell" value="07 3205 1300" /></td>
-                                <td><input class="editable-cell" value="HVAC, Refrigeration" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Solar Depot" /></td>
-                                <td><input class="editable-cell" value="info@solardepot.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 765 273" /></td>
-                                <td><input class="editable-cell" value="Solar, Battery Storage" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Climate Technologies" /></td>
-                                <td><input class="editable-cell" value="orders@climatetechnologies.com.au" /></td>
-                                <td><input class="editable-cell" value="1800 234 567" /></td>
-                                <td><input class="editable-cell" value="HVAC, Heat Pumps" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Trade Tools Direct" /></td>
-                                <td><input class="editable-cell" value="sales@tradetoolsdirect.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 872 332" /></td>
-                                <td><input class="editable-cell" value="Tools, Safety Equipment" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Middy's Electrical" /></td>
-                                <td><input class="editable-cell" value="wholesale@middys.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 643 397" /></td>
-                                <td><input class="editable-cell" value="Electrical, Lighting" /></td>
-                                <td><span class="status-badge status-inactive">Inactive</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button class="add-record-btn" onclick="addSupplier()">➕ Add New Supplier</button>
-                </div>
-
-                <!-- Materials Table -->
-                <div id="db-materials" class="db-table-container">
-                    <table class="database-table">
-                        <thead>
-                            <tr>
-                                <th>Material Name</th>
-                                <th>Code</th>
-                                <th>Unit</th>
-                                <th>Category</th>
-                                <th>Supplier</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input class="editable-cell" value="TPS Cable 2.5mm Twin & Earth" /></td>
-                                <td><input class="editable-cell" value="TPS-2.5-TE" /></td>
-                                <td><input class="editable-cell" value="Meters" /></td>
-                                <td><input class="editable-cell" value="Electrical
+</html>
