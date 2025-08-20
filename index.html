@@ -60,21 +60,14 @@
         }
 
         .logo {
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-size: 1.5rem;
-            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .logo::before {
-            content: "⚡";
-            font-size: 1.8rem;
-            -webkit-text-fill-color: var(--primary-purple);
+        .logo svg {
+            width: 40px;
+            height: 40px;
         }
 
         .nav-links {
@@ -505,7 +498,31 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                LCMB Material Management
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3b4bd8;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Gear wheel -->
+                    <path d="M50 10 L60 15 L70 10 L75 20 L85 25 L80 35 L90 40 L85 50 L90 60 L80 65 L85 75 L75 80 L70 90 L60 85 L50 90 L40 85 L30 90 L25 80 L15 75 L20 65 L10 60 L15 50 L10 40 L20 35 L15 25 L25 20 L30 10 L40 15 Z" fill="url(#logoGradient)"/>
+                    <!-- Inner circle -->
+                    <circle cx="50" cy="50" r="20" fill="#ffffff"/>
+                    <!-- Network nodes -->
+                    <circle cx="75" cy="25" r="8" fill="url(#logoGradient)"/>
+                    <circle cx="75" cy="75" r="8" fill="url(#logoGradient)"/>
+                    <circle cx="25" cy="50" r="8" fill="url(#logoGradient)"/>
+                    <circle cx="90" cy="50" r="6" fill="url(#logoGradient)"/>
+                    <!-- Connection lines -->
+                    <line x1="58" y1="42" x2="67" y2="33" stroke="url(#logoGradient)" stroke-width="3"/>
+                    <line x1="58" y1="58" x2="67" y2="67" stroke="url(#logoGradient)" stroke-width="3"/>
+                    <line x1="42" y1="50" x2="33" y2="50" stroke="url(#logoGradient)" stroke-width="3"/>
+                    <line x1="70" y1="50" x2="84" y2="50" stroke="url(#logoGradient)" stroke-width="3"/>
+                    <!-- Inner gear teeth -->
+                    <circle cx="50" cy="50" r="3" fill="url(#logoGradient)"/>
+                </svg>
             </div>
             <nav>
                 <ul class="nav-links">
@@ -535,7 +552,6 @@
             <div class="tabs-container">
                 <div class="tabs">
                     <button class="tab-button active" onclick="switchTab('orders')">📦 New Order</button>
-                    <button class="tab-button" onclick="switchTab('quotes')">💬 Quote Request</button>
                     <button class="tab-button" onclick="switchTab('history')">📋 Order History</button>
                 </div>
             </div>
@@ -712,58 +728,6 @@
                                 <td><input class="editable-cell" value="orders@rexel.com.au" /></td>
                                 <td><input class="editable-cell" value="1800 739 350" /></td>
                                 <td><input class="editable-cell" value="Electrical, Automation" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="HVAC Depot" /></td>
-                                <td><input class="editable-cell" value="sales@hvacdepot.com.au" /></td>
-                                <td><input class="editable-cell" value="07 3205 1300" /></td>
-                                <td><input class="editable-cell" value="HVAC, Refrigeration" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Solar Depot" /></td>
-                                <td><input class="editable-cell" value="info@solardepot.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 765 273" /></td>
-                                <td><input class="editable-cell" value="Solar, Battery Storage" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Climate Technologies" /></td>
-                                <td><input class="editable-cell" value="orders@climatetechnologies.com.au" /></td>
-                                <td><input class="editable-cell" value="1800 234 567" /></td>
-                                <td><input class="editable-cell" value="HVAC, Heat Pumps" /></td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-small btn-edit">Edit</button>
-                                        <button class="btn-small btn-delete">Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><input class="editable-cell" value="Trade Tools Direct" /></td>
-                                <td><input class="editable-cell" value="sales@tradetoolsdirect.com.au" /></td>
-                                <td><input class="editable-cell" value="1300 872 332" /></td>
-                                <td><input class="editable-cell" value="Tools, Safety Equipment" /></td>
                                 <td><span class="status-badge status-active">Active</span></td>
                                 <td>
                                     <div class="action-buttons">
@@ -1418,3 +1382,55 @@
     </script>
 </body>
 </html>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="HVAC Depot" /></td>
+                                <td><input class="editable-cell" value="sales@hvacdepot.com.au" /></td>
+                                <td><input class="editable-cell" value="07 3205 1300" /></td>
+                                <td><input class="editable-cell" value="HVAC, Refrigeration" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Solar Depot" /></td>
+                                <td><input class="editable-cell" value="info@solardepot.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 765 273" /></td>
+                                <td><input class="editable-cell" value="Solar, Battery Storage" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Climate Technologies" /></td>
+                                <td><input class="editable-cell" value="orders@climatetechnologies.com.au" /></td>
+                                <td><input class="editable-cell" value="1800 234 567" /></td>
+                                <td><input class="editable-cell" value="HVAC, Heat Pumps" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
+                                        <button class="btn-small btn-delete">Del</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input class="editable-cell" value="Trade Tools Direct" /></td>
+                                <td><input class="editable-cell" value="sales@tradetoolsdirect.com.au" /></td>
+                                <td><input class="editable-cell" value="1300 872 332" /></td>
+                                <td><input class="editable-cell" value="Tools, Safety Equipment" /></td>
+                                <td><span class="status-badge status-active">Active</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit">Edit</button>
